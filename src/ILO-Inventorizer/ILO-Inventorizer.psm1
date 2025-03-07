@@ -13,9 +13,14 @@ Function GetHWInfoFromILO {
     param (
         [Parameter(Position = 0)]
         [string]
-        $help
+        $help,
+
+        [Parameter()]
+        [switch]
+        $h
     )
     ## Check if Help must be displayed
+    if($h -eq $true) {$help = "-h";}
     Show-Help $help; 
         
     ## Check for recommended ModuleVersion
