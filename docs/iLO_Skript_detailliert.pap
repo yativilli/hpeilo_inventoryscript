@@ -1,0 +1,283 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<FRAME GUID="2FB25471-B62C-4EE6-BD43-F819C095ACF8" FORMAT="0000" APP_VERSION="2.2.0.8" CHECKSUM="88E73CC413BB5DFE">
+  <PROJECT FORMAT="1.00" NAME="iLO_Skript_detailliert" AUTHOR="wernle_y" CREATED="2025.03.05 13:07:45" MODIFIED="2025.03.05 15:12:00">
+    <DIAGRAMS>
+      <DIAGRAM FORMAT="1.00" ID="0" NAME="Inventurskript" CREATED="2025.03.05 13:07:56" MODIFIED="2025.03.05 15:12:00">
+        <LAYOUT FORMAT="1.00" COLUMNS="5" ROWS="24">
+          <ENTRIES>
+            <ENTRY COLUMN="0" ROW="0" ANCHOR="True">
+              <FIGURE SUBTYPE="PapTitle" FORMAT="1.00" ID="0">
+                <TEXT><![CDATA[Inventurskript]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="1">
+              <FIGURE SUBTYPE="PapStart" FORMAT="1.00" ID="1">
+                <TEXT><![CDATA[Start]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="2">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="66">
+                <TEXT><![CDATA[Überprüfe Modulversion]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="3">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="158">
+                <TEXT><![CDATA[Ist Modulversion eine andere als erwartet?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="4">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="105">
+                <TEXT><![CDATA[Schreibe in die Konsole, dass eine unerwartete Modulversion verwendet wird.]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="5">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="166">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="6">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="4">
+                <TEXT><![CDATA[Gestartet mit Parametern?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="7">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="152">
+                <TEXT><![CDATA[Validiere Parameter]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="8">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="28">
+                <TEXT><![CDATA[Lese Konfiguration/Parameter aus]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="9">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="36">
+                <TEXT><![CDATA[Ist Inventory erreichbar?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="10">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="45">
+                <TEXT><![CDATA[Frage mittels Suchstring Inventory.psi.ch ab]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="11">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="47">
+                <TEXT><![CDATA[Speichere die abgefragten Server in einer Datei]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="12">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="50">
+                <TEXT><![CDATA[Lese Server aus Datei aus]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="13">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="54">
+                <TEXT><![CDATA[Führe mit jedem Server einen Pingtest aus]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="14">
+              <FIGURE SUBTYPE="PapOutput" FORMAT="1.00" ID="56">
+                <TEXT><![CDATA[Ausgabe vom Pingtest]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="15">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="58">
+                <TEXT><![CDATA[Ist Pingtest erfolgreich?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="16">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="73">
+                <TEXT><![CDATA[Führe Verbindungsaufbau mit dem Server durch]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="17">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="75">
+                <TEXT><![CDATA[Frage Daten ab]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="18">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="77">
+                <TEXT><![CDATA[Bereite Daten auf]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="19">
+              <FIGURE SUBTYPE="PapOutput" FORMAT="1.00" ID="79">
+                <TEXT><![CDATA[Speichere die Daten in eine CSV Datei]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="20">
+              <FIGURE SUBTYPE="PapOutput" FORMAT="1.00" ID="81">
+                <TEXT><![CDATA[Speichere die Daten in eine JSON-Datei]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="21">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="113">
+                <TEXT><![CDATA[Schreibe die erhaltenen Daten in die Konsole]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="22">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="25">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="23">
+              <FIGURE SUBTYPE="PapEnd" FORMAT="1.00" ID="2">
+                <TEXT><![CDATA[Ende]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="3">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="163">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="5">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="162">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="6">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="6">
+                <TEXT><![CDATA[Konfiguration vorhanden?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="7">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="30">
+                <TEXT><![CDATA[Validiere Konfiguration]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="8">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="149">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="9">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="41">
+                <TEXT><![CDATA[Ist eine Liste an Servern hinterlegt?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="12">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="182">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="15">
+              <FIGURE SUBTYPE="PapOutput" FORMAT="1.00" ID="101">
+                <TEXT><![CDATA[Speichere in Logdatei, welche Server nicht erreichbar sind]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="17">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="192">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="22">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="62">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="2" ROW="6">
+              <FIGURE SUBTYPE="PapOutput" FORMAT="1.00" ID="12">
+                <TEXT><![CDATA[Keine Konfiguration vorhanden]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="2" ROW="15">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="102">
+                <TEXT><![CDATA[Schreibe in die Konsole, dass Server nicht erreichbar sind]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="2" ROW="16">
+              <FIGURE SUBTYPE="PapComment" FORMAT="1.00" ID="155">
+                <TEXT><![CDATA[Program endet hier nur, wenn alle Server nicht erreichbar sind]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="2" ROW="17">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="33">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="3" ROW="6">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="14">
+                <TEXT><![CDATA[Welche Konfiguration möchten Sie erstellen?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="3" ROW="7">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="19">
+                <TEXT><![CDATA[Erstelle Leere Konfiguration]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="3" ROW="9">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="144">
+                <TEXT><![CDATA[Schreibe in die Konsole, dass das Programm nur mit korrekter Konfiguration läuft]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="3" ROW="17">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="188">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="4" ROW="6">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="20">
+                <TEXT><![CDATA[Erstelle eine Konfiguration mit Daten darin]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="4" ROW="9">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="172">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+          </ENTRIES>
+        </LAYOUT>
+        <CONNECTIONS>
+          <CONNECTION FORMAT="1.00" ID="165" FROM="163" TO="162" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="26" FROM="25" TO="2" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="7" FROM="4" TO="6" TEXT="nein" />
+          <CONNECTION FORMAT="1.00" ID="151" FROM="149" TO="28" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="11" FROM="6" TO="12" TEXT="nein" />
+          <CONNECTION FORMAT="1.00" ID="13" FROM="12" TO="14" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="18" FROM="14" TO="20" TEXT="Vorgefüllte Konfiguration" />
+          <CONNECTION FORMAT="1.00" ID="5" FROM="4" TO="152" TEXT="ja" />
+          <CONNECTION FORMAT="1.00" ID="194" FROM="192" TO="62" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="184" FROM="182" TO="50" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="201" FROM="19" TO="144" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="37" FROM="36" TO="45" TEXT="ja" />
+          <CONNECTION FORMAT="1.00" ID="42" FROM="36" TO="41" TEXT="nein" />
+          <CONNECTION FORMAT="1.00" ID="204" FROM="172" TO="144" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="46" FROM="45" TO="47" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="48" FROM="47" TO="50" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="51" FROM="50" TO="54" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="119" FROM="41" TO="144" TEXT="nein" />
+          <CONNECTION FORMAT="1.00" ID="55" FROM="54" TO="56" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="57" FROM="56" TO="58" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="3" FROM="1" TO="66" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="190" FROM="188" TO="33" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="193" FROM="33" TO="192" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="61" FROM="58" TO="101" TEXT="nein" />
+          <CONNECTION FORMAT="1.00" ID="167" FROM="166" TO="4" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="156" FROM="66" TO="158" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="59" FROM="58" TO="73" TEXT="ja" />
+          <CONNECTION FORMAT="1.00" ID="74" FROM="73" TO="75" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="76" FROM="75" TO="77" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="100" FROM="81" TO="113" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="98" FROM="77" TO="79" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="99" FROM="79" TO="81" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="114" FROM="113" TO="25" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="104" FROM="101" TO="102" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="164" FROM="158" TO="163" TEXT="nein" />
+          <CONNECTION FORMAT="1.00" ID="159" FROM="158" TO="105" TEXT="ja" />
+          <CONNECTION FORMAT="1.00" ID="196" FROM="41" TO="182" TEXT="ja" />
+          <CONNECTION FORMAT="1.00" ID="207" FROM="144" TO="188" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="29" FROM="28" TO="36" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="153" FROM="152" TO="28" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="161" FROM="105" TO="166" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="168" FROM="162" TO="166" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="199" FROM="14" TO="19" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="200" FROM="20" TO="172" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="198" FROM="30" TO="149" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="197" FROM="6" TO="30" TEXT="ja" />
+          <CONNECTION FORMAT="1.00" ID="103" FROM="102" TO="33" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="195" FROM="62" TO="25" TEXT="" />
+        </CONNECTIONS>
+      </DIAGRAM>
+    </DIAGRAMS>
+  </PROJECT>
+</FRAME>

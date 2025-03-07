@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<FRAME GUID="2FB25471-B62C-4EE6-BD43-F819C095ACF8" FORMAT="0000" APP_VERSION="2.2.0.8" CHECKSUM="527E96AF35CC27ED">
+  <PROJECT FORMAT="1.00" NAME="IPA_iLO" AUTHOR="wernle_y" CREATED="2025.03.04 10:54:46" MODIFIED="2025.03.04 11:07:33">
+    <DIAGRAMS>
+      <DIAGRAM FORMAT="1.00" ID="0" NAME="iLO_Inventory-Skript" CREATED="2025.03.04 10:54:55" MODIFIED="2025.03.04 11:07:33">
+        <LAYOUT FORMAT="1.00" COLUMNS="3" ROWS="17">
+          <ENTRIES>
+            <ENTRY COLUMN="0" ROW="0" ANCHOR="True">
+              <FIGURE SUBTYPE="PapTitle" FORMAT="1.00" ID="0">
+                <TEXT><![CDATA[iLO_Inventory-Skript]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="1">
+              <FIGURE SUBTYPE="PapStart" FORMAT="1.00" ID="1">
+                <TEXT><![CDATA[Start]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="2">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="4">
+                <TEXT><![CDATA[Gestartet mit Parametern?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="4">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="60">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="5">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="24">
+                <TEXT><![CDATA[Inventory erreichbar?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="6">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="36">
+                <TEXT><![CDATA[Abfrage von Inventory]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="7">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="42">
+                <TEXT><![CDATA[Führe Pingtest durch]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="8">
+              <FIGURE SUBTYPE="PapOutput" FORMAT="1.00" ID="87">
+                <TEXT><![CDATA[Ausgabe von Pingtest]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="9">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="43">
+                <TEXT><![CDATA[Ping erfolgreich?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="10">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="58">
+                <TEXT><![CDATA[Überprüfe Modulversion]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="11">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="79">
+                <TEXT><![CDATA[Führe Verbindungsaufbau mit Server durch]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="12">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="81">
+                <TEXT><![CDATA[Frage Daten ab]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="13">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="83">
+                <TEXT><![CDATA[Speichere Daten in CSV & JSON]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="14">
+              <FIGURE SUBTYPE="PapOutput" FORMAT="1.00" ID="85">
+                <TEXT><![CDATA[Ausgabe von gespeicherten Daten]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="15">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="49">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="0" ROW="16">
+              <FIGURE SUBTYPE="PapEnd" FORMAT="1.00" ID="2">
+                <TEXT><![CDATA[Ende]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="2">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="7">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="3">
+              <FIGURE SUBTYPE="PapCondition" FORMAT="1.00" ID="10">
+                <TEXT><![CDATA[Konfiguration vorhanden?]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="4">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="6">
+                <TEXT><![CDATA[Lese aus der Konfigurationsdatei]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="5">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="34">
+                <TEXT><![CDATA[Lese Server aus Liste]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="7">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="72">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="9">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="57">
+                <TEXT><![CDATA[Loge in Datei]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="1" ROW="15">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="76">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="2" ROW="3">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="12">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="2" ROW="4">
+              <FIGURE SUBTYPE="PapActivity" FORMAT="1.00" ID="14">
+                <TEXT><![CDATA[Generiere Konfigurationsdatei]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+            <ENTRY COLUMN="2" ROW="15">
+              <FIGURE SUBTYPE="PapConnector" FORMAT="1.00" ID="47">
+                <TEXT><![CDATA[]]></TEXT>
+              </FIGURE>
+            </ENTRY>
+          </ENTRIES>
+        </LAYOUT>
+        <CONNECTIONS>
+          <CONNECTION FORMAT="1.00" ID="3" FROM="1" TO="4" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="44" FROM="43" TO="58" TEXT="ja" />
+          <CONNECTION FORMAT="1.00" ID="8" FROM="4" TO="7" TEXT="nein" />
+          <CONNECTION FORMAT="1.00" ID="9" FROM="7" TO="10" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="11" FROM="10" TO="6" TEXT="ja" />
+          <CONNECTION FORMAT="1.00" ID="13" FROM="10" TO="12" TEXT="nein" />
+          <CONNECTION FORMAT="1.00" ID="15" FROM="12" TO="14" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="17" FROM="14" TO="47" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="61" FROM="60" TO="24" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="22" FROM="42" TO="87" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="71" FROM="34" TO="72" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="62" FROM="6" TO="60" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="74" FROM="72" TO="42" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="68" FROM="36" TO="42" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="80" FROM="79" TO="81" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="66" FROM="24" TO="34" TEXT="nein" />
+          <CONNECTION FORMAT="1.00" ID="67" FROM="24" TO="36" TEXT="ja" />
+          <CONNECTION FORMAT="1.00" ID="50" FROM="49" TO="2" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="77" FROM="76" TO="49" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="75" FROM="43" TO="57" TEXT="nein" />
+          <CONNECTION FORMAT="1.00" ID="78" FROM="57" TO="76" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="51" FROM="47" TO="76" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="59" FROM="58" TO="79" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="5" FROM="4" TO="60" TEXT="ja" />
+          <CONNECTION FORMAT="1.00" ID="82" FROM="81" TO="83" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="84" FROM="83" TO="85" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="86" FROM="85" TO="49" TEXT="" />
+          <CONNECTION FORMAT="1.00" ID="88" FROM="87" TO="43" TEXT="" />
+        </CONNECTIONS>
+      </DIAGRAM>
+    </DIAGRAMS>
+  </PROJECT>
+</FRAME>
