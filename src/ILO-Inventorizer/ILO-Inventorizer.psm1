@@ -2,8 +2,7 @@
 .SYNOPSIS
 Scripting-Module to query information from HPE-Servers via ILO
 #>
-#Requires -Modules @{ ModuleName="HPEiLOCmdlets"; ModuleVersion="4.0.0.0"}
-    
+
 . $PSScriptRoot\Constants.ps1
 . $PSScriptRoot\Functions.ps1
 
@@ -36,6 +35,7 @@ Function GetHWInfoFromILO {
     if ($h -eq $true) { $help = "-h"; }
     if ($help.Length -gt 0) { Show-Help $help; } 
         
+    Import-Module HPEiLOCmdlets;
     ## Check for recommended ModuleVersion
     $moduleVersion = (Get-Module -Name HPEiLOCmdlets).Version.ToString()
     if ($recommendedVersion -ne ($moduleVersion)) {
@@ -58,7 +58,17 @@ Function GetHWInfoFromILO {
             }
             2 {
                 $pathToSaveAt = Read-Host-Prompt "Where do you want to save the config at?";
-                $withInventory = Read-Host -Prompt "Do you want to:`n[1] Read from Inventory or From"
+                $withInventory = Read-Host -Prompt "Do you want to:`nRead From Inventory [y/N]?"
+                switch ($withInventory) {
+                    "y" {
+                        Generate-Config -Path $pathToSaveAt;
+                        break;
+                    }
+                    "N" {
+                        Generate-Config -Path $pathToSaveAt -WithoutInventory;
+                        break;
+                    }
+                }
                 break;
             }
             3 {
@@ -109,4 +119,4 @@ Function Set-ConfigPath {
     }
 }
     
-Export-ModuleMember -Function GetHWInfoFromILO, Set-ConfigPath;
+Export-ModuleMember -Function GetHWInfoFromILO, Set-ConfigPath, Generate-Config;
