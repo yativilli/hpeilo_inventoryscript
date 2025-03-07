@@ -30,7 +30,7 @@ Function GetHWInfoFromILO {
         [switch]
         $params
     )
-    $Env:hpeiloConfig;
+    $env:hpeiloConfig;
 
     ## Check if Help must be displayed
     if ($h -eq $true) { $help = "-h"; }
@@ -46,7 +46,7 @@ Function GetHWInfoFromILO {
     if ($param) {
         Write-Host "Param";
     }
-    if ($null -eq $Env:hpeiloConfig) {
+    if ($null -eq $env:hpeiloConfig) {
         Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
         [int]$configDecision = Read-Host -Prompt "Enter the corresponding number:";
 
@@ -85,14 +85,27 @@ Function Set-ConfigPath {
         $Reset
     )try {
         if ($Reset) {
-            $Env:hpeiloConfig = "";
+            $env:hpeiloConfig = "";
         }
-        elseif ((Resolve-Path -Path $Path -ErrorAction Stop).Path -eq $true) {
-            $Env:hpeiloConfig = $Path;
+        if ((Resolve-Path -Path $Path -ErrorAction Stop).Path) {
+            if ($Path -notcontains "config.json") {
+                if (Resolve-Path -Path ($Path + "\config.json") -ErrorAction SilentlyContinue) {
+                    $env:hpeiloConfig = $Path + "\config.json";    
+                }
+                else {
+                    throw [System.IO.FileNotFoundException]"The Path $Path does not contain a config.json";
+                }
+            }
+            else {
+                $env:hpeiloConfig = $Path;
+            }
         }
     }
     catch [System.Management.Automation.ItemNotFoundException] {
         Write-Error "The Path $Path does not exist. Please verify that it exists."
+    }
+    catch {
+        Write-Error $_;
     }
 }
     
