@@ -40,12 +40,12 @@ Function New-Config {
         doNotSearchInventory            = $false
         remoteMgmntField                = ""
         deactivateCertificateValidation = $false
-    }
+    };
     
     $login = [ordered]@{
         Username = ""
         Password = ""
-    }
+    };
         
     ## Generate Dummy (w/o Inventory)
     if ($NotEmpty -and $WithOutInventory) {
