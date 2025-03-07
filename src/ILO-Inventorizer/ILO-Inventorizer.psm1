@@ -2,23 +2,27 @@
 .SYNOPSIS
 Scripting-Module to query information from HPE-Servers via ILO
 #>
-
-#Requires -Modules @{ ModuleName="HPEiLOCmdlets"; ModuleVersion="4.4.0.0" }
-
+#Requires -Modules @{ ModuleName="HPEiLOCmdlets"; ModuleVersion="4.0.0.0"}
+    
 . $PSScriptRoot\Constants.ps1
 . $PSScriptRoot\Functions.ps1
 
 # Main Function
-Function GetHWInfoFromILO{
-    [CmdletBinding(PositionalBinding=$false)]
+Function GetHWInfoFromILO {
+    [CmdletBinding(PositionalBinding = $false)]
     param (
-        [Parameter(Position=0)]
+        [Parameter(Position = 0)]
         [string]
         $help
     )
-
-    Show-Help $help;
-
+    ## Check if Help must be displayed
+    Show-Help $help; 
+        
+    ## Check for recommended ModuleVersion
+    $moduleVersion = (Get-Module -Name HPEiLOCmdlets).Version.ToString()
+    if ($recommendedVersion -ne ($moduleVersion)) {
+        Write-Warning "The installed Module HPEiLOCmdlets doesnt use the recommended Version '$recommendedVersion', but '$moduleVersion' - some features may not work correctly."
+    }
 }
-
-Export-ModuleMember -Function GetHWInfoFromILO
+    
+Export-ModuleMember -Function GetHWInfoFromILO;
