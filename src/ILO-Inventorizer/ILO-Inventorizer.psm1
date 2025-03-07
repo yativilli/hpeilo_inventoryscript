@@ -45,7 +45,7 @@ Function Get-HWInfoFromILO {
     if ($param) {
         Write-Host "Param";
     }
-    if ($env:hpeiloConfig.Length -eq 0) {
+    if ($ENV:HPEILOCONFIG.Length -eq 0) {
         Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
         [int]$configDecision = Read-Host -Prompt "Enter the corresponding number:";
 
@@ -79,7 +79,6 @@ Function Get-HWInfoFromILO {
 
             
     }
-    $env:hpeiloConfig = "";
 }
 
 Function Set-ConfigPath {
@@ -95,16 +94,16 @@ Function Set-ConfigPath {
         $Reset
     )try {
         if ($Reset) {
-            $env:hpeiloConfig = "";
+            $ENV:HPEILOCONFIG = "";
         }
         if(Test-Path -Path $Path -ErrorAction Stop) {
             if ($Path.Contains("\config.json")) {
-                $env:hpeiloConfig = $Path;
+                $ENV:HPEILOCONFIG = $Path;
             }
             else {
                 $Path = $Path+ "\config.json";
                 if(Test-Path -Path $Path){
-                    $env:hpeiloConfig = $Path;
+                    $ENV:HPEILOCONFIG = $Path;
                 } else{
                     throw [System.IO.FileNotFoundException] "The Path must include a 'config.json'."
                 } 
@@ -118,5 +117,9 @@ Function Set-ConfigPath {
         Write-Error $_;
     }
 }
+
+Function Get-ConfigPath{
+    return $ENV:HPEILOCONFIG;
+}
     
-Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, New-Config;
+Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath;

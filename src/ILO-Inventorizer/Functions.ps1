@@ -6,7 +6,7 @@ Function Show-Help {
     )
     if (($h -eq "/?") -or ($h -eq "-h") -or ($h -eq "--help") -or ($h -eq "--h")) {
         Write-Host "Display-Help";
-        Get-Help GetHWInfoFromILO -Full
+        Get-Help Get-HWInfoFromILO -Full
         return;
     }
 }
@@ -16,7 +16,6 @@ Function New-Config {
         [Parameter(Mandatory = $true)]
         [String]
         $Path,
-        
         
         [Parameter()]
         [switch]
@@ -101,5 +100,5 @@ Function New-Config {
     $config | ConvertTo-Json -Depth 2 | Out-File -FilePath $config_path;
     $login | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\login.json");
     Set-ConfigPath -Path $config_path;
-    Write-Host $env:hpeiloConfig;
+    Write-Host $ENV:HPEILOCONFIG;
 }
