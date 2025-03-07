@@ -11,7 +11,7 @@ Function Show-Help {
     }
 }
 
-Function Generate-Config {
+Function New-Config {
     param(
         [Parameter(Mandatory = $true)]
         [String]
@@ -27,7 +27,6 @@ Function Generate-Config {
         $WithOutInventory
     )
     $config_path = ($Path + "\config.json");
-    Write-Host "$config_path"
     $login_config_path = ($Path + "\login.json");
     $config = [ordered]@{
         searchForFilesAt                = $Path
@@ -99,7 +98,8 @@ Function Generate-Config {
         $login.Password = "";
     }
 
-
-    $config | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\config.json");
+    $config | ConvertTo-Json -Depth 2 | Out-File -FilePath $config_path;
     $login | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\login.json");
+    Set-ConfigPath -Path $config_path;
+    Write-Host $env:hpeiloConfig;
 }

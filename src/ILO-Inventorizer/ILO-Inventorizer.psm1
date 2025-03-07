@@ -7,7 +7,7 @@ Scripting-Module to query information from HPE-Servers via ILO
 . $PSScriptRoot\Functions.ps1
 
 # Main Function
-Function GetHWInfoFromILO {
+Function Get-HWInfoFromILO {
     [CmdletBinding(PositionalBinding = $false)]
     param (
         # Help Handling
@@ -29,7 +29,6 @@ Function GetHWInfoFromILO {
         [switch]
         $params
     )
-    $env:hpeiloConfig;
 
     ## Check if Help must be displayed
     if ($h -eq $true) { $help = "-h"; }
@@ -46,33 +45,33 @@ Function GetHWInfoFromILO {
     if ($param) {
         Write-Host "Param";
     }
-    if ($null -eq $env:hpeiloConfig) {
+    if ($env:hpeiloConfig.Length -eq 0) {
         Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
         [int]$configDecision = Read-Host -Prompt "Enter the corresponding number:";
 
         switch ($configDecision) {
             1 {
-                $pathToSaveAt = Read-Host-Prompt "Where do you want to save the config at?";
-                Generate-Config -Path $pathToSaveAt;
+                $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
+                New-Config -Path $pathToSaveAt;
                 break;
             }
             2 {
-                $pathToSaveAt = Read-Host-Prompt "Where do you want to save the config at?";
+                $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
                 $withInventory = Read-Host -Prompt "Do you want to:`nRead From Inventory [y/N]?"
                 switch ($withInventory) {
                     "y" {
-                        Generate-Config -Path $pathToSaveAt;
+                        New-Config -Path $pathToSaveAt -NotEmpty;
                         break;
                     }
                     "N" {
-                        Generate-Config -Path $pathToSaveAt -WithoutInventory;
+                        New-Config -Path $pathToSaveAt -WithoutInventory -NotEmpty;
                         break;
                     }
                 }
                 break;
             }
             3 {
-                $pathToConfig = Read-Host-Prompt "Where dou you have the config stored at?";
+                $pathToConfig = Read-Host -Prompt "Where dou you have the config stored at?";
                 Set-ConfigPath -Path $pathToConfig;
                 break;
             }
@@ -80,6 +79,7 @@ Function GetHWInfoFromILO {
 
             
     }
+    $env:hpeiloConfig = "";
 }
 
 Function Set-ConfigPath {
@@ -97,17 +97,17 @@ Function Set-ConfigPath {
         if ($Reset) {
             $env:hpeiloConfig = "";
         }
-        if ((Resolve-Path -Path $Path -ErrorAction Stop).Path) {
-            if ($Path -notcontains "config.json") {
-                if (Resolve-Path -Path ($Path + "\config.json") -ErrorAction SilentlyContinue) {
-                    $env:hpeiloConfig = $Path + "\config.json";    
-                }
-                else {
-                    throw [System.IO.FileNotFoundException]"The Path $Path does not contain a config.json";
-                }
+        if(Test-Path -Path $Path -ErrorAction Stop) {
+            if ($Path.Contains("\config.json")) {
+                $env:hpeiloConfig = $Path;
             }
             else {
-                $env:hpeiloConfig = $Path;
+                $Path = $Path+ "\config.json";
+                if(Test-Path -Path $Path){
+                    $env:hpeiloConfig = $Path;
+                } else{
+                    throw [System.IO.FileNotFoundException] "The Path must include a 'config.json'."
+                } 
             }
         }
     }
@@ -119,4 +119,4 @@ Function Set-ConfigPath {
     }
 }
     
-Export-ModuleMember -Function GetHWInfoFromILO, Set-ConfigPath, Generate-Config;
+Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, New-Config;
