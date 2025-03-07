@@ -1,0 +1,6 @@
+This module provides the tools to query hardware Informations from HPE servers via the ILO-technology.
+For more Information, start using it with:
+``GetHWInfoFromILO``
+
+For Help, use either
+``Get-Help GetHWInfoFromILO`` or review https://github.com/yativilli/hpeilo_inventoryscript
