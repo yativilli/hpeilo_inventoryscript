@@ -215,4 +215,4 @@ Function Get-ConfigPath {
     return $ENV:HPEILOCONFIG;
 }
     
-Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath;
+Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Log;

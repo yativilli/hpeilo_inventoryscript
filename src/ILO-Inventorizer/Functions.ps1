@@ -1,3 +1,5 @@
+. .\ILO-Inventorizer\Constants.ps1
+
 Function Show-Help {
     param(
         [Parameter(Mandatory = $true)]
@@ -221,4 +223,58 @@ Function Update-Config {
     else {
         throw [System.IO.FileNotFoundException] "No updatable config could be found at $pathToConfig";
     }
+}
+
+Function Get-Config {
+    if ((Test-Path -Path $ENV:HPEILOCONFIG)) {
+        return (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
+    }
+}
+
+Function Log {
+    param(
+        [Parameter(
+            Mandatory = $true
+        )]
+        [string]
+        $Message,
+
+        [Parameter(
+            Mandatory = $true
+        )]
+        [int]
+        $Level
+    )
+
+    $config = Get-Config;
+    $logPath = $config.logPath;
+    $logLevel = $config.logLevel;
+    $logActive = $config.loggingActived;
+
+    if ($logActive) {
+        if ($Level -le $logLevel) {
+            if ((Test-Path -Path $logPath) -eq $false) {
+                # Directory does not exist
+                Write-Warning ("No Path for logging exists. Logs will be stored at '" + $ENV:HPEILOCONFIG + "\logs'.")
+                $defaultLogPath = ($defaultPath + "\logs");
+                New-Item -ItemType Directory $defaultLogPath -Force;
+                Write-Host $defaultLogPath
+                Update-Config -LogPath $defaultLogPath;
+            }
+
+            $currentDateTime = Get-Date -Format "yyyy/MM/dd HH:mm:ss`t";
+            $logFilePath = "$logPath\" + (Get-Date -Format "yyyy_MM_dd") + ".txt";
+            $saveString = $currentDateTime + $Message;
+
+            # File already exists
+            if (Test-Path -Path $logFilePath) {
+                Add-Content -Path $logFilePath -Value $saveString;
+            }
+            else {
+                # File does not exist
+                Set-Content -Path $logFilePath -Value $saveString -Force;
+            }
+        }
+    }
+
 }
