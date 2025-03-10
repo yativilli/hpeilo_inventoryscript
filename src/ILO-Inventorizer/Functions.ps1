@@ -322,3 +322,24 @@ Function Log {
         Write-Error $_.ErrorDetails;
     }
 }
+
+Function Execute-PingTest {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Hostname
+    )
+    try {
+        $nsl = nslookup.exe $Hostname;
+        if($nsl.Length -gt 3){
+
+            $dnsname = ($nsl | Select-String -Pattern "Name:").Line.Split(":").Trim()[1];   
+            Test-Connection $dnsname -Count 1 -Quiet;
+        }else{
+            Log 2 "$Hostname is not reachable from within this network"
+        }
+    }
+    catch {
+        $_
+    }
+}

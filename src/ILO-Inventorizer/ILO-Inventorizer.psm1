@@ -216,10 +216,15 @@ Function Get-HWInfoFromILO {
             }
         }
         Log 3 "Import Configuration"
-        Write-Host ($PSCmdlet.ParameterSetName);
         Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
         
         Log 3 "Start Pingtest"
+        $config = Get-Config;
+        $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
+        foreach($srv in $serverJSON){
+            Execute-PingTest;
+        }
+
         
         Log 3 "Query from Inventory started."
         
