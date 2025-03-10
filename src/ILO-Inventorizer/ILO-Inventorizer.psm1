@@ -62,7 +62,7 @@ Function Get-HWInfoFromILO {
 
         [Parameter()]
         [switch]
-        $LogToConsole,        
+        $LogToConsole = $null,        
 
         [Parameter(Mandatory = $true,
             ParameterSetName = "Inventory")]
@@ -193,27 +193,30 @@ Function Get-HWInfoFromILO {
                     return;   
                 }
                 else {
+                    # Set Standard Values for Updating Configurations
                     $config = Get-Config;
-                    $configPath = $config.configPath;
-                    $LoginConfigPath = $config.loginConfigPath;
-                    $ReportPath = $config.reportPath;
-                    $LogPath = $config.logPath;
-                    $ServerPath = $config.serverPath;
-                    $LogLevel = $config.logLevel;
-                    $LogToConsole = $config.logToConsole -eq $true ? $true : $false; ;
-                    $LoggingActivated = $config.loggingActived -eq $true ? $true : $false;
-                    $SearchStringInventory = $config.searchStringInventory;
-                    $DoNotSearchInventory = $config.doNotSearchInventory -eq $true ? $true : $false;
-                    $RemoteMgmntField = $config.remoteMgmntField;
-                    $DeactivateCertificateValidationILO = $config.deactivateCertificateValidation -eq $true ? $true : $false; ;
+                    $configPath = $config.Length -gt 0 ? $configPath : $config.configPath;
+                    $LoginConfigPath = $LoginConfigPath.Length -gt 0 ? $LoginConfigPath : $config.loginConfigPath;
+                    $ReportPath = $ReportPath.Length -gt 0 ? $ReportPath : $config.reportPath;
+                    $LogPath = $LogPath.Length -gt 0 ? $LogPath : $config.logPath;
+                    $ServerPath = $ServerPath.Length -gt 0 ? $ServerPath : $config.serverPath;
+                    $LogLevel = $LogLevel -ne -1 ? $LogLevel : $config.logLevel;
+                    $LogToConsole = $PSBoundParameters.ContainsKey('LogToConsole') -eq $true ? $LogToConsole : $config.logToConsole ;
+                    $LoggingActivated = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $LoggingActivated : $config.loggingActived;
+                    $DoNotSearchInventory = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $DoNotSearchInventory : $config.doNotSearchInventory ;
+                    $DeactivateCertificateValidationILO = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $DeactivateCertificateValidationILO : $config.deactivateCertificateValidation;
+                    
+                    $SearchStringInventory = $SearchStringInventory.Length -gt 0 ? $SearchStringInventory : $config.searchStringInventory;
+                    $RemoteMgmntField = $RemoteMgmntField.Length -gt 0 ? $RemoteMgmntField : $config.remoteMgmntField;
                     
                     $login = (Get-Content ($LoginConfigPath) | ConvertFrom-Json -Depth 3);
-                    $Username = $login.Username;
-                    $Password = $login.Password;
+                    $Username = $Username.Length -gt 0 ? $Username : $login.Username;
+                    $Password = $Password.Length -gt 0 ? $Password : $login.Password;
                 }
             }
         }
         Log 3 "Import Configuration"
+        Write-Host ($PSCmdlet.ParameterSetName);
         Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
         
         Log 3 "Start Pingtest"
