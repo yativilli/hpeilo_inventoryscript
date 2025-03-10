@@ -265,15 +265,11 @@ Function Get-Config {
 
 Function Log {
     param(
-        [Parameter(
-            Mandatory = $true
-        )]
+        [Parameter(Mandatory = $true)]
         [int]
         $Level,
 
-        [Parameter(
-            Mandatory = $true
-        )]
+        [Parameter(Mandatory = $true)]
         [string]
         $Message
 
@@ -319,7 +315,7 @@ Function Log {
         }
     }
     catch {
-        Write-Error $_.ErrorDetails;
+        Write-Error $_;
     }
 }
 
@@ -339,7 +335,7 @@ Function Invoke-PingTest {
                 return $false
             }
             # Reachable
-            else { return true; }
+            else { return $true; }
             # Not Reachable via NSlookup
             else {
                 Log 2 "$Hostname is not reachable from within this network and could not be found via nslookup."
