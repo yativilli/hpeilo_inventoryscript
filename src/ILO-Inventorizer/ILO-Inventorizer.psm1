@@ -221,10 +221,14 @@ Function Get-HWInfoFromILO {
         Log 3 "Start Pingtest"
         $config = Get-Config;
         $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
+        [Array]$reachable;
         foreach($srv in $serverJSON){
-            Execute-PingTest;
+            if(Invoke-PingTest $srv){
+                $reachable += $srv;
+            }
         }
 
+        Write-Host "Reachable: $reachable";
         
         Log 3 "Query from Inventory started."
         

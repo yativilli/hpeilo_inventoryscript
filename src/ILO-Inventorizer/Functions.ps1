@@ -323,7 +323,7 @@ Function Log {
     }
 }
 
-Function Execute-PingTest {
+Function Invoke-PingTest {
     param(
         [Parameter(Mandatory = $true)]
         [string]
@@ -331,15 +331,23 @@ Function Execute-PingTest {
     )
     try {
         $nsl = nslookup.exe $Hostname;
-        if($nsl.Length -gt 3){
-
+        if ($nsl.Length -gt 3) {
             $dnsname = ($nsl | Select-String -Pattern "Name:").Line.Split(":").Trim()[1];   
-            Test-Connection $dnsname -Count 1 -Quiet;
-        }else{
-            Log 2 "$Hostname is not reachable from within this network"
+            # Reachable via NSLookup, but insufficient permissions
+            if ((Test-Connection $dnsname -Count 1 -Quiet) -eq $false) {
+                Log 2 "$Hostname was found via nslookup but could not be reached. Verify that you have appropriate permissions within your network to access it."
+                return $false
+            }
+            # Reachable
+            else { return true; }
+            # Not Reachable via NSlookup
+            else {
+                Log 2 "$Hostname is not reachable from within this network and could not be found via nslookup."
+                return $false
+            }
         }
     }
-    catch {
+    catch {    
         $_
     }
 }
