@@ -227,8 +227,6 @@ Function Get-HWInfoFromILO {
                 $reachable += $srv;
             }
         }
-
-        Write-Host "Reachable: $reachable";
         
         Log 3 "Query from Inventory started."
         
