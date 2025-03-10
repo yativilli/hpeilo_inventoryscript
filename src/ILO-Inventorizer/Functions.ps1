@@ -148,7 +148,7 @@ Function Update-Config {
 
         [Parameter()]
         [bool]
-        $LoggingActivated = $null,
+        $LoggingActivated,
 
         [Parameter()]
         [string]
@@ -156,7 +156,7 @@ Function Update-Config {
 
         [Parameter()]
         [bool]
-        $DoNotSearchInventory = $null,
+        $DoNotSearchInventory,
 
         [Parameter()]
         [string]
@@ -164,7 +164,7 @@ Function Update-Config {
 
         [Parameter()]
         [bool]
-        $DeactivateCertificateValidationILO = $null,
+        $DeactivateCertificateValidationILO,
 
         [Parameter()]
         [string]
@@ -174,42 +174,44 @@ Function Update-Config {
         [securestring]
         $Password
     )
-
     $pathToConfig = $ENV:HPEILOCONFIG;
     if (Test-Path -Path $pathToConfig) {
         $config = Get-Content -Path $pathToConfig | ConvertFrom-Json -Depth 3;
 
         if ($null -ne $configPath) { $config.configPath = $configPath; }
-        if ($null -ne $LoginConfigPath) { $config.loginConfigPath = $LoginConfigPath; }
-        if ($null -ne $ReportPath) { $config.reportPath = $ReportPath; }
-        if ($null -ne $LogPath) { $config.logPath = $LogPath; }
-        if ($null -ne $ServerPath) { $config.serverPath = $ServerPath; }
+        if ($LoginConfigPath.Length -gt 0) { $config.loginConfigPath = $LoginConfigPath; }
+        if ($ReportPath.Length -gt 0) { $config.reportPath = $ReportPath; }
+        if ($LogPath.Length -gt 0) { $config.logPath = $LogPath; }
+        if ($ServerPath.Length -gt 0) { $config.serverPath = $ServerPath; }
         if ($LogLevel -ne -1) { $config.logLevel = $LogLevel; }
-        if ($null -ne $SearchStringInventory) { $config.searchStringInventory = $SearchStringInventory; }
-        if ($null -ne $RemoteMgmntField) { $config.remoteMgmntField = $RemoteMgmntField; }
+        if ($SearchStringInventory.Length -gt 0) { $config.searchStringInventory = $SearchStringInventory; }
+        if ($RemoteMgmntField.Length -gt 0) { $config.remoteMgmntField = $RemoteMgmntField; }
 
         # Set Switch-Value
-        if ($null -ne $LoggingActivated) { $config.loggingActived = $true; }
-        if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = $true; }
-        if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidationILO = $true; }
+        if ($null -ne $LoggingActivated) { $config.loggingActived = $LoggingActivated; }
+        if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = $DoNotSearchInventory; }
+        if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidation = $DeactivateCertificateValidationILO; }
 
         # Set ServerArray
         if ($server.Length -gt 0) { 
-            if (Test-Path -Path $config.serverPath) {
-
-            } 
-            else {
+            if (Test-Path -Path $config.serverPath -eq $false) {
                 $serverPath = New-File ($defaultPath + "\server.json"); 
-                $config.serverPath = $ServerPath;
+                $config.serverPath = $serverPath;
 
-                Set-Content -Path $ServerPath -Value ($server | ConvertTo-JSOn -Depth 2);
             }
+            Set-Content -Path ($config.serverPath) -Value ($server | ConvertTo-JSOn -Depth 2);
         }
         
         # Set Credentials
-        $login = Get-Content -Path ($config.logConfigPath) | ConvertFrom-Json -Depth 3;
-        if ($null -ne $Username) { $login.Username = $Username; }
-        if ($null -ne $Password) { $login.Password = $Password }
+        if (Test-Path -Path ($config.loginConfigPath)) {
+            $login = Get-Content -Path ($config.loginConfigPath) | ConvertFrom-Json -Depth 3;
+            if ($Username.Length -gt 0) { $login.Username = $Username; }
+            if ($Password.Length -gt 0) { $login.Password = $Password }
+
+            Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);
+        }
+
+        Set-Content -Path ($config.configPath) -Value ($config | ConvertTo-Json -Depth 3);
     }
     else {
         throw [System.IO.FileNotFoundException] "No updatable config could be found at $pathToConfig";

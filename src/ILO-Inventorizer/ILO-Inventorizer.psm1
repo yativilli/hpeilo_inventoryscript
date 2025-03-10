@@ -19,7 +19,7 @@ Function Get-HWInfoFromILO {
             ParameterSetName = "Config",
             Mandatory = $true
         )]
-        [Parameter(ParameterSetName = "None")]
+        [Parameter()]
         [string]
         $configPath,
 
@@ -37,13 +37,13 @@ Function Get-HWInfoFromILO {
 
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerPath")]
-        [Parameter(ParameterSetName = "None")]
+        [Parameter()]
         [string]
         $ServerPath,
 
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerArray")]
-        [Parameter(ParameterSetName = "None")]
+        [Parameter()]
         [array]
         $server,
 
@@ -57,7 +57,7 @@ Function Get-HWInfoFromILO {
 
         [Parameter(Mandatory = $true,
             ParameterSetName = "Inventory")]
-        [Parameter(ParameterSetName = "None")]
+        [Parameter()]
         [string]
         $SearchStringInventory,
 
@@ -79,7 +79,7 @@ Function Get-HWInfoFromILO {
             ParameterSetName = "ServerArray")]
         [Parameter(Mandatory = $true,
             ParameterSetName = "Inventory")]
-        [Parameter(ParameterSetName = "None")]
+        [Parameter()]
         [string]
         $Username,
 
@@ -89,15 +89,12 @@ Function Get-HWInfoFromILO {
             ParameterSetName = "ServerArray")]
         [Parameter(Mandatory = $true,
             ParameterSetName = "Inventory")]
-        [Parameter(ParameterSetName = "None")]
+        [Parameter()]
         [securestring]
         $Password
 
 
     )
-    try{
-
-
     ## Check if Help must be displayed
     if ($h -eq $true) { $help = "-h"; }
     if ($help.Length -gt 0) { Show-Help $help; } 
@@ -171,9 +168,6 @@ Function Get-HWInfoFromILO {
     }
 
     Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
-}catch{
-    Write-Error $_.ErrorDetails;
-}
 }
 
 Function Set-ConfigPath {
@@ -218,4 +212,4 @@ Function Get-ConfigPath {
     return $ENV:HPEILOCONFIG;
 }
     
-Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath;
+Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Update-Config;
