@@ -19,6 +19,8 @@ Function Get-HWInfoFromILO {
             ParameterSetName = "Config",
             Mandatory = $true
         )]
+        [Parameter(
+            ParameterSetName = "None")]
         [Parameter()]
         [string]
         $configPath,
@@ -37,19 +39,22 @@ Function Get-HWInfoFromILO {
 
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerPath")]
+        [Parameter(
+            ParameterSetName = "None")]
         [Parameter()]
         [string]
         $ServerPath,
 
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerArray")]
-        [Parameter()]
+        [Parameter(
+            ParameterSetName = "None")]
         [array]
         $server,
 
         [Parameter()]
         [int]
-        $LogLevel,
+        $LogLevel = -1,
 
         [Parameter()]
         [switch]
@@ -61,13 +66,15 @@ Function Get-HWInfoFromILO {
 
         [Parameter(Mandatory = $true,
             ParameterSetName = "Inventory")]
+        [Parameter(
+            ParameterSetName = "None")]
         [Parameter()]
         [string]
         $SearchStringInventory,
 
         [Parameter()]
         [switch]
-        $DoNotSearchInventory,
+        $DoNotSearchInventory,        
 
         [Parameter()]
         [string]
@@ -75,7 +82,7 @@ Function Get-HWInfoFromILO {
 
         [Parameter()]
         [switch]
-        $DeactivateCertificateValidationILO,
+        $DeactivateCertificateValidationILO,        
 
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerPath")]
@@ -85,7 +92,8 @@ Function Get-HWInfoFromILO {
             ParameterSetName = "Inventory")]
         [Parameter(
             ParameterSetName = "Config")]
-        [Parameter()]
+        [Parameter(
+            ParameterSetName = "None")]
         [string]
         $Username,
 
@@ -97,14 +105,15 @@ Function Get-HWInfoFromILO {
             ParameterSetName = "Inventory")]
         [Parameter(
             ParameterSetName = "Config")]
-        [Parameter()]
+        [Parameter(
+            ParameterSetName = "None")]
         [String]
         $Password
 
 
     )
     try {
-        Log 2 "ILO-Inventorizer has been started.";
+        Log 2 "--------------------------------------`nILO-Inventorizer has been started.";
 
         ## Check if Help must be displayed
         if ($h -eq $true) { $help = "-h"; }
@@ -119,39 +128,47 @@ Function Get-HWInfoFromILO {
 
         ## Check for Config
         # Check for Parameterset for configuration
+        Log 3 "Configure new Configuration"
         $parameterSetName = $PSCmdlet.ParameterSetName;
         switch ($parameterSetName) {
             "Config" { 
+                Log 6 "Started with 'Config' ParameterSet."
                 Set-ConfigPath -Path $configPath;
                 break;
             }
             "ServerPath" {
+                Log 6 "Started with 'ServerPath' ParameterSet."
                 $path = New-File -Path ($defaultPath);
                 New-Config -Path $path;
                 break;
             }
             "ServerArray" {
+                Log 6 "Started with 'ServerArray' ParameterSet."
                 $path = New-File -Path ($defaultPath);
                 New-Config -Path $path;
                 break;
             }
             "Inventory" {
+                Log 6 "Started with 'Inventory' ParameterSet."
                 $path = New-File -Path ($defaultPath);
                 New-Config -Path $path;
                 break;
             }
             default {
                 if ($ENV:HPEILOCONFIG.Length -eq 0) {
+                    Log 6 "Started without specific Parameterset - displaying configuration prompt."
                     Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
                     [int]$configDecision = Read-Host -Prompt "Enter the corresponding number:";
             
                     switch ($configDecision) {
                         1 {
+                            Log 6 "User has selected generating empty config"
                             $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
                             New-Config -Path $pathToSaveAt;
                             break;
                         }
                         2 {
+                            Log 6 "User has selected generating a config with dumydata."
                             $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
                             $withInventory = Read-Host -Prompt "Do you want to:`nRead From Inventory [y/N]?"
                             switch ($withInventory) {
@@ -167,6 +184,7 @@ Function Get-HWInfoFromILO {
                             break;
                         }
                         3 {
+                            Log 6 "User has selected adding existing config"
                             $pathToConfig = Read-Host -Prompt "Where dou you have the config stored at?";
                             Set-ConfigPath -Path $pathToConfig;
                             break;
@@ -174,12 +192,41 @@ Function Get-HWInfoFromILO {
                     }
                     return;   
                 }
+                else {
+                    $config = Get-Config;
+                    $configPath = $config.configPath;
+                    $LoginConfigPath = $config.loginConfigPath;
+                    $ReportPath = $config.reportPath;
+                    $LogPath = $config.logPath;
+                    $ServerPath = $config.serverPath;
+                    $LogLevel = $config.logLevel;
+                    $LogToConsole = $config.logToConsole -eq $true ? $true : $false; ;
+                    $LoggingActivated = $config.loggingActived -eq $true ? $true : $false;
+                    $SearchStringInventory = $config.searchStringInventory;
+                    $DoNotSearchInventory = $config.doNotSearchInventory -eq $true ? $true : $false;
+                    $RemoteMgmntField = $config.remoteMgmntField;
+                    $DeactivateCertificateValidationILO = $config.deactivateCertificateValidation -eq $true ? $true : $false; ;
+                    
+                    $login = (Get-Content ($LoginConfigPath) | ConvertFrom-Json -Depth 3);
+                    $Username = $login.Username;
+                    $Password = $login.Password;
+                }
             }
         }
+        Log 3 "Import Configuration"
         Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
+        
+        Log 3 "Start Pingtest"
+        
+        Log 3 "Query from Inventory started."
+        
+        Log 3 "Query from ILO Started"
+
         Log 2 "ILO-Inventorizer has been executed successfully."
-    }catch{
-        Log 1 $_;
+    }
+    catch {
+        Log 1 ($_.Exception)
+        Log 1 ($_.ScriptStackTrace);
     }
 }
 
@@ -196,23 +243,29 @@ Function Set-ConfigPath {
         [switch]
         $Reset
     )try {
+        Log 5 "Set Config Path has been started with 'Path' $Path and reset:$Reset"
         if ($Reset) {
             $ENV:HPEILOCONFIG = "";
         }
-        if (Test-Path -Path $Path -ErrorAction Stop) {
+        elseif (Test-Path -Path $Path -ErrorAction Stop) {
             if ($Path.Contains("\config.json")) {
+                Log 6 "Config Path already contains config.json"
                 $ENV:HPEILOCONFIG = $Path;
             }
             else {
+                Log 6 "Config Path is a directory does not contain config.json. "
                 $Path = $Path + "\config.json";
                 if (Test-Path -Path $Path) {
+                    Log 6 "Config Path directory contains a config.json"
                     $ENV:HPEILOCONFIG = $Path;
                 }
                 else {
+                    Log 6 "Config Path does not include a config.json in its path or directory."
                     throw [System.IO.FileNotFoundException] "The Path must include a 'config.json'."
                 } 
             }
         }
+        Log 5 ("Config Path has successfully been set to '" + $ENV:HPEILOCONFIG + "'")
     }
     catch [System.Management.Automation.ItemNotFoundException] {
         Log 1 $_
@@ -225,7 +278,9 @@ Function Set-ConfigPath {
 }
 
 Function Get-ConfigPath {
+    Log 5 ("Getting config path - " + $ENV:HPEILOCONFIG); 
     return $ENV:HPEILOCONFIG;
 }
     
-Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Log;
+Export-ModuleMember -Function * -Alias *
+#Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Log;

@@ -7,6 +7,7 @@ Function Show-Help {
         $h
     )
     if (($h -eq "/?") -or ($h -eq "-h") -or ($h -eq "--help") -or ($h -eq "--h")) {
+        Log 5 "User has requested help -displaying Help-Page"
         Write-Host "Display-Help";
         Get-Help Get-HWInfoFromILO -Full
         return;
@@ -28,7 +29,7 @@ Function New-Config {
         $WithOutInventory
     )
     try {
-
+        Log 5 "Started generating new Configuration - intitalising empty object."
         $config_path = ($Path + "\config.json");
         $login_config_path = ($Path + "\login.json");
         $config = [ordered]@{
@@ -54,6 +55,7 @@ Function New-Config {
         
         ## Generate Dummy (w/o Inventory)
         if ($NotEmpty -and $WithOutInventory) {
+            Log 6 "Filling empty config w/o Inventory - generating supplementary 'server.json'"
             $config.reportPath = $Path + "\reports";
             $config.serverPath = $Path + "\servers.json";
             $config.logPath = $Path + "\logs";
@@ -74,6 +76,7 @@ Function New-Config {
         }
         ## Generate Dummy (w/ Inventory)
         elseif ($NotEmpty) {
+            Log 6 "Filling empty config w/ Inventory"   
             $config.reportPath = $Path + "\reports";
             $config.serverPath = "";
             $config.logPath = $Path + "\logs";
@@ -89,6 +92,7 @@ Function New-Config {
         }
         ## Generate empty
         else {
+            Log 6 "Filling empty config with no contents"
             $config.reportPath = "";
             $config.serverPath = "";
             $config.logPath = "";
@@ -104,10 +108,12 @@ Function New-Config {
             $login.Password = "";
         }
 
+        Log 6 "Saving Config files at $config_path";
         $config | ConvertTo-Json -Depth 2 | Out-File -FilePath $config_path;
         $login | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\login.json");
         Set-ConfigPath -Path $config_path;
         Write-Host $ENV:HPEILOCONFIG;
+        Log 5 "Finished Generating Configuration-File"
     }
     catch {
         Log 1 $_;
@@ -121,6 +127,7 @@ Function New-File {
         $Path
     )
     try {
+        Log 5 "Create new File at $Path";
         if ((Test-Path -Path $Path) -eq $false) {
             New-Item -ItemType File -Path $Path -Force -ErrorAction Stop;
         }
@@ -130,7 +137,7 @@ Function New-File {
         $splitPath = Split-Path($Path);
         New-Item -ItemType Directory -Path $splitPath -Force;
         New-Item -ItemType File -Path $Path -Force;
-        Log 1 "$_ has been caught and dealt with"
+        Log 1 "$_ has been caught and the appropriate directory has been generated."
     }
     return $Path;
 }
@@ -198,7 +205,7 @@ Function Update-Config {
         $Password
     )
     try {
-
+        Log 5 "Start Updating Configuraton File"
         $pathToConfig = Get-ConfigPath;
         if (Test-Path -Path $pathToConfig) {
             $config = Get-Content -Path $pathToConfig | ConvertFrom-Json -Depth 3;
@@ -217,9 +224,10 @@ Function Update-Config {
             if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = $DoNotSearchInventory; }
             if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidation = $DeactivateCertificateValidationILO; }
             if ( $null -ne $LogToConsole) { $config.logToConsole = $LogToConsole; }
-
+            
             # Set ServerArray
             if ($server.Length -gt 0) { 
+                Log 6 "Updating Server Configuration."
                 if ((Test-Path -Path $config.serverPath) -eq $false) {
                     $serverPath = New-File ($defaultPath + "\server.json"); 
                     $config.serverPath = $serverPath;
@@ -230,18 +238,21 @@ Function Update-Config {
         
             # Set Credentials
             if (Test-Path -Path ($config.loginConfigPath)) {
+                Log 6 "Updating Credentials."
                 $login = Get-Content -Path ($config.loginConfigPath) | ConvertFrom-Json -Depth 3;
                 if ($Username.Length -gt 0) { $login.Username = $Username; }
                 if ($Password.Length -gt 0) { $login.Password = $Password }
 
                 Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);
             }
+            Log 5 ("Saving updated Configuration at " + $config.configPath)
             Set-Content -Path ($config.configPath) -Value ($config | ConvertTo-Json -Depth 3);
         }
         else {
             throw [System.IO.FileNotFoundException] "No updatable config could be found at $pathToConfig";
         }
-    }catch{
+    }
+    catch {
         Log 1 $_
     }
 }
@@ -257,49 +268,57 @@ Function Log {
         [Parameter(
             Mandatory = $true
         )]
-        [string]
-        $Message,
+        [int]
+        $Level,
 
         [Parameter(
             Mandatory = $true
         )]
-        [int]
-        $Level
+        [string]
+        $Message
+
     )
+    try {
 
-    $config = Get-Config;
-    $logPath = $config.logPath;
-    $logLevel = $config.logLevel;
-    $logActive = $config.loggingActived;
-    $logToConsoleActive = $config.logToConsole;
+        if (Test-Path -Path $ENV:HPEILOCONFIG) {
+            $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-JSON -Depth 3);
 
-    if ($logActive) {
-        if ($Level -le $logLevel) {
-            if ((Test-Path -Path $logPath) -eq $false) {
-                # Directory does not exist
-                Write-Warning ("No Path for logging exists. Logs will be stored at '" + $ENV:HPEILOCONFIG + "\logs'.")
-                $defaultLogPath = ($defaultPath + "\logs");
-                New-Item -ItemType Directory $defaultLogPath -Force;
-                Update-Config -LogPath $defaultLogPath;
-            }
+            $logPath = $config.logPath;
+            $logLevel = $config.logLevel;
+            $logActive = $config.loggingActived;
+            $logToConsoleActive = $config.logToConsole;
 
-            $currentDateTime = Get-Date -Format "yyyy/MM/dd HH:mm:ss`t";
-            $logFilePath = "$logPath\" + (Get-Date -Format "yyyy_MM_dd") + ".txt";
-            $saveString = $currentDateTime + $Message;
+            if ($logActive) {
+                if ($Level -le $logLevel) {
+                    if ((Test-Path -Path $logPath) -eq $false) {
+                        # Directory does not exist
+                        Write-Warning ("No Path for logging exists. Logs will be stored at '" + $ENV:HPEILOCONFIG + "\logs'.")
+                        $defaultLogPath = ($defaultPath + "\logs");
+                        New-Item -ItemType Directory $defaultLogPath -Force;
+                        Update-Config -LogPath $defaultLogPath;
+                    }
 
-            # File already exists
-            if (Test-Path -Path $logFilePath) {
-                Add-Content -Path $logFilePath -Value $saveString;
-            }
-            else {
-                # File does not exist
-                Set-Content -Path $logFilePath -Value $saveString -Force;
-            }
+                    $currentDateTime = Get-Date -Format "yyyy/MM/dd HH:mm:ss`t";
+                    $logFilePath = "$logPath\" + (Get-Date -Format "yyyy_MM_dd") + ".txt";
+                    $saveString = $currentDateTime + $Message;
 
-            if ($logToConsoleActive) {
-                Write-Host ($saveString);
+                    # File already exists
+                    if (Test-Path -Path $logFilePath) {
+                        Add-Content -Path $logFilePath -Value $saveString;
+                    }
+                    else {
+                        # File does not exist
+                        Set-Content -Path $logFilePath -Value $saveString -Force;
+                    }
+
+                    if ($logToConsoleActive) {
+                        Write-Host ($saveString);
+                    }
+                }
             }
         }
     }
-
+    catch {
+        Write-Error $_.ErrorDetails;
+    }
 }
