@@ -113,7 +113,8 @@ Function New-File {
         if ((Test-Path -Path $Path) -eq $false) {
             New-Item -ItemType File -Path $Path -Force -ErrorAction Stop;
         }
-    }catch [System.IO.DirectoryNotFoundException]{ 
+    }
+    catch [System.IO.DirectoryNotFoundException] { 
         $splitPath = Split-Path($Path);
         New-Item -ItemType Directory -Path $splitPath -Force;
         New-Item -ItemType File -Path $Path -Force;
@@ -199,12 +200,12 @@ Function Update-Config {
 
         # Set ServerArray
         if ($server.Length -gt 0) { 
-            if (Test-Path -Path $config.serverPath -eq $false) {
+            if ((Test-Path -Path $config.serverPath) -eq $false) {
                 $serverPath = New-File ($defaultPath + "\server.json"); 
                 $config.serverPath = $serverPath;
 
             }
-            Set-Content -Path ($config.serverPath) -Value ($server | ConvertTo-JSOn -Depth 2);
+            Set-Content -Path ($config.serverPath) -Value ($server | ConvertTo-Json -Depth 2);
         }
         
         # Set Credentials
@@ -215,7 +216,6 @@ Function Update-Config {
 
             Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);
         }
-
         Set-Content -Path ($config.configPath) -Value ($config | ConvertTo-Json -Depth 3);
     }
     else {

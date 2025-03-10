@@ -67,7 +67,7 @@ Function Get-HWInfoFromILO {
 
         [Parameter()]
         [string]
-        $RemoteMgmntField,
+        $RemoteMgmntField = "Hostname Mgnt",
 
         [Parameter()]
         [switch]
@@ -215,4 +215,4 @@ Function Get-ConfigPath {
     return $ENV:HPEILOCONFIG;
 }
     
-Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Update-Config, New-File;
+Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath;
