@@ -95,6 +95,8 @@ Function Get-HWInfoFromILO {
 
 
     )
+    try{
+
 
     ## Check if Help must be displayed
     if ($h -eq $true) { $help = "-h"; }
@@ -165,12 +167,13 @@ Function Get-HWInfoFromILO {
                 }
             }
         }
-            
+        return;   
     }
-    else { 
-        # Config exists
-        
-    }
+
+    Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
+}catch{
+    Write-Error $_.ErrorDetails;
+}
 }
 
 Function Set-ConfigPath {
