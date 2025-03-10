@@ -42,6 +42,7 @@ Function New-Config {
         doNotSearchInventory            = $false
         remoteMgmntField                = ""
         deactivateCertificateValidation = $false
+        logToConsole                    = $false
     };
     
     $login = [ordered]@{
@@ -56,6 +57,7 @@ Function New-Config {
         $config.logPath = $Path + "\logs";
         $config.logLevel = 0;
         $config.loggingActived = $true;
+        $config.logToConsole = $true;
         $config.searchStringInventory = "";
         $config.doNotSearchInventory = $true;
         $config.remoteMgmntField = "";
@@ -74,7 +76,7 @@ Function New-Config {
         $config.serverPath = "";
         $config.logPath = $Path + "\logs";
         $config.logLevel = 0;
-        $config.loggingActived = $true;
+        $config.logToConsole = $true;
         $config.searchStringInventory = "rmgfa-sioc-cs";
         $config.doNotSearchInventory = $false;
         $config.remoteMgmntField = "Hostname Mgnt";
@@ -90,6 +92,7 @@ Function New-Config {
         $config.logPath = "";
         $config.logLevel = 0;
         $config.loggingActived = $null;
+        $config.logToConsole = $null;
         $config.searchStringInventory = "";
         $config.doNotSearchInventory = $null;
         $config.remoteMgmntField = "";
@@ -159,6 +162,10 @@ Function Update-Config {
         $LoggingActivated,
 
         [Parameter()]
+        [bool]
+        $LogToConsole,
+
+        [Parameter()]
         [string]
         $SearchStringInventory,
 
@@ -199,6 +206,7 @@ Function Update-Config {
         if ($null -ne $LoggingActivated) { $config.loggingActived = $LoggingActivated; }
         if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = $DoNotSearchInventory; }
         if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidation = $DeactivateCertificateValidationILO; }
+        if ( $null -ne $LogToConsole) { $config.logToConsole = $LogToConsole; }
 
         # Set ServerArray
         if ($server.Length -gt 0) { 
@@ -250,6 +258,7 @@ Function Log {
     $logPath = $config.logPath;
     $logLevel = $config.logLevel;
     $logActive = $config.loggingActived;
+    $logToConsoleActive = $config.logToConsole;
 
     if ($logActive) {
         if ($Level -le $logLevel) {
@@ -258,7 +267,6 @@ Function Log {
                 Write-Warning ("No Path for logging exists. Logs will be stored at '" + $ENV:HPEILOCONFIG + "\logs'.")
                 $defaultLogPath = ($defaultPath + "\logs");
                 New-Item -ItemType Directory $defaultLogPath -Force;
-                Write-Host $defaultLogPath
                 Update-Config -LogPath $defaultLogPath;
             }
 
@@ -273,6 +281,10 @@ Function Log {
             else {
                 # File does not exist
                 Set-Content -Path $logFilePath -Value $saveString -Force;
+            }
+
+            if($logToConsoleActive){
+                Write-Host ($saveString);
             }
         }
     }
