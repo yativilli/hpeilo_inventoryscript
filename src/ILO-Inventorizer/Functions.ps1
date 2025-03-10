@@ -102,3 +102,16 @@ Function New-Config {
     Set-ConfigPath -Path $config_path;
     Write-Host $ENV:HPEILOCONFIG;
 }
+
+Function New-File {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Path
+    )
+
+    if (Test-Path -Path $Path -eq $false) {
+        New-Item -Path $Path -Force;
+    }
+    return $Path;
+}

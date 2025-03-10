@@ -16,18 +16,84 @@ Function Get-HWInfoFromILO {
 
         # Config Handling
         [Parameter(
-            ParameterSetName = "Config"
+            ParameterSetName = "Config",
+            Mandatory = $true
         )]
+        [Parameter(ParameterSetName = "None")]
         [string]
         $configPath,
 
-        # ParameterHandling
-        [Parameter(
-            ParameterSetName = "Param",
-            Mandatory = $true
-        )]
+        [Parameter()]
+        [string]
+        $LoginConfigPath,
+
+        [Parameter()]
+        [string]
+        $ReportPath,
+    
+        [Parameter()]
+        [string]
+        $LogPath,
+
+        [Parameter(Mandatory = $true,
+            ParameterSetName = "ServerPath")]
+        [Parameter(ParameterSetName = "None")]
+        [string]
+        $ServerPath,
+
+        [Parameter(Mandatory = $true,
+            ParameterSetName = "ServerArray")]
+        [Parameter(ParameterSetName = "None")]
+        [array]
+        $server,
+
+        [Parameter()]
+        [int]
+        $LogLevel,
+
+        [Parameter()]
         [switch]
-        $params
+        $LoggingActivated,
+
+        [Parameter(Mandatory = $true,
+            ParameterSetName = "Inventory")]
+        [Parameter(ParameterSetName = "None")]
+        [string]
+        $SearchStringInventory,
+
+        [Parameter()]
+        [switch]
+        $DoNotSearchInventory,
+
+        [Parameter()]
+        [string]
+        $RemoteMgmntField,
+
+        [Parameter()]
+        [switch]
+        $DeactivateCertificateValidationILO,
+
+        [Parameter(Mandatory = $true,
+            ParameterSetName = "ServerPath")]
+        [Parameter(Mandatory = $true,
+            ParameterSetName = "ServerArray")]
+        [Parameter(Mandatory = $true,
+            ParameterSetName = "Inventory")]
+        [Parameter(ParameterSetName = "None")]
+        [string]
+        $Username,
+
+        [Parameter(Mandatory = $true,
+            ParameterSetName = "ServerPath")]
+        [Parameter(Mandatory = $true,
+            ParameterSetName = "ServerArray")]
+        [Parameter(Mandatory = $true,
+            ParameterSetName = "Inventory")]
+        [Parameter(ParameterSetName = "None")]
+        [securestring]
+        $Password
+
+
     )
 
     ## Check if Help must be displayed
@@ -42,42 +108,68 @@ Function Get-HWInfoFromILO {
     }
 
     ## Check for Config
-    if ($param) {
-        Write-Host "Param";
-    }
     if ($ENV:HPEILOCONFIG.Length -eq 0) {
-        Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
-        [int]$configDecision = Read-Host -Prompt "Enter the corresponding number:";
-
-        switch ($configDecision) {
-            1 {
-                $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
-                New-Config -Path $pathToSaveAt;
+        # Check for Parameterset for configuration
+        $parameterSetName = $PSCmdlet.ParameterSetName;
+        switch ($parameterSetName) {
+            "Config" { 
+                Set-ConfigPath -Path $configPath;
                 break;
             }
-            2 {
-                $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
-                $withInventory = Read-Host -Prompt "Do you want to:`nRead From Inventory [y/N]?"
-                switch ($withInventory) {
-                    "y" {
-                        New-Config -Path $pathToSaveAt -NotEmpty;
-                        break;
-                    }
-                    "N" {
-                        New-Config -Path $pathToSaveAt -WithoutInventory -NotEmpty;
-                        break;
-                    }
-                }
+            "ServerPath" {
+                $path = New-File -Path ($defaultPath);
+                New-Config -Path $path;
                 break;
             }
-            3 {
-                $pathToConfig = Read-Host -Prompt "Where dou you have the config stored at?";
-                Set-ConfigPath -Path $pathToConfig;
+            "ServerArray" {
+                $path = New-File -Path ($defaultPath);
+                New-Config -Path $path;
+                break;
+            }
+            "Inventory" {
+                $path = New-File -Path ($defaultPath);
+                New-Config -Path $path;
                 break;
             }
         }
 
+        if ($parameterSetName -eq "None") {
+            Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
+            [int]$configDecision = Read-Host -Prompt "Enter the corresponding number:";
+
+            switch ($configDecision) {
+                1 {
+                    $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
+                    New-Config -Path $pathToSaveAt;
+                    break;
+                }
+                2 {
+                    $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
+                    $withInventory = Read-Host -Prompt "Do you want to:`nRead From Inventory [y/N]?"
+                    switch ($withInventory) {
+                        "y" {
+                            New-Config -Path $pathToSaveAt -NotEmpty;
+                            break;
+                        }
+                        "N" {
+                            New-Config -Path $pathToSaveAt -WithoutInventory -NotEmpty;
+                            break;
+                        }
+                    }
+                    break;
+                }
+                3 {
+                    $pathToConfig = Read-Host -Prompt "Where dou you have the config stored at?";
+                    Set-ConfigPath -Path $pathToConfig;
+                    break;
+                }
+            }
+        }
             
+    }
+    else { 
+        # Config exists
+        
     }
 }
 
@@ -96,15 +188,16 @@ Function Set-ConfigPath {
         if ($Reset) {
             $ENV:HPEILOCONFIG = "";
         }
-        if(Test-Path -Path $Path -ErrorAction Stop) {
+        if (Test-Path -Path $Path -ErrorAction Stop) {
             if ($Path.Contains("\config.json")) {
                 $ENV:HPEILOCONFIG = $Path;
             }
             else {
-                $Path = $Path+ "\config.json";
-                if(Test-Path -Path $Path){
+                $Path = $Path + "\config.json";
+                if (Test-Path -Path $Path) {
                     $ENV:HPEILOCONFIG = $Path;
-                } else{
+                }
+                else {
                     throw [System.IO.FileNotFoundException] "The Path must include a 'config.json'."
                 } 
             }
@@ -118,7 +211,7 @@ Function Set-ConfigPath {
     }
 }
 
-Function Get-ConfigPath{
+Function Get-ConfigPath {
     return $ENV:HPEILOCONFIG;
 }
     
