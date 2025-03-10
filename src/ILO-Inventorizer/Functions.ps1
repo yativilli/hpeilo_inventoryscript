@@ -109,9 +109,14 @@ Function New-File {
         [string]
         $Path
     )
-
-    if (Test-Path -Path $Path -eq $false) {
-        New-Item -Path $Path -Force;
+    try {
+        if ((Test-Path -Path $Path) -eq $false) {
+            New-Item -ItemType File -Path $Path -Force -ErrorAction Stop;
+        }
+    }catch [System.IO.DirectoryNotFoundException]{ 
+        $splitPath = Split-Path($Path);
+        New-Item -ItemType Directory -Path $splitPath -Force;
+        New-Item -ItemType File -Path $Path -Force;
     }
     return $Path;
 }
@@ -171,14 +176,14 @@ Function Update-Config {
         $Username,
 
         [Parameter()]
-        [securestring]
+        [String]
         $Password
     )
-    $pathToConfig = $ENV:HPEILOCONFIG;
+    $pathToConfig = Get-ConfigPath;
     if (Test-Path -Path $pathToConfig) {
         $config = Get-Content -Path $pathToConfig | ConvertFrom-Json -Depth 3;
 
-        if ($null -ne $configPath) { $config.configPath = $configPath; }
+        if ($configPath.Length -gt 0) { $config.configPath = $configPath; }
         if ($LoginConfigPath.Length -gt 0) { $config.loginConfigPath = $LoginConfigPath; }
         if ($ReportPath.Length -gt 0) { $config.reportPath = $ReportPath; }
         if ($LogPath.Length -gt 0) { $config.logPath = $LogPath; }
