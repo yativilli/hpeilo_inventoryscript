@@ -103,77 +103,84 @@ Function Get-HWInfoFromILO {
 
 
     )
-    ## Check if Help must be displayed
-    if ($h -eq $true) { $help = "-h"; }
-    if ($help.Length -gt 0) { Show-Help $help; } 
-        
-    Import-Module HPEiLOCmdlets;
-    ## Check for recommended ModuleVersion
-    $moduleVersion = (Get-Module -Name HPEiLOCmdlets).Version.ToString()
-    if ($recommendedVersion -ne ($moduleVersion)) {
-        Write-Warning "The installed Module HPEiLOCmdlets doesnt use the recommended Version '$recommendedVersion', but '$moduleVersion' - some features may not work correctly."
-    }
+    try {
+        Log 2 "ILO-Inventorizer has been started.";
 
-    ## Check for Config
-    # Check for Parameterset for configuration
-    $parameterSetName = $PSCmdlet.ParameterSetName;
-    switch ($parameterSetName) {
-        "Config" { 
-            Set-ConfigPath -Path $configPath;
-            break;
+        ## Check if Help must be displayed
+        if ($h -eq $true) { $help = "-h"; }
+        if ($help.Length -gt 0) { Show-Help $help; } 
+        
+        Import-Module HPEiLOCmdlets;
+        ## Check for recommended ModuleVersion
+        $moduleVersion = (Get-Module -Name HPEiLOCmdlets).Version.ToString()
+        if ($recommendedVersion -ne ($moduleVersion)) {
+            Write-Warning "The installed Module HPEiLOCmdlets doesnt use the recommended Version '$recommendedVersion', but '$moduleVersion' - some features may not work correctly."
         }
-        "ServerPath" {
-            $path = New-File -Path ($defaultPath);
-            New-Config -Path $path;
-            break;
-        }
-        "ServerArray" {
-            $path = New-File -Path ($defaultPath);
-            New-Config -Path $path;
-            break;
-        }
-        "Inventory" {
-            $path = New-File -Path ($defaultPath);
-            New-Config -Path $path;
-            break;
-        }
-        default {
-            if ($ENV:HPEILOCONFIG.Length -eq 0) {
-                Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
-                [int]$configDecision = Read-Host -Prompt "Enter the corresponding number:";
+
+        ## Check for Config
+        # Check for Parameterset for configuration
+        $parameterSetName = $PSCmdlet.ParameterSetName;
+        switch ($parameterSetName) {
+            "Config" { 
+                Set-ConfigPath -Path $configPath;
+                break;
+            }
+            "ServerPath" {
+                $path = New-File -Path ($defaultPath);
+                New-Config -Path $path;
+                break;
+            }
+            "ServerArray" {
+                $path = New-File -Path ($defaultPath);
+                New-Config -Path $path;
+                break;
+            }
+            "Inventory" {
+                $path = New-File -Path ($defaultPath);
+                New-Config -Path $path;
+                break;
+            }
+            default {
+                if ($ENV:HPEILOCONFIG.Length -eq 0) {
+                    Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
+                    [int]$configDecision = Read-Host -Prompt "Enter the corresponding number:";
             
-                switch ($configDecision) {
-                    1 {
-                        $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
-                        New-Config -Path $pathToSaveAt;
-                        break;
-                    }
-                    2 {
-                        $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
-                        $withInventory = Read-Host -Prompt "Do you want to:`nRead From Inventory [y/N]?"
-                        switch ($withInventory) {
-                            "y" {
-                                New-Config -Path $pathToSaveAt -NotEmpty;
-                                break;
-                            }
-                            "N" {
-                                New-Config -Path $pathToSaveAt -WithoutInventory -NotEmpty;
-                                break;
-                            }
+                    switch ($configDecision) {
+                        1 {
+                            $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
+                            New-Config -Path $pathToSaveAt;
+                            break;
                         }
-                        break;
+                        2 {
+                            $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
+                            $withInventory = Read-Host -Prompt "Do you want to:`nRead From Inventory [y/N]?"
+                            switch ($withInventory) {
+                                "y" {
+                                    New-Config -Path $pathToSaveAt -NotEmpty;
+                                    break;
+                                }
+                                "N" {
+                                    New-Config -Path $pathToSaveAt -WithoutInventory -NotEmpty;
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        3 {
+                            $pathToConfig = Read-Host -Prompt "Where dou you have the config stored at?";
+                            Set-ConfigPath -Path $pathToConfig;
+                            break;
+                        }
                     }
-                    3 {
-                        $pathToConfig = Read-Host -Prompt "Where dou you have the config stored at?";
-                        Set-ConfigPath -Path $pathToConfig;
-                        break;
-                    }
+                    return;   
                 }
-                return;   
             }
         }
+        Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
+        Log 2 "ILO-Inventorizer has been executed successfully."
+    }catch{
+        Log 1 $_;
     }
-    Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
 }
 
 
@@ -208,9 +215,11 @@ Function Set-ConfigPath {
         }
     }
     catch [System.Management.Automation.ItemNotFoundException] {
+        Log 1 $_
         Write-Error "The Path $Path does not exist. Please verify that it exists."
     }
     catch {
+        Log 1 $_
         Write-Error $_;
     }
 }
