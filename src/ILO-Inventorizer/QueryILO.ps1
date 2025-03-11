@@ -58,9 +58,23 @@ Function Get-DataFromILO {
             $nicDetails = @();
             foreach ($nic in $networkInterfaces) {
                 $nicDetails += @{
-                    MACAddress = $nic.MACAdress.toLower();
-                    Status = $iLOVersion -eq 4 ? $nic.Status : $nic.Status.Health; 
+                    MACAddress    = ([string]$nic.MACAdress).ToLower();
+                    Status        = $iLOVersion -eq 4 ? $nic.Status : $nic.Status.State; 
                     InterfaceType = $iLOVersion -eq 4 ? $nic.Location : $nic.InterfaceType;
+                }
+            }
+
+            Log 6 "Querying Devices"
+            $devices = ($conn | Get-HPEiLODeviceInventory);
+            $deviceDetails = @();
+            if ($iLOVersion -eq 4) { $deviceDetails = $devices.StatusInfo.Message; }
+            foreach ($dev in $devices.PCIDevice) {
+                $deviceDetails += @{
+                    Name = $dev.Name;
+                    DeviceType = $dev.DeviceType;
+                    Location = $dev.Location;
+                    SerialNumber = $dev.SerialNumber;
+                    Status = $dev.Status.State;
                 }
             }
 
@@ -95,11 +109,8 @@ Function Get-DataFromILO {
                 Processor         = $processorDetails
                 
                 Memory            = $memoryDetails
-                NetworkInterfaces = $networkInterfaces;
-                NetworkAdapter    = ""
-                PCIDevices        = ""
-                USBDevices        = ""
-                Devices           = ""
+                NetworkInterfaces = $nicDetails;
+                Devices           = $deviceDetails;
                 Storage           = ""
             }
 
