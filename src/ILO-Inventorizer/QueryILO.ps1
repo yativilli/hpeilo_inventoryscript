@@ -33,6 +33,7 @@ Function Get-DataFromILO {
                 }
             }
             
+            Log 6 "Querying Processor"
             $processor = ($conn | Get-HPEiLOProcessor).Processor;
             $processorDetails = @();
             foreach ($pr in $processor) {
@@ -42,6 +43,7 @@ Function Get-DataFromILO {
                 }
             }
 
+            Log 6 "Querying Memory"
             $memory = $iLOVersion -eq 4 ? ($conn | Get-HPEiLOMemoryInfo).MemoryComponent : ($conn | Get-HPEiLOMemoryInfo).MemoryDetails.MemoryData;
             $memoryDetails = @();
             foreach ($me in $memory) {
@@ -51,20 +53,31 @@ Function Get-DataFromILO {
                 }
             }            
 
+            Log 6 "Querying NetworkInterfaces"
+            $networkInterfaces = ($conn | Get-HPEiLOServerInfo).NICInfo.EthernetInterface;
+            $nicDetails = @();
+            foreach ($nic in $networkInterfaces) {
+                $nicDetails += @{
+                    MACAddress = $nic.MACAdress.toLower();
+                    Status = $iLOVersion -eq 4 ? $nic.Status : $nic.Status.Health; 
+                    InterfaceType = $iLOVersion -eq 4 ? $nic.Location : $nic.InterfaceType;
+                }
+            }
+
             Log 0 "$srv querried"
 
             $srvReport = [ordered]@{
-                Serial         = $findILO.SerialNumber;
-                Part_Type_Name = $conn.TargetInfo.ProductName;
-                Hostname       = ($conn | Get-HPEiLOAccessSetting).ServerName.ToLower();
-                Hostname_Mgnt  = $conn.Hostname.ToLower();
-                MAC_1          = "";
-                MAC_2          = "";
-                MAC_3          = "";
-                MAC_4          = "";
-                Mgnt_MAC       = ($conn | Get-HPEiLOIPv4NetworkSetting).PermanentMACAddress.ToLower();
+                Serial            = $findILO.SerialNumber;
+                Part_Type_Name    = $conn.TargetInfo.ProductName;
+                Hostname          = ($conn | Get-HPEiLOAccessSetting).ServerName.ToLower();
+                Hostname_Mgnt     = $conn.Hostname.ToLower();
+                MAC_1             = "";
+                MAC_2             = "";
+                MAC_3             = "";
+                MAC_4             = "";
+                Mgnt_MAC          = ($conn | Get-HPEiLOIPv4NetworkSetting).PermanentMACAddress.ToLower();
 
-                Health_Summary = @{
+                Health_Summary    = @{
                     FanStatus           = $healthSummary.FanStatus;
                     MemoryStatus        = $healthSummary.MemoryStatus;
                     PowerSuppliesStatus = $healthSummary.PowerSuppliesStatus;
@@ -73,21 +86,21 @@ Function Get-DataFromILO {
                     TemperatureStatus   = $healthSummary.TemperatureStatus;
                 }
 
-                PowerSupply    = @{
+                PowerSupply       = @{
                     PowerSystemRedundancy = $powerSupply.PowerSupplySummary.PowerSystemRedundancy;
                     PresentPowerReading   = $powerSupply.PowerSupplySummary.PresentPowerReading;
                     PowerSupplies         = $powerSuppliesDetails;
                 }
                 
-                Processor      = $processorDetails
+                Processor         = $processorDetails
                 
-                Memory         = $memoryDetails
-                Network        = ""
-                NetworkAdapter = ""
-                PCIDevices     = ""
-                USBDevices     = ""
-                Devices        = ""
-                Storage        = ""
+                Memory            = $memoryDetails
+                NetworkInterfaces = $networkInterfaces;
+                NetworkAdapter    = ""
+                PCIDevices        = ""
+                USBDevices        = ""
+                Devices           = ""
+                Storage           = ""
             }
 
         
