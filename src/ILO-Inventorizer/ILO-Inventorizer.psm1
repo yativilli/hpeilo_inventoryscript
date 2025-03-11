@@ -5,6 +5,7 @@ Scripting-Module to query information from HPE-Servers via ILO
 
 . $PSScriptRoot\Constants.ps1
 . $PSScriptRoot\Functions.ps1
+. $PSScriptRoot\QueryInventory.ps1
 
 # Main Function
 Function Get-HWInfoFromILO {
