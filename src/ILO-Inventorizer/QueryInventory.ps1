@@ -12,17 +12,15 @@ Function Get-ServersFromInventory {
     # Check if it matches naming convention
     [regex]$reg = '(gfa)?(s(f)?(ls)?)?-.*';
     $doesMatchNamingConvention = $reg.Match($searchStringInventory).Success;
-    if(-not $doesMatchNamingConvention){
+    if (-not $doesMatchNamingConvention) {
         throw [System.Text.RegularExpressions.RegexParseException] "The search string does not match the naming convention. The search String must contain something like 'gfa-', 'sf-', 'sls-'.";
         return $false;
     }   
 
-    $inventoryReachable = Invoke-PingTest -Hostname inventory.psi.ch;
     if ((-not $doNotSearchInventory)) {
+        $inventoryReachable = Invoke-PingTest -Hostname inventory.psi.ch;
         if ($inventoryReachable) {
-            # Query Inventory
-            Write-Host "$remoteMgmntField";
-        
+            # Query Inventory        
             $uri = "https://inventory.psi.ch/DataAccess.asmx/FindObjects";
             $headers = @{"Content-Type" = "application/json; charset= utf-8" };
             $body = @{
@@ -35,13 +33,25 @@ Function Get-ServersFromInventory {
                     "columns" = @(
                         "Label",
                         "Hostname",
-                        $remoteMgmntField
+                        $remoteMgmntField,
+                        "Serial",
+                        "Part Type",
+                        "Facility",
+                        "MAC 1",
+                        "MAC 2",
+                        "MAC 3",
+                        "MAC 4",
+                        "Mgnt MAC",
+                        "HW Status",
+                        "OS"
                     )
                 }
             } | ConvertTo-Json -Depth 4
 
             $resp = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -HttpVersion 3.0
             $servers = (($resp).d.Rows);
+
+            $servers | ConvertTo-Json -Depth 3 | Out-File -Path ($config.searchForFilesAt + "\inventory_results.json");
         
             # Save Servers in server.json
             [Array]$serversToSave = @();
@@ -71,7 +81,9 @@ Function Get-ServersFromInventory {
                 $Path = $config.serverPath;
                 throw [System.IO.FileNotFoundException] "The file at '$Path' could not be found. Please verify that the file exists."
             }
-        }else{
+        }
+        # Inventory not found with Pingtest
+        else {
             throw [System.Net.WebException] "Inventory.psi.ch is not reachable";
         }
     }
