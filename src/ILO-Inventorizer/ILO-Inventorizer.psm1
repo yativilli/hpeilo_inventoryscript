@@ -6,6 +6,7 @@ Scripting-Module to query information from HPE-Servers via ILO
 . $PSScriptRoot\Constants.ps1
 . $PSScriptRoot\Functions.ps1
 . $PSScriptRoot\QueryInventory.ps1
+. $PSScriptRoot\QueryILO.ps1
 
 # Main Function
 Function Get-HWInfoFromILO {
@@ -48,8 +49,6 @@ Function Get-HWInfoFromILO {
 
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerArray")]
-        [Parameter(
-            ParameterSetName = "None")]
         [array]
         $server,
 
@@ -67,8 +66,6 @@ Function Get-HWInfoFromILO {
 
         [Parameter(Mandatory = $true,
             ParameterSetName = "Inventory")]
-        [Parameter(
-            ParameterSetName = "None")]
         [Parameter()]
         [string]
         $SearchStringInventory,
@@ -141,12 +138,14 @@ Function Get-HWInfoFromILO {
                 Log 6 "Started with 'ServerPath' ParameterSet."
                 $path = New-File -Path ($defaultPath);
                 New-Config -Path $path;
+                $DoNotSearchInventory = $true;
                 break;
             }
             "ServerArray" {
                 Log 6 "Started with 'ServerArray' ParameterSet."
                 $path = New-File -Path ($defaultPath);
                 New-Config -Path $path;
+                $DoNotSearchInventory = $true;
                 break;
             }
             "Inventory" {
@@ -218,14 +217,11 @@ Function Get-HWInfoFromILO {
         }
         Log 3 "Import Configuration"
         Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
+        $config = Get-Config;
         
-        
-        Log 3 "Query from Inventory started."
-        $wasInventorySuccessfull = Get-ServersFromInventory;
-        if (-not $wasInventorySuccessfull) {
-            Write-Host "Inventory could not be querried";
-        }else{
-            Write-Host "Inventory querried";
+        if (-not $config.doNotSearchInventory) {
+            Log 3 "Query from Inventory started."
+            Get-ServersFromInventory;
         }
  
         Log 3 "Start Pingtest"
@@ -239,10 +235,12 @@ Function Get-HWInfoFromILO {
         }
         
         Log 3 "Query from ILO Started"
+        Get-DataFromILO $reachable;
 
         Log 2 "ILO-Inventorizer has been executed successfully."
     }
     catch {
+        Write-Host $_
         Log 1 ($_.Exception)
         Log 1 ($_.ScriptStackTrace);
     }
