@@ -219,17 +219,24 @@ Function Get-HWInfoFromILO {
         Log 3 "Import Configuration"
         Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
         
+        
+        Log 3 "Query from Inventory started."
+        $wasInventorySuccessfull = Get-ServersFromInventory;
+        if (-not $wasInventorySuccessfull) {
+            Write-Host "Inventory could not be querried";
+        }else{
+            Write-Host "Inventory querried";
+        }
+ 
         Log 3 "Start Pingtest"
         $config = Get-Config;
         $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
         [Array]$reachable;
-        foreach($srv in $serverJSON){
-            if(Invoke-PingTest $srv){
+        foreach ($srv in $serverJSON) {
+            if (Invoke-PingTest $srv) {
                 $reachable += $srv;
             }
         }
-        
-        Log 3 "Query from Inventory started."
         
         Log 3 "Query from ILO Started"
 
