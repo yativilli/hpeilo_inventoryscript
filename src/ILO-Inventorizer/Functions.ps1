@@ -46,6 +46,8 @@ Function New-Config {
             remoteMgmntField                = ""
             deactivateCertificateValidation = $false
             logToConsole                    = $false
+            ignoreMACAddress                = $false
+            ignoreSerialNumbers             = $false
         };
     
         $login = [ordered]@{
@@ -103,6 +105,8 @@ Function New-Config {
             $config.doNotSearchInventory = $null;
             $config.remoteMgmntField = "";
             $config.deactivateCertificateValidation = $null;
+            $config.ignoreMACAddress = $null;
+            $config.ignoreSerialNumbers = $null;
 
             $login.Username = "";
             $login.Password = "";
@@ -189,6 +193,14 @@ Function Update-Config {
         $DoNotSearchInventory,
 
         [Parameter()]
+        [bool]
+        $IgnoreMACAddress,
+
+        [Parameter()]
+        [bool]
+        $IgnoreSerialNumbers,
+
+        [Parameter()]
         [string]
         $RemoteMgmntField,
 
@@ -224,6 +236,8 @@ Function Update-Config {
             if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = $DoNotSearchInventory; }
             if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidation = $DeactivateCertificateValidationILO; }
             if ( $null -ne $LogToConsole) { $config.logToConsole = $LogToConsole; }
+            if ($null -ne $IgnoreMACAddress) { $config.ignoreMACAddress; }
+            if ($null -ne $IgnoreSerialNumbers) { $config.ignoreSerialNumbers; }
             
             # Set ServerArray
             if ($server.Length -gt 0) { 
@@ -271,8 +285,11 @@ Function Log {
 
         [Parameter(Mandatory = $true)]
         [string]
-        $Message
+        $Message,
 
+        [Parameter()]
+        [switch]
+        $IgnoreLogActive
     )
     try {
 
@@ -284,8 +301,9 @@ Function Log {
             $logActive = $config.loggingActived;
             $logToConsoleActive = $config.logToConsole;
 
-            if ($logActive) {
-                if ($Level -le $logLevel) {
+            # Log only if activated
+            if ($logActive -or $IgnoreLogActive) {
+                if ($Level -le $logLevel -or $IgnoreLogActive) {
                     if ((Test-Path -Path $logPath) -eq $false) {
                         # Directory does not exist
                         Write-Warning ("No Path for logging exists. Logs will be stored at '" + $ENV:HPEILOCONFIG + "\logs'.")
@@ -298,16 +316,19 @@ Function Log {
                     $logFilePath = "$logPath\" + (Get-Date -Format "yyyy_MM_dd") + ".txt";
                     $saveString = $currentDateTime + $Message;
 
-                    # File already exists
-                    if (Test-Path -Path $logFilePath) {
-                        Add-Content -Path $logFilePath -Value $saveString;
+                    # If LogActive is ignored, log only to console.
+                    if (-not $IgnoreLogActive) {
+                        # File already exists
+                        if (Test-Path -Path $logFilePath) {
+                            Add-Content -Path $logFilePath -Value $saveString;
+                        }
+                        else {
+                            # File does not exist
+                            Set-Content -Path $logFilePath -Value $saveString -Force;
+                        }
                     }
-                    else {
-                        # File does not exist
-                        Set-Content -Path $logFilePath -Value $saveString -Force;
-                    }
-
-                    if ($logToConsoleActive) {
+                    
+                    if ($logToConsoleActive -or $IgnoreLogActive) {
                         Write-Host ($saveString);
                     }
                 }

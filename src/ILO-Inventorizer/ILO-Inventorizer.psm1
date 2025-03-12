@@ -62,6 +62,14 @@ Function Get-HWInfoFromILO {
 
         [Parameter()]
         [switch]
+        $IgnoreMACAddress,
+
+        [Parameter()]
+        [switch]
+        $IgnoreSerialNumbers,
+
+        [Parameter()]
+        [switch]
         $LogToConsole = $null,        
 
         [Parameter(Mandatory = $true,
@@ -216,7 +224,7 @@ Function Get-HWInfoFromILO {
             }
         }
         Log 3 "Import Configuration"
-        Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
+        Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -IgnoreMACAddress $IgnoreMACAddress -IgnoreSerialNumbers $IgnoreSerialNumbers -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
         $config = Get-Config;
         
         if (-not $config.doNotSearchInventory) {

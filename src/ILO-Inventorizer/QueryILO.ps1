@@ -11,19 +11,19 @@ Function Get-DataFromILO {
         $config = Get-Config;
         $login = Get-Content -Path $config.loginConfigPath | ConvertFrom-Json -Depth 2;
 
-        Log 0 "Started"
         $report = @();
         foreach ($srv in $servers) {
+            Log 6 "Started querying $srv" -IgnoreLogActive
 
             $findILO = Find-HPEiLO $srv;
             $iLOVersion = ([regex]"\d").Match($findILO.PN).Value;
             $conn = Connect-HPEiLO -Address $srv -Username $login.Username -Password $login.Password -DisableCertificateAuthentication:($config.deactivateCertificateValidation);
 
-            Log 6 "Querying PowerSupply"
+            Log 6 "`tQuerying PowerSupply" -IgnoreLogActive
             $powerSupply = ($conn | Get-HPEiLOPowerSupply);
             $powerSuppliesDetails = @();
             foreach ($ps in $powerSupply.PowerSupplies) {
-                $powerSuppliesDetails += @{
+                $powerSuppliesDetails += [ordered]@{
                     SerialNumber = $ps.SerialNumber;
                     Status       = $iLOVersion -eq 4 ? $ps.Status : $ps.Status.Health;
                     Model        = $ps.Model;
@@ -36,43 +36,43 @@ Function Get-DataFromILO {
                 PowerSupplies         = $powerSuppliesDetails;
             }
             
-            Log 6 "Querying Processor"
+            Log 6 "`tQuerying Processor" -IgnoreLogActive
             $processor = ($conn | Get-HPEiLOProcessor).Processor;
             $processorDetails = @();
             foreach ($pr in $processor) {
-                $processorDetails += @{
+                $processorDetails += [ordered]@{
                     Model        = $pr.Model;
                     SerialNumber = $pr.SerialNumber;    
                 }
             }
 
-            Log 6 "Querying Memory"
+            Log 6 "`tQuerying Memory" -IgnoreLogActive
             $memory = $iLOVersion -eq 4 ? ($conn | Get-HPEiLOMemoryInfo).MemoryComponent : ($conn | Get-HPEiLOMemoryInfo).MemoryDetails.MemoryData;
             $memoryDetails = @();
             foreach ($me in $memory) {
-                $memoryDetails += @{
+                $memoryDetails += [ordered]@{
                     Location = $iLOVersion -eq 4 ? $me.MemoryLocation.ToString() : $me.DeviceLocator.ToString();
                     SizeMB   = $iLOVersion -eq 4 ? $me.MemorySizeMB.ToString() : $me.CapacityMiB.ToString();
                 }
             }            
 
-            Log 6 "Querying NetworkInterfaces"
+            Log 6 "`tQuerying NetworkInterfaces" -IgnoreLogActive
             $networkInterfaces = ($conn | Get-HPEiLOServerInfo).NICInfo.EthernetInterface;
             $nicDetails = @();
             foreach ($nic in $networkInterfaces) {
-                $nicDetails += @{
+                $nicDetails += [ordered]@{
                     MACAddress    = ([string]$nic.MACAddress).ToLower();
                     Status        = $iLOVersion -eq 4 ? $nic.Status : $nic.Status.State; 
                     InterfaceType = $iLOVersion -eq 4 ? $nic.Location : $nic.InterfaceType;
                 }
             }
 
-            Log 6 "Querying NetworkAdapters"
+            Log 6 "`tQuerying NetworkAdapters" -IgnoreLogActive
             $networkAdapter = ($conn | Get-HPEiLONICInfo).NetworkAdapter;
             $adapterDetails = @();
             foreach ($na in $networkAdapter) {
                 foreach ($neAd in $na.Ports) {
-                    $adapterDetails += @{
+                    $adapterDetails += [ordered]@{
                         Location   = $na.Location;
                         MACAddress = $neAd.MACAddress;
                         Status     = $iLOVersion -eq 4 ? $na.Status : $na.Status.State;
@@ -80,12 +80,12 @@ Function Get-DataFromILO {
                 }
             }
 
-            Log 6 "Querying Devices"
+            Log 6 "`tQuerying Devices" -IgnoreLogActive
             $devices = ($conn | Get-HPEiLODeviceInventory);
             $deviceDetails = @();
             if ($iLOVersion -eq 4) { $deviceDetails = $devices.StatusInfo.Message; }else {
                 foreach ($dev in $devices.PCIDevice) {
-                    $deviceDetails += @{
+                    $deviceDetails += [ordered]@{
                         Name         = $dev.Name;
                         DeviceType   = $dev.DeviceType;
                         Location     = $dev.Location;
@@ -95,7 +95,7 @@ Function Get-DataFromILO {
                 }
             }
 
-            Log 6 "Querying Storage"
+            Log 6 "`tQuerying Storage" -IgnoreLogActive
             $storage; 
             $storageDetails = @();
             if (($iLOVersion -eq 4) -or ($iLOVersion -eq 5)) { 
@@ -111,40 +111,40 @@ Function Get-DataFromILO {
             else {
                 $storage = ($conn | Get-HPEiLOStorageController).StorageControllers;
                 <#
-            foreach ($st in $storage) {
+                foreach ($st in $storage) {
                 $storageDetails += @{
                     
-            }
-            #>
+                }
+                #>
                 $storageDetails = $storage;
             }
     
-            Log 6 "Querying IPv4-Configuration"
+            Log 6 "`tQuerying IPv4-Configuration" -IgnoreLogActive
             $ipv4 = ($conn | Get-HPEiLOIPv4NetworkSetting);
-            $ipv4Details = @{
+            $ipv4Details = [ordered]@{
+                MACAddress        = $ipv4.MACAddress;
                 IPv4Address       = $ipv4.IPv4Address;
                 IPv4SubnetMask    = $ipv4.IPv4SubnetMask;
                 IPv4Gateway       = $ipv4.IPv4Gateway;
                 IPv4AddressOrigin = $ipv4.IPv4AddressOrigin;
-                MACAddress        = $ipv4.MACAddress;
                 DNSServer         = $ipv4.DNSServer;
                 FQDN              = $ipv4.FQDN;
                 DomainName        = $ipv4.DomainName;
             };
 
 
-            Log 6 "Querying IPv6-Configuration"
+            Log 6 "`tQuerying IPv6-Configuration" -IgnoreLogActive
             $ipv6 = ($conn | Get-HPEiLOIPv6NetworkSetting);
-            $ipv6Details = @{
+            $ipv6Details = [ordered]@{
+                MACAddress        = $ipv6.MACAddress.ToLower();
                 IPv6Address       = $ipv6.IPv6Address.Value.ToLower();
                 DNSServer         = $ipv6.DNSServer;
-                MACAddress        = $ipv6.MACAddress.ToLower();
                 PreferredProtocol = $ipv4.PreferredProtocol;
             };
 
-            Log 6 "Querying Health-Summary"
+            Log 6 "`tQuerying Health-Summary" -IgnoreLogActive
             $healthSummary = ($conn | Get-HPEiLOHealthSummary);
-            $healthDetails = @{
+            $healthDetails = [ordered]@{
                 FanStatus           = $healthSummary.FanStatus;
                 MemoryStatus        = $healthSummary.MemoryStatus;
                 PowerSuppliesStatus = $healthSummary.PowerSuppliesStatus;
@@ -153,7 +153,7 @@ Function Get-DataFromILO {
                 TemperatureStatus   = $healthSummary.TemperatureStatus;
             }
 
-            Log 6 "Prepare MAC 1 - MAC 4"
+            Log 6 "`tPrepare MAC 1 - MAC 4" -IgnoreLogActive
             $arr = $networkAdapter.Ports;
             if ($arr.Length -gt 0) {
                 $macAddressNotEmbeded = $arr[2..($arr.Length - 1)]
@@ -167,11 +167,9 @@ Function Get-DataFromILO {
                         default { $i = ($macAddressNotEmbeded.Length + 1); break; }
                     }
                 }
-            }
-
+            }            
             
-            
-            Log 0 "$srv querried"
+            Log 6 "$srv querrying finished." -IgnoreLogActive
 
             $srvReport = [ordered]@{
                 Serial            = $findILO.SerialNumber;
