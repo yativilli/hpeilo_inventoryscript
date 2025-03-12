@@ -99,7 +99,7 @@ Function Get-DataFromILO {
             $storage; 
             $storageDetails = @();
             if (($iLOVersion -eq 4) -or ($iLOVersion -eq 5)) { 
-                ($storage = Get-HPEiLOSmartArrayStorageController).Controllers; 
+                $storage = ($conn | Get-HPEiLOSmartArrayStorageController).Controllers; 
                 <#
                 foreach ($st in $storage) {
                     $storageDetails += @{
@@ -153,7 +153,24 @@ Function Get-DataFromILO {
                 TemperatureStatus   = $healthSummary.TemperatureStatus;
             }
 
+            Log 6 "Prepare MAC 1 - MAC 4"
+            $arr = $networkAdapter.Ports;
+            if ($arr.Length -gt 0) {
+                $macAddressNotEmbeded = $arr[2..($arr.Length - 1)]
+                for ($i = 0; $i -le $macAddressNotEmbeded.Length - 1; $i++) {
+                    $macAddress = $macAddressNotEmbeded[$i].MACAddress;
+                    switch ($i) {
+                        0 { $mac1 = $macAddress; break; }
+                        1 { $mac2 = $macAddress; break; }
+                        2 { $mac3 = $macAddress; break; }
+                        3 { $mac4 = $macAddress; break; }
+                        default { $i = ($macAddressNotEmbeded.Length + 1); break; }
+                    }
+                }
+            }
 
+            
+            
             Log 0 "$srv querried"
 
             $srvReport = [ordered]@{
