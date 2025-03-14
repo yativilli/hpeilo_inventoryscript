@@ -24,10 +24,10 @@ Function Get-DataFromILO {
             $powerSuppliesDetails = @();
             foreach ($ps in $powerSupply.PowerSupplies) {
                 $powerSuppliesDetails += [ordered]@{
-                    SerialNumber = $ps.SerialNumber;
-                    Status       = $iLOVersion -eq 4 ? $ps.Status : $ps.Status.Health;
-                    Model        = $ps.Model;
-                    Name         = $iLOVersion -eq 4 ? $ps.Label : $ps.Name;
+                    Serial = $ps.SerialNumber;
+                    Status = $iLOVersion -eq 4 ? $ps.Status : $ps.Status.Health;
+                    Model  = $ps.Model;
+                    Name   = $iLOVersion -eq 4 ? $ps.Label : $ps.Name;
                 }
             }
             $powerDetails = @{
@@ -41,8 +41,8 @@ Function Get-DataFromILO {
             $processorDetails = @();
             foreach ($pr in $processor) {
                 $processorDetails += [ordered]@{
-                    Model        = $pr.Model;
-                    SerialNumber = $pr.SerialNumber;    
+                    Model  = $pr.Model;
+                    Serial = $pr.SerialNumber;    
                 }
             }
 
@@ -79,11 +79,11 @@ Function Get-DataFromILO {
                     }
                 }
                 $adapterDetails += [ordered]@{
-                    Name         = $na.Name;
-                    Location     = $na.Location;
-                    SerialNumber = $na.SerialNumber;
-                    Ports        = $adapt;
-                    State        = $iLOVersion -eq 4 ? $na.Status : $na.Status.State;
+                    Name     = $na.Name;
+                    Location = $na.Location;
+                    Serial   = $na.SerialNumber;
+                    Ports    = $adapt;
+                    State    = $iLOVersion -eq 4 ? $na.Status : $na.Status.State;
                 }
             }
         
@@ -94,11 +94,11 @@ Function Get-DataFromILO {
             if ($iLOVersion -eq 4) { $deviceDetails = $devices.StatusInfo.Message; }else {
                 foreach ($dev in $devices.Devices) {
                     $deviceDetails += [ordered]@{
-                        Name         = $dev.Name;
-                        DeviceType   = $dev.DeviceType;
-                        Location     = $dev.Location;
-                        SerialNumber = $dev.SerialNumber;
-                        Status       = $dev.Status.State;
+                        Name       = $dev.Name;
+                        DeviceType = $dev.DeviceType;
+                        Location   = $dev.Location;
+                        Serial     = $dev.SerialNumber;
+                        Status     = $dev.Status.State;
                     }
                 }
             }
@@ -115,7 +115,7 @@ Function Get-DataFromILO {
                         MediaType          = $st.MediaType;
                         Model              = $st.Model;
                         Name               = $st.Name;
-                        SerialNumber       = $st.SerialNumber;
+                        Serial             = $st.SerialNumber;
                         State              = $st.State;
                     }
                 }
@@ -203,8 +203,8 @@ Function Get-DataFromILO {
                 IPv4Configuration = $ipv4Details;
                 IPv6Configuration = $ipv6Details;
             }
+            $report += $srvReport;
         }
-        $report += $srvReport;
         Log 0 "Ended"
         Log 0 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
 
@@ -261,13 +261,37 @@ Function Save-DataInCSV {
     
     # General (like in Inventory)
     $name = "$path\result_$date.csv"
-    $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
+    $inventoryData = Get-InventoryData;
+
+    $csv_report = @();
+    foreach ($sr in $Report) {
+        $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
+        $csv_report += [ordered]@{
+            Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "";
+            Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "";
+            Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "";
+            Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : "";
+            MAC_1         = $sr.MAC_1.Length -gt 0 ? $sr.MAC_1: "";
+            MAC_2         = $sr.MAC_2.Length -gt 0 ? $sr.MAC_2 : "";
+            MAC_3         = $sr.MAC_3.Length -gt 0 ? $sr.MAC_3 : "";
+            MAC_4         = $sr.MAC_4.Length -gt 0 ? $sr.MAC_4 : "";
+            Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : "";
+        }
+    }
+    $csv_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
 
     # MAC (if not deactivated)
     $name = "$path\result_$date.csv"
-    $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
+    #  $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
 
     # SerialNumber (if not deactivated)
     $name = "$path\result_$date.csv"
-    $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
+    # $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
+}
+
+Function Get-InventoryData {
+    $config = Get-Config;
+    $path = $config.searchForFilesAt + "\inventory_results.json";
+    $server = Get-Content $path | ConvertFrom-Json -Depth 10;
+    return $server;
 }

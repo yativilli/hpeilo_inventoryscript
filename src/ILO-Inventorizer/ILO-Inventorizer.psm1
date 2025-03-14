@@ -235,7 +235,7 @@ Function Get-HWInfoFromILO {
         Log 3 "Start Pingtest"
         $config = Get-Config;
         $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
-        [Array]$reachable;
+        [Array]$reachable = @();
         foreach ($srv in $serverJSON) {
             if (Invoke-PingTest $srv) {
                 $reachable += $srv;

@@ -50,17 +50,34 @@ Function Get-ServersFromInventory {
 
             $resp = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -HttpVersion 3.0
             $servers = (($resp).d.Rows);
+            $serversClean = @();
+            foreach ($srv in $servers) {
+                $serversClean += [ordered]@{
+                    Label         = $srv[0]
+                    Hostname      = $srv[1]
+                    Hostname_Mgnt = $srv[2]
+                    Serial        = $srv[3]
+                    Part_Type     = $srv[4]
+                    Facility      = $srv[5]
+                    MAC_1         = $srv[6]
+                    MAC_2         = $srv[7]
+                    MAC_3         = $srv[8]
+                    MAC_4         = $srv[9]
+                    Mgnt_MAC      = $srv[10]
+                    HW_Status     = $srv[11]
+                    OS            = $srv[12]
+                }
+            }
+            $serversClean = $serversClean | Where-Object -Property "Label" -match "SRV*";
 
-            $servers | ConvertTo-Json -Depth 3 | Out-File -Path ($config.searchForFilesAt + "\inventory_results.json");
+            Guarantee-Directory ($config.searchForFilesAt);
+            $serversClean | ConvertTo-Json -Depth 3 | Out-File -Path ($config.searchForFilesAt + "\inventory_results.json");
         
             # Save Servers in server.json
             [Array]$serversToSave = @();
-            foreach ($s in $servers) {
-                $psiLabel = $s[0];
-                $hostnameMgnt = $s[2];
-                Write-Host $s[2];
-                if ($hostnameMgnt.Length -gt 0) {
-                    $serversToSave += $hostnameMgnt;
+            foreach ($s in $serversClean) {
+                if ($s.Hostname_Mgnt.Length -gt 0) {
+                    $serversToSave += $s.Hostname_Mgnt;
                 }
             }
 
@@ -74,7 +91,6 @@ Function Get-ServersFromInventory {
       
             if (Test-Path -Path $config.serverPath) {
                 $serversToSave | ConvertTo-Json -Depth 2 | Out-File -Path ($config.serverPath);
-                Write-Host ($servers.Length, $serversToSave.Length);
                 return $true;
             }
             else {

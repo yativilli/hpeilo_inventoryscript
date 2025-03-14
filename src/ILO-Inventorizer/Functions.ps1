@@ -116,7 +116,6 @@ Function New-Config {
         $config | ConvertTo-Json -Depth 2 | Out-File -FilePath $config_path;
         $login | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\login.json");
         Set-ConfigPath -Path $config_path;
-        Write-Host $ENV:HPEILOCONFIG;
         Log 5 "Finished Generating Configuration-File"
     }
     catch {
