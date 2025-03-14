@@ -259,10 +259,10 @@ Function Save-DataInCSV {
     [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
     $path = $config.reportPath
     
-    # General (like in Inventory)
     $name = "$path\result_$date.csv"
     $inventoryData = Get-InventoryData;
 
+    # General (like in Inventory)
     $csv_report = @();
     foreach ($sr in $Report) {
         $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
@@ -281,11 +281,48 @@ Function Save-DataInCSV {
     $csv_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
 
     # MAC (if not deactivated)
-    $name = "$path\result_$date.csv"
-    #  $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
+    $name = "$path\mac_result_$date.csv"
+    $csv_mac_report = @();
+    foreach ($sr in $Report) {
+        $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
+        $csv_mac = [ordered]@{
+            Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "";
+            Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "";
+            Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "";
+            Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : "";
+        }   
+
+        [int]$i = 1;
+        foreach ($nic in $sr.NetworkInterfaces) {
+            $csv_mac.Add(("NetInterf_MAC_" + $i), $nic.MACAddress);
+            $i++;
+        }
+
+        $i = 1
+        foreach ($nad in $sr.NetworkAdapter) {
+            foreach ($p in $nad.Ports) {
+                $csv_mac.Add(("NetAdap_MAC_" + $i), $p.MACAddress);   
+                $i++; 
+            }
+        }
+        
+        $csv_mac_report += $csv_mac
+    }
+    $csv_mac_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
 
     # SerialNumber (if not deactivated)
-    $name = "$path\result_$date.csv"
+    $name = "$path\serial_result_$date.csv"
+    $csv_serial_report = @();
+    foreach ($sr in $Report) {
+        $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
+        $csv_serial_report += [ordered]@{
+            Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "";
+            Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "";
+            Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "";
+            SRV_Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : "";
+        }   
+    }
+
     # $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
 }
 
