@@ -122,7 +122,7 @@ Function Get-DataFromILO {
             }
             else {
                 # Not testable on my configuration
-                $storage = ($conn | Get-HPEiLOStorageController -ErrorAction SilentlyContinue);
+                $storage = ($conn | Get-HPEiLOStorageController -ErrorAction SilentlyContinue).StorageControllers;
                 $storageDetails = $storage;
             }
     
@@ -207,8 +207,52 @@ Function Get-DataFromILO {
         $report += $srvReport;
         Log 0 "Ended"
         Log 0 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
+
+        Save-DataInJSON $report;
     }
     catch {
         Write-Error $_;
     }
+}
+
+Function Guarantee-Directory {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Path
+    )
+
+    if(-not (Test-Path -Path $Path)){
+        New-Item -Path $Path -Force -ItemType Directory;
+    }
+
+    $isDirectory = (Get-Item ($Path)) -is [System.IO.DirectoryInfo];
+    if(-not $isDirectory) {
+        $Path = $Path | Split-Path -Parent -Resolve;
+    }
+    
+    return;
+}
+
+Function Save-DataInJSON {
+    param(
+        [Parameter(Mandatory = $true)]
+        [Psobject]
+        $Report
+    )
+
+    $config = Get-Config;
+    (Guarantee-Directory ($config.reportPath));
+    [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
+    $path = $config.reportPath
+    $name = "$path\ilo_report_$date.json";
+    $report | ConvertTo-Json -Depth 15 | Out-File -FilePath $name -Force;
+}
+
+Function Save-DatainCSV {
+    param(
+        [Parameter(Mandatory = $true)]
+        [Psobject]
+        $Report    
+    )
 }
