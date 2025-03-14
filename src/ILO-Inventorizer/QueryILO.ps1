@@ -71,20 +71,28 @@ Function Get-DataFromILO {
             $networkAdapter = ($conn | Get-HPEiLONICInfo).NetworkAdapter;
             $adapterDetails = @();
             foreach ($na in $networkAdapter) {
+                $adapt = @();
                 foreach ($neAd in $na.Ports) {
-                    $adapterDetails += [ordered]@{
-                        Location   = $na.Location;
+                    $adapt += @{
                         MACAddress = $neAd.MACAddress;
-                        Status     = $iLOVersion -eq 4 ? $na.Status : $na.Status.State;
+                        Name       = $neAd.Name;
                     }
                 }
+                $adapterDetails += [ordered]@{
+                    Name         = $na.Name;
+                    Location     = $na.Location;
+                    SerialNumber = $na.SerialNumber;
+                    Ports        = $adapt;
+                    State        = $iLOVersion -eq 4 ? $na.Status : $na.Status.State;
+                }
             }
+        
 
             Log 6 "`tQuerying Devices" -IgnoreLogActive
             $devices = ($conn | Get-HPEiLODeviceInventory);
             $deviceDetails = @();
             if ($iLOVersion -eq 4) { $deviceDetails = $devices.StatusInfo.Message; }else {
-                foreach ($dev in $devices.PCIDevice) {
+                foreach ($dev in $devices.Devices) {
                     $deviceDetails += [ordered]@{
                         Name         = $dev.Name;
                         DeviceType   = $dev.DeviceType;
@@ -96,26 +104,25 @@ Function Get-DataFromILO {
             }
 
             Log 6 "`tQuerying Storage" -IgnoreLogActive
-            $storage; 
             $storageDetails = @();
             if (($iLOVersion -eq 4) -or ($iLOVersion -eq 5)) { 
-                $storage = ($conn | Get-HPEiLOSmartArrayStorageController).Controllers; 
-                <#
+                $storage = ($conn | Get-HPEiLOSmartArrayStorageController).Controllers.PhysicalDrives; 
                 foreach ($st in $storage) {
-                    $storageDetails += @{
-                        
+                    $storageDetails += [ordered]@{
+                        CapacityGB         = $st.CapacityGB;
+                        InterfaceType      = $st.InterfaceType;
+                        InterfaceSpeedMbps = $st.InterfaceSpeedMbps;
+                        MediaType          = $st.MediaType;
+                        Model              = $st.Model;
+                        Name               = $st.Name;
+                        SerialNumber       = $st.SerialNumber;
+                        State              = $st.State;
+                    }
                 }
-                #>
-                $storageDetails = $storage;
             }
             else {
-                $storage = ($conn | Get-HPEiLOStorageController).StorageControllers;
-                <#
-                foreach ($st in $storage) {
-                $storageDetails += @{
-                    
-                }
-                #>
+                # Not testable on my configuration
+                $storage = ($conn | Get-HPEiLOStorageController -ErrorAction SilentlyContinue);
                 $storageDetails = $storage;
             }
     
@@ -196,12 +203,10 @@ Function Get-DataFromILO {
                 IPv4Configuration = $ipv4Details;
                 IPv6Configuration = $ipv6Details;
             }
-
-        
-            $report += $srvReport;
         }
+        $report += $srvReport;
         Log 0 "Ended"
-        $report | ConvertTo-Json -Depth 10 | Out-File "U:\IPA\IPA\hpeilo_inventoryscript\r.json";
+        $report | ConvertTo-Json -Depth 100 | Out-File "U:\IPA\IPA\hpeilo_inventoryscript\r.json";
     }
     catch {
         Write-Error $_;
