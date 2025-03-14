@@ -347,6 +347,13 @@ Function Save-DataInCSV {
             $i++;
         }
 
+        $i = 1;
+        foreach ($stor in $sr.Storage) {
+            if ($iLOVersion -lt 6) {
+                
+            }
+        }
+
 
         $csv_serial_report += $csv_serial;
     }
