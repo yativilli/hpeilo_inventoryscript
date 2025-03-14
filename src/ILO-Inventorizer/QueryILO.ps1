@@ -53,6 +53,7 @@ Function Get-DataFromILO {
                 $memoryDetails += [ordered]@{
                     Location = $iLOVersion -eq 4 ? $me.MemoryLocation.ToString() : $me.DeviceLocator.ToString();
                     SizeMB   = $iLOVersion -eq 4 ? $me.MemorySizeMB.ToString() : $me.CapacityMiB.ToString();
+                    Serial   = $iLOVersion -eq 4 ? "N/A (Not supported in ILO4)" : $me.SerialNumber;
                 }
             }            
 
@@ -294,14 +295,14 @@ Function Save-DataInCSV {
 
         [int]$i = 1;
         foreach ($nic in $sr.NetworkInterfaces) {
-            $csv_mac.Add(("NetInterf_MAC_" + $i), $nic.MACAddress);
+            $csv_mac.Add(("NetInterf_MAC_$i"), $nic.MACAddress);
             $i++;
         }
 
         $i = 1
         foreach ($nad in $sr.NetworkAdapter) {
             foreach ($p in $nad.Ports) {
-                $csv_mac.Add(("NetAdap_MAC_" + $i), $p.MACAddress);   
+                $csv_mac.Add(("NetAdap_MAC_$i"), $p.MACAddress);   
                 $i++; 
             }
         }
@@ -315,15 +316,43 @@ Function Save-DataInCSV {
     $csv_serial_report = @();
     foreach ($sr in $Report) {
         $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
-        $csv_serial_report += [ordered]@{
+        $csv_serial = [ordered]@{
             Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "";
             Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "";
             Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "";
-            SRV_Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : "";
+            SRV_Serial    = $sr.Serial.Length -gt 0 ? $sr.Serial : "";
         }   
-    }
 
-    # $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
+        foreach ($ps in $sr.PowerSupply.PowerSupplies) {
+            $csv_serial.Add(("PowerSupply_$i" + "_Serial"), $ps.Serial);
+        }
+        
+        [int]$i = 1;
+        foreach ($pr in $sr.Processor) {
+            $csv_serial.Add(("Processor_$i" + "_Serial"), $pr.Serial);
+            i++;
+        }
+
+        $i = 1;
+        foreach ($dev in $sr.Devices) {
+            if ($iLOVersion -gt 4) {
+                $csv_serial.Add(("Device_$i" + "_Serial"), $dev.Serial + "($Name)");
+                $i++;
+            }
+        }
+
+        $i = 1;
+        foreach ($mem in $sr.Memory) {
+            $csv_serial.Add(("Memory_$i" + "_Serial"), $mem.Serial + "$Location")
+            $i++;
+        }
+
+
+        $csv_serial_report += $csv_serial;
+    }
+    $csv_serial_report;
+
+    $csv_serial_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
 }
 
 Function Get-InventoryData {
