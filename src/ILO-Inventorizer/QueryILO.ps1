@@ -222,16 +222,14 @@ Function Guarantee-Directory {
         $Path
     )
 
-    if(-not (Test-Path -Path $Path)){
+    if (-not (Test-Path -Path $Path)) {
         New-Item -Path $Path -Force -ItemType Directory;
     }
 
     $isDirectory = (Get-Item ($Path)) -is [System.IO.DirectoryInfo];
-    if(-not $isDirectory) {
+    if (-not $isDirectory) {
         $Path = $Path | Split-Path -Parent -Resolve;
     }
-    
-    return;
 }
 
 Function Save-DataInJSON {
@@ -249,10 +247,27 @@ Function Save-DataInJSON {
     $report | ConvertTo-Json -Depth 15 | Out-File -FilePath $name -Force;
 }
 
-Function Save-DatainCSV {
+Function Save-DataInCSV {
     param(
         [Parameter(Mandatory = $true)]
         [Psobject]
         $Report    
     )
+
+    $config = Get-Config;
+    (Guarantee-Directory ($config.reportPath));
+    [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
+    $path = $config.reportPath
+    
+    # General (like in Inventory)
+    $name = "$path\result_$date.csv"
+    $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
+
+    # MAC (if not deactivated)
+    $name = "$path\result_$date.csv"
+    $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
+
+    # SerialNumber (if not deactivated)
+    $name = "$path\result_$date.csv"
+    $report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
 }
