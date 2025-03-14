@@ -301,15 +301,23 @@ Function Log {
             $logActive = $config.loggingActived;
             $logToConsoleActive = $config.logToConsole;
 
+            if ($logPath.Length -gt 0) {
+                # Path set but not existing
+                if (-not (Test-Path -Path $logPath)) {
+                    $logPath = Guarantee-Directory $logPath;
+                }
+            }            
+            
             # Log only if activated
             if ($logActive -or $IgnoreLogActive) {
                 if ($Level -le $logLevel -or $IgnoreLogActive) {
                     if ((Test-Path -Path $logPath) -eq $false) {
-                        # Directory does not exist
+                        # Directory does not exist$
                         Write-Warning ("No Path for logging exists. Logs will be stored at '" + $ENV:HPEILOCONFIG + "\logs'.")
                         $defaultLogPath = ($defaultPath + "\logs");
                         New-Item -ItemType Directory $defaultLogPath -Force;
                         Update-Config -LogPath $defaultLogPath;
+                        $logPath = $defaultLogPath;
                     }
 
                     $currentDateTime = Get-Date -Format "yyyy/MM/dd HH:mm:ss`t";
