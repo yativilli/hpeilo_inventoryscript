@@ -206,7 +206,7 @@ Function Get-DataFromILO {
         }
         $report += $srvReport;
         Log 0 "Ended"
-        $report | ConvertTo-Json -Depth 100 | Out-File "U:\IPA\IPA\hpeilo_inventoryscript\r.json";
+        Log 0 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
     }
     catch {
         Write-Error $_;
