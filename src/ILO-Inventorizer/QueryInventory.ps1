@@ -70,7 +70,7 @@ Function Get-ServersFromInventory {
             }
             $serversClean = $serversClean | Where-Object -Property "Label" -match "SRV*";
 
-            Guarantee-Directory ($config.searchForFilesAt);
+            Register-Directory ($config.searchForFilesAt);
             $serversClean | ConvertTo-Json -Depth 3 | Out-File -Path ($config.searchForFilesAt + "\inventory_results.json");
         
             # Save Servers in server.json

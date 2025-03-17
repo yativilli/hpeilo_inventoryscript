@@ -303,7 +303,7 @@ Function Log {
             if ($logPath.Length -gt 0) {
                 # Path set but not existing
                 if (-not (Test-Path -Path $logPath)) {
-                    $logPath = Guarantee-Directory $logPath;
+                    $logPath = Register-Directory $logPath;
                 }
             }            
             

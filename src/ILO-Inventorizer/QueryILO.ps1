@@ -210,13 +210,14 @@ Function Get-DataFromILO {
         Log 0 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
 
         Save-DataInJSON $report;
+        Save-DataInCSV $report;
     }
     catch {
         Write-Error $_;
     }
 }
 
-Function Guarantee-Directory {
+Function Register-Directory {
     param(
         [Parameter(Mandatory = $true)]
         [string]
@@ -241,7 +242,7 @@ Function Save-DataInJSON {
     )
 
     $config = Get-Config;
-    (Guarantee-Directory ($config.reportPath));
+    (Register-Directory ($config.reportPath));
     [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
     $path = $config.reportPath
     $name = "$path\ilo_report_$date.json";
@@ -256,11 +257,11 @@ Function Save-DataInCSV {
     )
 
     $config = Get-Config;
-    (Guarantee-Directory ($config.reportPath));
+    (Register-Directory ($config.reportPath));
     [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
     $path = $config.reportPath
     
-    $name = "$path\result_$date.csv"
+    $name = "$path\ilo_report_$date.csv"
     $inventoryData = Get-InventoryData;
 
     # General (like in Inventory)
@@ -279,11 +280,11 @@ Function Save-DataInCSV {
             Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : "N/A";
         }
     }
-    $csv_mac_report = Standardize-CSV -Report $csv_mac_report;
+    $csv_report = Get-StandardizedCSV $csv_report;
     $csv_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
 
     # MAC (if not deactivated)
-    $name = "$path\mac_result_$date.csv"
+    $name = "$path\ilo_report_MAC_$date.csv"
     $csv_mac_report = @();
     foreach ($sr in $Report) {
         $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
@@ -296,7 +297,7 @@ Function Save-DataInCSV {
 
         [int]$i = 1;
         foreach ($nic in $sr.NetworkInterfaces) {
-            $nic.MACAddress = $nic.Serial.Length -gt 0 ? $nic.MACAddress : "N/A";
+            $nic.MACAddress = $nic.MACAddress.Length -gt 0 ? $nic.MACAddress : "N/A";
             $csv_mac.Add(("NetInterf_MAC_$i"), $nic.MACAddress);
             $i++;
         }
@@ -304,7 +305,7 @@ Function Save-DataInCSV {
         $i = 1
         foreach ($nad in $sr.NetworkAdapter) {
             foreach ($p in $nad.Ports) {
-                $p.MACAddress = $p.Serial.Length -gt 0 ? $p.MACAddress : "N/A";
+                $p.MACAddress = $p.MACAddress.Length -gt 0 ? $p.MACAddress : "N/A";
                 $csv_mac.Add(("NetAdap_MAC_$i"), $p.MACAddress);   
                 $i++; 
             }
@@ -312,11 +313,11 @@ Function Save-DataInCSV {
         
         $csv_mac_report += $csv_mac
     }
-    $csv_mac_report = Standardize-CSV -Report $csv_mac_report;
+    $csv_mac_report = Get-StandardizedCSV $csv_mac_report;
     $csv_mac_report | Export-Csv -Path $name -Delimiter ";" -Force;
 
     # SerialNumber (if not deactivated)
-    $name = "$path\serial_result_$date.csv"
+    $name = "$path\ilo_report_SERIAL_$date.csv"
     $csv_serial_report = @();
     foreach ($sr in $Report) {
         $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
@@ -368,25 +369,24 @@ Function Save-DataInCSV {
         }
         $csv_serial_report += $csv_serial;
     }
-    $csv_serial_report = Standardize-CSV -Report $csv_serial_report;
+    $csv_serial_report = Get-StandardizedCSV $csv_serial_report;
     $csv_serial_report | Export-Csv -Path $name -Delimiter ";" -Force;
 }
 
-Function Standardize-CSV {
+Function Get-StandardizedCSV {
     param(
         [Parameter(Mandatory = $true)]
-        [psobject]
         $Report
     )
-    $unique = $report | ForEach-Object { $_.Keys } | Select-Object -Unique
-    foreach ($srvObj in $report) {
+    $unique = $Report | ForEach-Object { $_.Keys } | Select-Object -Unique
+    foreach ($srvObj in $Report) {
         foreach ($uniqueMember in $unique) {
             if (($srvObj.Keys -contains $uniqueMember) -eq $false) {    
                 $srvObj | Add-Member -Name $uniqueMember -Value "N/A" -MemberType NoteProperty;
             }
         }
     }
-    return $report
+    return $Report
 }
 
 Function Get-InventoryData {
