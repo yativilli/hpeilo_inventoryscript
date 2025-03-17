@@ -279,6 +279,7 @@ Function Save-DataInCSV {
             Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : "N/A";
         }
     }
+    $csv_mac_report = Standardize-CSV -Report $csv_mac_report;
     $csv_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
 
     # MAC (if not deactivated)
@@ -295,7 +296,7 @@ Function Save-DataInCSV {
 
         [int]$i = 1;
         foreach ($nic in $sr.NetworkInterfaces) {
-            $nic.Serial = $nic.Serial.Length -gt 0 ? $nic.Serial : "N/A";
+            $nic.MACAddress = $nic.Serial.Length -gt 0 ? $nic.MACAddress : "N/A";
             $csv_mac.Add(("NetInterf_MAC_$i"), $nic.MACAddress);
             $i++;
         }
@@ -303,7 +304,7 @@ Function Save-DataInCSV {
         $i = 1
         foreach ($nad in $sr.NetworkAdapter) {
             foreach ($p in $nad.Ports) {
-                $p.Serial = $p.Serial.Length -gt 0 ? $p.Serial : "N/A";
+                $p.MACAddress = $p.Serial.Length -gt 0 ? $p.MACAddress : "N/A";
                 $csv_mac.Add(("NetAdap_MAC_$i"), $p.MACAddress);   
                 $i++; 
             }
@@ -311,6 +312,7 @@ Function Save-DataInCSV {
         
         $csv_mac_report += $csv_mac
     }
+    $csv_mac_report = Standardize-CSV -Report $csv_mac_report;
     $csv_mac_report | Export-Csv -Path $name -Delimiter ";" -Force;
 
     # SerialNumber (if not deactivated)
@@ -329,14 +331,14 @@ Function Save-DataInCSV {
         $pwr = $sr.PowerSupply.PowerSupplies;
         foreach ($ps in $pwr) {
             $ps.Serial = $ps.Serial.Length -gt 0 ? $ps.Serial : "N/A";
-            $csv_serial.Add(("PowerSupply_$i" + "_Serial"), $ps.Serial);
+            $csv_serial.Add(("PowerSupply$i (" + $ps.Name + ")"), $ps.Serial);
             $i++;
         }
         
-        $i++
+        $i = 1;
         foreach ($pr in $sr.Processor) {
             $pr.Serial = $pr.Serial.Length -gt 0 ? $pr.Serial : "N/A";
-            $csv_serial.Add(("Processor_$i" + "_Serial"), $pr.Serial);
+            $csv_serial.Add(("Processor$i (" + $pr.Model + ")"), $pr.Serial);
             $i++;
         }
 
@@ -344,7 +346,7 @@ Function Save-DataInCSV {
         foreach ($dev in $sr.Devices) {
             if ($iLOVersion -gt 4) {
                 $dev.Serial = $dev.Serial.Length -gt 0 ? $dev.Serial : "N/A";
-                $csv_serial.Add(("Device_$i" + "_Serial"), $dev.Serial + "($Name)");
+                $csv_serial.Add(("Device$i (" + $dev.$Name + ")"), $dev.Serial + "($Name)");
                 $i++;
             }
         }
@@ -352,7 +354,7 @@ Function Save-DataInCSV {
         $i = 1;
         foreach ($mem in $sr.Memory) {
             $mem.Serial = $mem.Serial.Length -gt 0 ? $mem.Serial : "N/A";
-            $csv_serial.Add(("Memory_$i" + "_Serial"), $mem.Serial + "$Location")
+            $csv_serial.Add(("Memory$i (" + $mem.Location + ")"), $mem.Serial + "$Location")
             $i++;
         }
 
@@ -360,14 +362,31 @@ Function Save-DataInCSV {
         foreach ($stor in $sr.Storage) {
             if ($iLOVersion -lt 6) {
                 $stor.Serial = $stor.Serial.Length -gt 0 ? $stor.Serial : "N/A";
-                $csv_serial.Add(("Storage_$i" + "_Serial"), $stor.Serial);
+                $csv_serial.Add(("Storage$i (" + $stor.Name + "," + $stor.Model + " ) "), $stor.Serial);
                 $i++;
             }
         }
-        $csv_serial;
         $csv_serial_report += $csv_serial;
     }
+    $csv_serial_report = Standardize-CSV -Report $csv_serial_report;
     $csv_serial_report | Export-Csv -Path $name -Delimiter ";" -Force;
+}
+
+Function Standardize-CSV {
+    param(
+        [Parameter(Mandatory = $true)]
+        [psobject]
+        $Report
+    )
+    $unique = $report | ForEach-Object { $_.Keys } | Select-Object -Unique
+    foreach ($srvObj in $report) {
+        foreach ($uniqueMember in $unique) {
+            if (($srvObj.Keys -contains $uniqueMember) -eq $false) {    
+                $srvObj | Add-Member -Name $uniqueMember -Value "N/A" -MemberType NoteProperty;
+            }
+        }
+    }
+    return $report
 }
 
 Function Get-InventoryData {
