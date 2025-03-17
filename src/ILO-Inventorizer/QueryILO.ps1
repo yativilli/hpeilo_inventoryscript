@@ -224,16 +224,28 @@ Function Register-Directory {
     param(
         [Parameter(Mandatory = $true)]
         [string]
-        $Path
+        $Path,
+
+        [Parameter()]
+        [switch]
+        $ignoreError
+
     )
 
-    if (-not (Test-Path -Path $Path)) {
-        New-Item -Path $Path -Force -ItemType Directory;
-    }
-
-    $isDirectory = (Get-Item ($Path)) -is [System.IO.DirectoryInfo];
-    if (-not $isDirectory) {
-        $Path = $Path | Split-Path -Parent -Resolve;
+    try{
+        if ((-not (Test-Path -Path $Path)) -and $ignoreError) {
+            New-Item -Path $Path -Force -ItemType Directory;
+        }else{
+            throw [System.IO.DirectoryNotFoundException] "The directory at '$Path' does not exist."
+        }
+        
+        $isDirectory = (Get-Item ($Path)) -is [System.IO.DirectoryInfo];
+        if (-not $isDirectory) {
+            $Path = $Path | Split-Path -Parent -Resolve;
+        }
+        return $Path.ToString();
+    }catch{
+        Write-Error $_
     }
 }
 
@@ -245,7 +257,7 @@ Function Save-DataInJSON {
     )
 
     $config = Get-Config;
-    (Register-Directory ($config.reportPath));
+    Update-Config -ReportPath (Register-Directory ($config.reportPath)).ToString();
     [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
     $path = $config.reportPath
     $name = "$path\ilo_report_$date.json";
@@ -260,9 +272,9 @@ Function Save-DataInCSV {
     )
 
     $config = Get-Config;
-    (Register-Directory ($config.reportPath));
+    Update-Config -ReportPath (Register-Directory ($config.reportPath)).ToString();
     [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
-    $path = $config.reportPath
+    $path = $config.reportPath;
     
     $name = "$path\ilo_report_$date.csv"
     $inventoryData = Get-InventoryData;

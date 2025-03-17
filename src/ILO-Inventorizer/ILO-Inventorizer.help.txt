@@ -1,6 +1,35 @@
-This module provides the tools to query hardware Informations from HPE servers via the ILO-technology.
-For more Information, start using it with:
-``GetHWInfoFromILO``
+This module provides the functionality not only query hardware information from HPE-ILO machines. It is designed for the Paul Scherrer Institute (PSI) and querries 
+from the internal database 'inventory.psi.ch'. Its functions are managed via generated config.json-files.
 
-For Help, use either
-``Get-Help GetHWInfoFromILO`` or review https://github.com/yativilli/hpeilo_inventoryscript
+There are a few important functions you should knwo to use:
++----------------------+-----------------------------------------------------------------------------+
+| Name                 | Function                                                                    |
++----------------------+-----------------------------------------------------------------------------+
+| Get-HWInfoFromILO    | Main Function that handles the actual query for ILO and Inventory.          |
+|                      | To actually get the Script to do anything (create config, start query etc.) |
+|                      | use this function.        |                                                 |
++----------------------+-----------------------------------------------------------------------------+
+| Set-ConfigPath       | Set the path to the Config file to somewhere else                           |
++----------------------+-----------------------------------------------------------------------------+
+| Get-ConfigPath       | Get the path to the current config file                                     |
++----------------------+-----------------------------------------------------------------------------+
+| Get-Config           | Returns the current Config with all its values as a PowerShell-Object       |
++----------------------+-----------------------------------------------------------------------------+
+| Update-Config        | Update the current config (use parameters)                                  |
++----------------------+-----------------------------------------------------------------------------+
+
+
+Start the part of the Script with:
+``Get-HWInfoFromILO``
+
+Since not everyone using this script is familiar with the way help is called in PowerShell, you can get help using the following syntax (the output will always be the same.):
+``Get-Help Get-HWInfoFromILO``
+``Set-ConfigPath /?``
+``Get-ConfigPath -h``
+``Get-Config --help``
+``Get-HWInfoFromILO --h``
+
+For Source-Code, please reference https://github.com/yativilli/hpeilo_inventoryscript
+
+This project was developed as the final project/exam by Yannick Wernle during 10 days, so there may be some errors, that aren't fixed.
+© Yannick Wernle, Paul Scherrer Institut (PSI) 2025

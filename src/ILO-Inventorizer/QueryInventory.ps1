@@ -1,8 +1,6 @@
 . .\ILO-Inventorizer\Functions.ps1
 
-Function Get-ServersFromInventory {
-    param()
-    
+Function Get-ServersFromInventory { 
     $config = Get-Config;
 
     $doNotSearchInventory = $config.doNotSearchInventory;

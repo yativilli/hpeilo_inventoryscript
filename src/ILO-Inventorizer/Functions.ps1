@@ -8,9 +8,10 @@ Function Show-Help {
     )
     if (($h -eq "/?") -or ($h -eq "-h") -or ($h -eq "--help") -or ($h -eq "--h")) {
         Log 5 "User has requested help -displaying Help-Page"
-        Write-Host "Display-Help";
-        Get-Help Get-HWInfoFromILO -Full
-        return;
+        return $true;
+    }
+    else {
+        return $false;
     }
 }
 
@@ -54,6 +55,8 @@ Function New-Config {
             Username = ""
             Password = ""
         };
+
+        Register-Directory $Path -ignoreError
         
         ## Generate Dummy (w/o Inventory)
         if ($NotEmpty -and $WithOutInventory) {
@@ -146,7 +149,12 @@ Function New-File {
 }
 
 Function Update-Config {
-    param(
+    [CmdletBinding(PositionalBinding = $false)]
+    param (
+        # Help Handling
+        [Parameter(Position = 0)][string]$help,
+        [Parameter()][switch]$h,
+
         [Parameter()]
         [string]
         $configPath,
@@ -216,6 +224,12 @@ Function Update-Config {
         $Password
     )
     try {
+        ## Check if Help must be displayed
+        if (($h -eq $true) -or (Show-Help $help) ) {
+            Get-Help Update-Config -Full;    
+        }
+
+
         Log 5 "Start Updating Configuraton File"
         $pathToConfig = Get-ConfigPath;
         if (Test-Path -Path $pathToConfig) {
@@ -235,8 +249,8 @@ Function Update-Config {
             if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = $DoNotSearchInventory; }
             if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidation = $DeactivateCertificateValidationILO; }
             if ( $null -ne $LogToConsole) { $config.logToConsole = $LogToConsole; }
-            if ($null -ne $IgnoreMACAddress) { $config.ignoreMACAddress; }
-            if ($null -ne $IgnoreSerialNumbers) { $config.ignoreSerialNumbers; }
+            if ($null -ne $IgnoreMACAddress) { $config.ignoreMACAddress = $IgnoreMACAddress; }
+            if ($null -ne $IgnoreSerialNumbers) { $config.ignoreSerialNumbers = $IgnoreSerialNumbers; }
             
             # Set ServerArray
             if ($server.Length -gt 0) { 
@@ -271,8 +285,20 @@ Function Update-Config {
 }
 
 Function Get-Config {
-    if ((Test-Path -Path $ENV:HPEILOCONFIG)) {
-        return (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
+    [CmdletBinding(PositionalBinding = $false)]
+    param (
+        # Help Handling
+        [Parameter(Position = 0)][string]$help,
+        [Parameter()][switch]$h
+    )
+
+    if (($h -eq $true) -or (Show-Help $help) ) {
+        Get-Help Get-Config -Full;    
+    }
+    else {   
+        if ((Test-Path -Path $ENV:HPEILOCONFIG)) {
+            return (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
+        }
     }
 }
 
@@ -285,13 +311,15 @@ Function Log {
         [Parameter(Mandatory = $true)]
         [string]
         $Message,
-
+        
         [Parameter()]
         [switch]
         $IgnoreLogActive
     )
     try {
-
+        $currentDateTime = Get-Date -Format "yyyy/MM/dd HH:mm:ss`t";
+        $saveString = $currentDateTime + $Message;
+            
         if (Test-Path -Path $ENV:HPEILOCONFIG) {
             $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-JSON -Depth 3);
 
@@ -303,7 +331,7 @@ Function Log {
             if ($logPath.Length -gt 0) {
                 # Path set but not existing
                 if (-not (Test-Path -Path $logPath)) {
-                    $logPath = Register-Directory $logPath;
+                    $logPath = (Register-Directory $logPath).ToString();
                 }
             }            
             
@@ -318,10 +346,8 @@ Function Log {
                         Update-Config -LogPath $defaultLogPath;
                         $logPath = $defaultLogPath;
                     }
-
-                    $currentDateTime = Get-Date -Format "yyyy/MM/dd HH:mm:ss`t";
                     $logFilePath = "$logPath\" + (Get-Date -Format "yyyy_MM_dd") + ".txt";
-                    $saveString = $currentDateTime + $Message;
+
 
                     # If LogActive is ignored, log only to console.
                     if (-not $IgnoreLogActive) {
