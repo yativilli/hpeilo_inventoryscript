@@ -53,7 +53,7 @@ Function Get-DataFromILO {
                 $memoryDetails += [ordered]@{
                     Location = $iLOVersion -eq 4 ? $me.MemoryLocation.ToString() : $me.DeviceLocator.ToString();
                     SizeMB   = $iLOVersion -eq 4 ? $me.MemorySizeMB.ToString() : $me.CapacityMiB.ToString();
-                    Serial   = $iLOVersion -eq 4 ? "N/A in ILO4" : $me.SerialNumber;
+                    Serial   = $iLOVersion -eq 4 ? "- in ILO4" : $me.SerialNumber;
                 }
             }            
 
@@ -92,7 +92,7 @@ Function Get-DataFromILO {
             Log 6 "`tQuerying Devices" -IgnoreLogActive
             $devices = ($conn | Get-HPEiLODeviceInventory);
             $deviceDetails = @();
-            if ($iLOVersion -eq 4) { $deviceDetails = $devices.StatusInfo.Message; }else {
+            if ($iLOVersion -eq 4 -or $iLOVersion -eq 5) { $deviceDetails = $devices.StatusInfo.Message; }else {
                 foreach ($dev in $devices.Devices) {
                     $deviceDetails += [ordered]@{
                         Name       = $dev.Name;
@@ -211,9 +211,12 @@ Function Get-DataFromILO {
 
         Save-DataInJSON $report;
         Save-DataInCSV $report;
+
+        return "";
     }
     catch {
         Write-Error $_;
+        Write-Error $_.ScriptStackTrace;
     }
 }
 
@@ -265,112 +268,137 @@ Function Save-DataInCSV {
     $inventoryData = Get-InventoryData;
 
     # General (like in Inventory)
-    $csv_report = @();
-    foreach ($sr in $Report) {
-        $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
-        $csv_report += [ordered]@{
-            Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "N/A";
-            Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "N/A";
-            Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "N/A";
-            Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : "N/A";
-            MAC_1         = $sr.MAC_1.Length -gt 0 ? $sr.MAC_1: "N/A";
-            MAC_2         = $sr.MAC_2.Length -gt 0 ? $sr.MAC_2 : "N/A";
-            MAC_3         = $sr.MAC_3.Length -gt 0 ? $sr.MAC_3 : "N/A";
-            MAC_4         = $sr.MAC_4.Length -gt 0 ? $sr.MAC_4 : "N/A";
-            Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : "N/A";
-        }
-    }
-    $csv_report = Get-StandardizedCSV $csv_report;
-    $csv_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
+    if ((-not $config.ignoreMACAddress) -or (-not $config.ignoreSerialNumbers)) {
 
-    # MAC (if not deactivated)
-    $name = "$path\ilo_report_MAC_$date.csv"
-    $csv_mac_report = @();
-    foreach ($sr in $Report) {
-        $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
-        $csv_mac = [ordered]@{
-            Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "N/A";
-            Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "N/A";
-            Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "N/A";
-            Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : "N/A";
-        }   
-
-        [int]$i = 1;
-        foreach ($nic in $sr.NetworkInterfaces) {
-            $nic.MACAddress = $nic.MACAddress.Length -gt 0 ? $nic.MACAddress : "N/A";
-            $csv_mac.Add(("NetInterf_MAC_$i"), $nic.MACAddress);
-            $i++;
-        }
-
-        $i = 1
-        foreach ($nad in $sr.NetworkAdapter) {
-            foreach ($p in $nad.Ports) {
-                $p.MACAddress = $p.MACAddress.Length -gt 0 ? $p.MACAddress : "N/A";
-                $csv_mac.Add(("NetAdap_MAC_$i"), $p.MACAddress);   
-                $i++; 
+        $csv_report = @();
+        foreach ($sr in $Report) {
+            $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
+            $csv_report += [ordered]@{
+                Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "-";
+                Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "-";
+                Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "-";
+                Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : "-";
+                MAC_1         = $sr.MAC_1.Length -gt 0 ? $sr.MAC_1: "-";
+                MAC_2         = $sr.MAC_2.Length -gt 0 ? $sr.MAC_2 : "-";
+                MAC_3         = $sr.MAC_3.Length -gt 0 ? $sr.MAC_3 : "-";
+                MAC_4         = $sr.MAC_4.Length -gt 0 ? $sr.MAC_4 : "-";
+                Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : "-";
             }
         }
-        
-        $csv_mac_report += $csv_mac
+        $csv_report = Get-StandardizedCSV $csv_report;
+        $csv_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
     }
-    $csv_mac_report = Get-StandardizedCSV $csv_mac_report;
-    $csv_mac_report | Export-Csv -Path $name -Delimiter ";" -Force;
+        
+    # MAC (if not deactivated)
+    if (-not $config.ignoreMACAddress) {
+
+        $name = "$path\ilo_report_MAC_$date.csv"
+        $csv_mac_report = @();
+        foreach ($sr in $Report) {
+            $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
+            $csv_mac = [ordered]@{
+                Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "-";
+                Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "-";
+                Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "-";
+                Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : "-";
+            }   
+
+            [int]$i = 1;
+            foreach ($nic in $sr.NetworkInterfaces) {
+                $nic.MACAddress = $nic.MACAddress.Length -gt 0 ? $nic.MACAddress : "-";
+                $csv_mac.Add(("NetInterf_MAC_$i"), $nic.MACAddress);
+                $i++;
+            }
+
+            $i = 1
+            foreach ($nad in $sr.NetworkAdapter) {
+                foreach ($p in $nad.Ports) {
+                    $p.MACAddress = $p.MACAddress.Length -gt 0 ? $p.MACAddress : "-";
+                    $csv_mac.Add(("NetAdap_MAC_$i"), $p.MACAddress);   
+                    $i++; 
+                }
+            }
+        
+            $csv_mac_report += $csv_mac
+        }
+        $csv_mac_report = Get-StandardizedCSV $csv_mac_report;
+        $csv_mac_report | Export-Csv -Path $name -Delimiter ";" -Force;
+    }
 
     # SerialNumber (if not deactivated)
-    $name = "$path\ilo_report_SERIAL_$date.csv"
-    $csv_serial_report = @();
-    foreach ($sr in $Report) {
-        $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
-        $csv_serial = [ordered]@{
-            Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "";
-            Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "";
-            Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "";
-            SRV_Serial    = $sr.Serial.Length -gt 0 ? $sr.Serial : "";
-        }   
+    if (-not $config.ignoreSerialNumbers) {
+        $name = "$path\ilo_report_SERIAL_$date.csv"
+        $csv_serial_report = @();
+        $csv_additional_info = @();
+        foreach ($sr in $Report) {
+            $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
+            $csv_serial = [ordered]@{
+                Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "";
+                Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "-";
+                Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "-";
+                Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : "-";
+            }   
+            $csv_additional = [ordered]@{
+                Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "";
+                Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : "-";
+                Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : "-";
+                Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : "-";
+            };
 
-        [int]$i = 1;
-        $pwr = $sr.PowerSupply.PowerSupplies;
-        foreach ($ps in $pwr) {
-            $ps.Serial = $ps.Serial.Length -gt 0 ? $ps.Serial : "N/A";
-            $csv_serial.Add(("PowerSupply$i (" + $ps.Name + ")"), $ps.Serial);
-            $i++;
-        }
+            [int]$i = 1;
+            $pwr = $sr.PowerSupply.PowerSupplies;
+            foreach ($ps in $pwr) {
+                $ps.Serial = $ps.Serial.Length -gt 0 ? $ps.Serial : "-";
+                $csv_serial.Add(("PowerSupply$i"), $ps.Serial);
+                $csv_additional.Add(("PowerSupply_$i"), $ps.Name);
+                $i++;
+            }
         
-        $i = 1;
-        foreach ($pr in $sr.Processor) {
-            $pr.Serial = $pr.Serial.Length -gt 0 ? $pr.Serial : "N/A";
-            $csv_serial.Add(("Processor$i (" + $pr.Model + ")"), $pr.Serial);
-            $i++;
-        }
-
-        $i = 1;
-        foreach ($dev in $sr.Devices) {
-            if ($iLOVersion -gt 4) {
-                $dev.Serial = $dev.Serial.Length -gt 0 ? $dev.Serial : "N/A";
-                $csv_serial.Add(("Device$i (" + $dev.$Name + ")"), $dev.Serial + "($Name)");
+            $i = 1;
+            foreach ($pr in $sr.Processor) {
+                $pr.Serial = $pr.Serial.Length -gt 0 ? $pr.Serial : "-";
+                $csv_serial.Add(("Processor$i"), $pr.Serial);
+                $csv_additional.Add(("Processor_$i"), $pr.Model);
                 $i++;
             }
-        }
 
-        $i = 1;
-        foreach ($mem in $sr.Memory) {
-            $mem.Serial = $mem.Serial.Length -gt 0 ? $mem.Serial : "N/A";
-            $csv_serial.Add(("Memory$i (" + $mem.Location + ")"), $mem.Serial + "$Location")
-            $i++;
-        }
+            $i = 1;
+            foreach ($dev in $sr.Devices) {
+                if ($iLOVersion -gt 5) {
+                    $dev.Serial = $dev.Serial.Length -gt 0 ? $dev.Serial : "-";
+                    $csv_serial.Add(("Device$i"), $dev.Serial);
+                    $csv_additional.Add(("Device_$i"), $dev.Name);
+                    $i++;
+                }
+            }
 
-        $i = 1;
-        foreach ($stor in $sr.Storage) {
-            if ($iLOVersion -lt 6) {
-                $stor.Serial = $stor.Serial.Length -gt 0 ? $stor.Serial : "N/A";
-                $csv_serial.Add(("Storage$i (" + $stor.Name + "," + $stor.Model + " ) "), $stor.Serial);
+            $i = 1;
+            foreach ($stor in $sr.Storage) {
+                if ($iLOVersion -lt 6) {
+                    $stor.Serial = $stor.Serial.Length -gt 0 ? $stor.Serial : "-";
+                    $csv_serial.Add(("Storage$i"), $stor.Serial);
+                    $csv_additional.Add(("Storage_$i"), $stor.Name + "," + $stor.Model);
+                    $i++;
+                }
+            }
+
+            $i = 1;
+            foreach ($mem in $sr.Memory) {
+                $mem.Serial = $mem.Serial.Length -gt 0 ? $mem.Serial : "-";
+                $csv_serial.Add(("Memory$i"), $mem.Serial)
+                $csv_additional.Add(("Memory_$i"), $mem.Location)
                 $i++;
             }
+            $csv_additional_info += $csv_additional;
+            $csv_serial_report += $csv_serial;
         }
-        $csv_serial_report += $csv_serial;
+        $csv_serial_report = Get-StandardizedCSV $csv_serial_report;
+        $csv_serial_report | Export-Csv -Path $name -Delimiter ";" -Force;
+        Add-Content -Path $name -Value "`r`n`n`n`nAdditional Information for above;"
+
+        $csv_additional_info = Get-StandardizedCSV $csv_additional_info; 
+        $csv_additional_info | ConvertTo-Csv -Delimiter ";" | Add-Content -Path $name -Force
     }
-    $csv_serial_report = Get-StandardizedCSV $csv_serial_report;
-    $csv_serial_report | Export-Csv -Path $name -Delimiter ";" -Force;
 }
 
 Function Get-StandardizedCSV {
@@ -382,7 +410,7 @@ Function Get-StandardizedCSV {
     foreach ($srvObj in $Report) {
         foreach ($uniqueMember in $unique) {
             if (($srvObj.Keys -contains $uniqueMember) -eq $false) {    
-                $srvObj | Add-Member -Name $uniqueMember -Value "N/A" -MemberType NoteProperty;
+                $srvObj | Add-Member -Name $uniqueMember -Value "-" -MemberType NoteProperty;
             }
         }
     }

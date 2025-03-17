@@ -4,5 +4,5 @@ Import-Module HPEiLOCmdlets;
 # Get-HWInfoFromILO;
 # Save-DataInJSON @("rmgfa-sioc", "rmsf-sioc-cs");
 
+
 Save-DataInCSV (Get-Content -Path "C:\Users\wernle_y\AppData\Roaming\hpeilo\out\ilo_report_2025_03_17.json" | ConvertFrom-Json -Depth 10);
-# Get-InventoryData;
