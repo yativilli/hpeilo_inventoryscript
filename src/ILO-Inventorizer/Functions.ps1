@@ -2,17 +2,19 @@
 
 Function Show-Help {
     param(
-        [Parameter(Mandatory = $true)]
+        [Parameter()]
         [string]
-        $h
+        $helpString
     )
-    if (($h -eq "/?") -or ($h -eq "-h") -or ($h -eq "--help") -or ($h -eq "--h")) {
-        Log 5 "User has requested help -displaying Help-Page"
-        return $true;
+    if ($helpString.Length -gt 0) {
+
+        if (($helpString -eq "/?") -or ($helpString -eq "-h") -or ($helpString -eq "--help") -or ($helpString -eq "--h")) {
+            Log 5 "User has requested help -displaying Help-Page"
+            return $true;
+        }
+        else { return $false; }
     }
-    else {
-        return $false;
-    }
+    else { return $false; }
 }
 
 Function New-Config {
@@ -149,6 +151,22 @@ Function New-File {
 }
 
 Function Update-Config {
+    <#
+    .SYNOPSIS
+    Updates the current config with the parameters passed along
+    .DESCRIPTION
+    Gets current Config path, and saves the configuration with the parameters that were passed along for future runs. 
+    .EXAMPLE
+    PS> Update-Config -LogLevel 0 -ReportPath "C:\examplePath\out"
+
+    Sets LogLevel to zero and ReportPath to "C:\examplePath\out" and saves it into the configuration.
+    .Example
+    PS> Update-Config -configPath "C:\pathToSomeWhere"
+
+    This will update the config path and set the paths and variables so that the a new config will be placed there and the script works now from there.
+    #>
+
+    
     [CmdletBinding(PositionalBinding = $false)]
     param (
         # Help Handling
@@ -225,7 +243,7 @@ Function Update-Config {
     )
     try {
         ## Check if Help must be displayed
-        if (($h -eq $true) -or (Show-Help $help) ) {
+        if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
             Get-Help Update-Config -Full;    
         }
 
@@ -233,9 +251,8 @@ Function Update-Config {
         Log 5 "Start Updating Configuraton File"
         $pathToConfig = Get-ConfigPath;
         if (Test-Path -Path $pathToConfig) {
-            $config = Get-Content -Path $pathToConfig | ConvertFrom-Json -Depth 3;
+            $config = Get-Config;
 
-            if ($configPath.Length -gt 0) { $config.configPath = $configPath; }
             if ($LoginConfigPath.Length -gt 0) { $config.loginConfigPath = $LoginConfigPath; }
             if ($ReportPath.Length -gt 0) { $config.reportPath = $ReportPath; }
             if ($LogPath.Length -gt 0) { $config.logPath = $LogPath; }
@@ -269,10 +286,12 @@ Function Update-Config {
                 $login = Get-Content -Path ($config.loginConfigPath) | ConvertFrom-Json -Depth 3;
                 if ($Username.Length -gt 0) { $login.Username = $Username; }
                 if ($Password.Length -gt 0) { $login.Password = $Password }
-
+                
                 Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);
             }
             Log 5 ("Saving updated Configuration at " + $config.configPath)
+
+            if ($configPath.Length -gt 0) { $config.configPath = $configPath; Copy-Item -Path $pathToConfig -Destination $configPath; }
             Set-Content -Path ($config.configPath) -Value ($config | ConvertTo-Json -Depth 3);
         }
         else {
@@ -285,6 +304,29 @@ Function Update-Config {
 }
 
 Function Get-Config {
+    <#
+    .SYNOPSIS
+    Returns the current Config
+    .DESCRIPTION
+    If called, it will read the current config-path and convert it from JSON back to a PS-Object. 
+    .EXAMPLE
+    PS> Get-Config
+    searchForFilesAt                : C:\Users\wernle_y\AppData\Roaming\hpeilo
+    configPath                      : C:\Users\wernle_y\AppData\Roaming\hpeilo\config.json
+    loginConfigPath                 : C:\Users\wernle_y\AppData\Roaming\hpeilo\login.json
+    reportPath                      : C:\Users\wernle_y\AppData\Roaming\hpeilo\out
+    serverPath                      : C:\Users\wernle_y\AppData\Roaming\hpeilo\server.json
+    logPath                         : C:\Users\wernle_y\AppData\Roaming\hpeilo\logs
+    logLevel                        : 0
+    loggingActived                  : True
+    searchStringInventory           : gfa-sioc-cs-de
+    doNotSearchInventory            : False
+    remoteMgmntField                : Hostname Mgnt
+    deactivateCertificateValidation : True
+    logToConsole                    : False
+    ignoreMACAddress                : False
+    ignoreSerialNumbers             : False
+    #>
     [CmdletBinding(PositionalBinding = $false)]
     param (
         # Help Handling
@@ -292,7 +334,7 @@ Function Get-Config {
         [Parameter()][switch]$h
     )
 
-    if (($h -eq $true) -or (Show-Help $help) ) {
+    if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
         Get-Help Get-Config -Full;    
     }
     else {   

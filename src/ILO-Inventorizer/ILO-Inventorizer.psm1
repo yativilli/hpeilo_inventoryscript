@@ -173,7 +173,7 @@ Function Get-HWInfoFromILO {
         Log 2 "--------------------------------------`nILO-Inventorizer has been started.";
 
         ## Check if Help must be displayed
-        if (($h -eq $true) -or (Show-Help $help) ) {
+        if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
             Get-Help Get-HWInfoFromILO -Full;    
         }
         else {
@@ -304,6 +304,7 @@ Function Get-HWInfoFromILO {
     }
     catch {
         Write-Host $_
+        Write-Host $_.ScriptStackTrace
         Log 1 ($_.Exception)
         Log 1 ($_.ScriptStackTrace);
     }
@@ -311,6 +312,19 @@ Function Get-HWInfoFromILO {
 
 
 Function Set-ConfigPath {
+    <#
+    .SYNOPSIS
+    Sets the Config Path for the entire script to a new place
+    .DESCRIPTION
+    If called, this will override the current path and set it to another config.json-File.
+    The entire execution of the script hinges on the config, so make sure it is contains all values needed. Otherwise, it might crash.
+    
+    Upon Setting a new Path, it will be validated, if it contains any config.json (it MUST)
+    .EXAMPLE
+    PS> Set-ConfigPath -Path "C:\examplePath\config.json";
+
+    Will change the path to the config to "C:\examplePath\config.json"
+    #>
     [CmdletBinding(PositionalBinding = $false)]
     param(
         [Parameter(Position = 0, ParameterSetName = "Help")][string]$help,
@@ -327,37 +341,46 @@ Function Set-ConfigPath {
         $Reset
     )try {
         ## Check if Help must be displayed
-        if (($h -eq $true) -or (Show-Help $help) ) {
-            Get-Help Set-ConfigPath -Full;    
-        }
-        else {
-
-            
-            
-            Log 5 "Set Config Path has been started with 'Path' $Path and reset:$Reset"
-            if ($Reset) {
-                $ENV:HPEILOCONFIG = "";
-            }
-            elseif (Test-Path -Path $Path -ErrorAction Stop) {
-                if ($Path.Contains("\config.json")) {
-                    Log 6 "Config Path already contains config.json"
-                    $ENV:HPEILOCONFIG = $Path;
+        switch ($PSCmdlet.ParameterSetName) {
+            "Help" { 
+                if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+                    Get-Help Set-ConfigPath -Full;    
                 }
-                else {
-                    Log 6 "Config Path is a directory does not contain config.json. "
-                    $Path = $Path + "\config.json";
-                    if (Test-Path -Path $Path) {
-                        Log 6 "Config Path directory contains a config.json"
+                break;
+            }
+            "ResetPath" {
+                if ($Reset) {
+                    $ENV:HPEILOCONFIG = "";
+                }
+                break;
+            }
+            Default {
+
+                Log 5 "Set Config Path has been started with 'Path' $Path and reset:$Reset"
+                
+                if (Test-Path -Path $Path -ErrorAction Stop) {
+                    if ($Path.Contains("\config.json")) {
+                        Log 6 "Config Path already contains config.json"
                         $ENV:HPEILOCONFIG = $Path;
                     }
                     else {
-                        Log 6 "Config Path does not include a config.json in its path or directory."
-                        throw [System.IO.FileNotFoundException] "The Path must include a 'config.json'."
-                    } 
+                        Log 6 "Config Path is a directory, Path does not contain config.json. "
+                        $Path = $Path + "\config.json";
+                        if (Test-Path -Path $Path) {
+                            Log 6 "Config Path directory contains a config.json"
+                            $ENV:HPEILOCONFIG = $Path;
+                        }
+                        else {
+                            Log 6 "Config Path does not include a config.json in its path or directory."
+                            throw [System.IO.FileNotFoundException] "The Path must include a 'config.json'."
+                        } 
+                    }
                 }
+                Log 5 ("Config Path has successfully been set to '" + $ENV:HPEILOCONFIG + "'")
+                break;
             }
-            Log 5 ("Config Path has successfully been set to '" + $ENV:HPEILOCONFIG + "'")
         }
+        
     }
     catch [System.Management.Automation.ItemNotFoundException] {
         Log 1 $_
@@ -366,16 +389,28 @@ Function Set-ConfigPath {
     catch {
         Log 1 $_
         Write-Error $_;
+        Write-Error $_.ScriptStackTrace;
     }
 }
 
 Function Get-ConfigPath {
+    <#
+    .SYNOPSIS
+    Returns the current path to the current config.json as a string.
+    .DESCRIPTION
+    If called, it will return
+    .EXAMPLE
+    PS> Get-NewConfig
+    C:\Users\wernle_y\AppData\Roaming\hpeilo\config.json    
+
+    Will reset the current config and bring up the screen to generate a new one.
+    #>
     [CmdletBinding(PositionalBinding = $false)]
     param(
         [Parameter(Position = 0, ParameterSetName = "Help")][string]$help,
         [Parameter(ParameterSetName = "Help")][switch]$h
     )
-    if (($h -eq $true) -or (Show-Help $help) ) {
+    if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
         Get-Help Get-ConfigPath -Full;    
     }
     else {   
@@ -383,5 +418,33 @@ Function Get-ConfigPath {
         return $ENV:HPEILOCONFIG;
     }
 }
-    
-Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Get-Config, Update-Config
+
+Function Get-NewConfig {
+        <#
+    .SYNOPSIS
+    Brings up the screen to generate a new Config
+    .DESCRIPTION
+    If called, it will reset the current configuration path and bring up the screen from Get-HWInfoFrmILO to generate a new one or set the path to an already existing one.
+    .EXAMPLE
+    PS> Get-NewConfig
+    No Configuration has been found. Would you like to:
+    [1] Generate an empty config?
+    [2] Generate a config with dummy data?
+    [3] Add Path to an Existing config?
+
+    Will reset the current config and bring up the screen to generate a new one.
+    #>
+    [CmdletBinding(PositionalBinding = $false)]
+    param(
+        [Parameter(Position = 0, ParameterSetName = "Help")][string]$help,
+        [Parameter(ParameterSetName = "Help")][switch]$h
+    )
+    if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+        Get-Help Get-ConfigPath -Full;    
+    }
+    else {   
+        Set-ConfigPath -Reset;
+        Get-HWInfoFromILO
+    }
+}
+Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Get-Config, Update-Config, Get-NewConfig

@@ -17,6 +17,8 @@ There are a few important functions you should knwo to use:
 +----------------------+-----------------------------------------------------------------------------+
 | Update-Config        | Update the current config (use parameters)                                  |
 +----------------------+-----------------------------------------------------------------------------+
+| Get-NewConfig        | Resets the Current Config and brings up the screen to generate a new one    |
++----------------------+-----------------------------------------------------------------------------+
 
 
 Start the part of the Script with:
@@ -27,7 +29,7 @@ Since not everyone using this script is familiar with the way help is called in 
 ``Set-ConfigPath /?``
 ``Get-ConfigPath -h``
 ``Get-Config --help``
-``Get-HWInfoFromILO --h``
+``Get-NewConfig --h``
 
 For Source-Code, please reference https://github.com/yativilli/hpeilo_inventoryscript
 
