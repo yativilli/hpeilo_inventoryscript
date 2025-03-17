@@ -10,6 +10,56 @@ Scripting-Module to query information from HPE-Servers via ILO
 
 # Main Function
 Function Get-HWInfoFromILO {
+    <#
+    .SYNOPSIS
+    Main function used for starting the ILO-query.
+    .DESCRIPTION
+    This function is the main function for starting the program.
+    It will first check for a config file - if none is found, you'll be prompted to either:
+    1. Generate an empty one or 
+    2. Generate one filled with dummy data or 
+    3. Add the path to an already existing config file.
+
+    After correctly configuring the config, restart this function and depending on your choices,
+    1. Inventory.psi.ch will be querried for Hostnames or
+    2. An List of Servers you provided will be used as Hostnames.
+
+    After that, it'll execute a pingtest to check if the Servers are reachable.
+    If that is the case, it'll beginn querying the ILO-Servers, display the report in the terminal as well as
+    1. Saving it as a JSON-File and if not configured otherwise,
+    2. Save the most important parts of the report into CSV-Files (MACs, SerialNumbers).
+
+    .EXAMPLE
+    PS> Get-HWInfoFromILO¨
+
+    Started with no parameters, will check for config and prompt you to generate or connect one if none exists or,
+        will directly execute the pingtest and querries if configured to do so.
+
+    .EXAMPLE
+    PS> Get-HWInfoFromILO -configPath "C:\examplePath\config.json"
+    
+    Will set the config in the background to the specified path and commence from there.
+
+    .EXAMPLE
+    PS> Get-HWInfoFromILO -ServerPath "C:\examplePath\server.json"
+    
+    Will use this path to read Hostnames for the querries from instead of connecting to Inventory
+
+    .EXAMPLE
+    PS> Get-HWInfoFromILO -server @("rmgfa-sioc-cs-de", "rmgfa-sioc-cs-dev") 
+    
+    Will use the specified array to read Hostnames for the querries instead of connecting to Inventory
+
+    .EXAMPLE
+    PS> Get-HWInfoFromILO -SearchStringInventory "sf-sioc-cs"
+    
+    Will check if the search string matches the naming convention and then use it to get the Hostnames from Inventory.psi.ch that match it.
+    It'll use those as Hostname for querying ILO.
+
+    .NOTES
+    Starting the script with ``Get-HWInfofromILO`` uses different ParameterSets. This assures that one cannot simultaneosly say it should search inventory with a string, but at the same time use an Array instead of Inventory. 
+    There are many other parameters that, if set, will edit the in the background to match its value and this saves it for any new runs.
+    #>
     [CmdletBinding(PositionalBinding = $false)]
     param (
         # Help Handling
