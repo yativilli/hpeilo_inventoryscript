@@ -291,15 +291,23 @@ Function Update-Config {
             }
             Log 5 ("Saving updated Configuration at " + $config.configPath)
 
-            if ($configPath.Length -gt 0) { $config.configPath = $configPath; Copy-Item -Path $pathToConfig -Destination $configPath; }
-            Set-Content -Path ($config.configPath) -Value ($config | ConvertTo-Json -Depth 3);
+            if ($configPath.Length -gt 0) {
+                $config.configPath = $configPath; 
+                Copy-Item -Path $pathToConfig -Destination $configPath; 
+                Set-ConfigPath -Path $config.configPath; 
+                Write-Warning ("Config has been updated to " + (Get-ConfigPath))
+            }
+            Set-Content -Path (Get-ConfigPath) -Value ($config | ConvertTo-Json -Depth 3);
+            
         }
         else {
             throw [System.IO.FileNotFoundException] "No updatable config could be found at $pathToConfig";
         }
     }
     catch {
-        Log 1 $_
+        # Log 1 
+        Write-Host $_
+        Write-Host $_.ScriptStackTrace
     }
 }
 

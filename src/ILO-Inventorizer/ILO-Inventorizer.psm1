@@ -354,7 +354,7 @@ Function Set-ConfigPath {
                 }
                 break;
             }
-            Default {
+            "SetPath" {
 
                 Log 5 "Set Config Path has been started with 'Path' $Path and reset:$Reset"
                 
