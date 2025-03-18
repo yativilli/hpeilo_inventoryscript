@@ -3,6 +3,7 @@
 
 Function Get-DataFromILO {
     param(
+        # Array with all the Hostnames of the Servers that will be querried
         [Parameter()]
         [Array]
         $servers
@@ -219,11 +220,17 @@ Function Get-DataFromILO {
 }
 
 Function Register-Directory {
+    <#
+    .DESCRIPTION
+    Checks the Path that is passed in if it exists and if a file is passed in, it will split the path so that only the Directory is the path
+    #>
     param(
+        # Path that will be checked if its a directory
         [Parameter(Mandatory = $true)]
         [string]
         $Path,
 
+        # Toggle if the Directory should be generated if it does not exist
         [Parameter()]
         [switch]
         $ignoreError
@@ -243,7 +250,7 @@ Function Register-Directory {
         }
         return $Path.ToString();
     }
-    catch [System.IO.DirectoryNotFoundException]{
+    catch [System.IO.DirectoryNotFoundException] {
         Save-Exception $_ ($_.Exception.Message.ToString());
     }
     catch {
@@ -253,6 +260,7 @@ Function Register-Directory {
 
 Function Save-DataInJSON {
     param(
+        # Report that'll be saved to a report.json
         [Parameter(Mandatory = $true)]
         [Psobject]
         $Report
@@ -272,6 +280,7 @@ Function Save-DataInJSON {
 
 Function Save-DataInCSV {
     param(
+        # Report from which the csv-Files will be generated
         [Parameter(Mandatory = $true)]
         [Psobject]
         $Report    
@@ -426,6 +435,7 @@ Function Save-DataInCSV {
 
 Function Get-StandardizedCSV {
     param(
+        # Object, in which all Members will be standardized to exist.
         [Parameter(Mandatory = $true)]
         $Report
     )
@@ -447,7 +457,6 @@ Function Get-StandardizedCSV {
 
 Function Get-InventoryData {
     try {
-
         $config = Get-Config;
         $path = $config.searchForFilesAt + "\inventory_results.json";
         if (Test-Path -Path $path) {

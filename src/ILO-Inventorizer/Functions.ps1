@@ -28,14 +28,17 @@ Function Show-Help {
 
 Function New-Config {
     param(
+        # Path where the config should be stored
         [Parameter(Mandatory = $true)]
         [String]
         $Path,
         
+        # Toggle to generate a config with dummydata
         [Parameter()]
         [switch]
         $NotEmpty,
         
+        # Toggle to switch off inventory
         [Parameter()]
         [switch]
         $WithOutInventory
@@ -175,74 +178,92 @@ Function Update-Config {
     
     [CmdletBinding(PositionalBinding = $false)]
     param (
-        # Help Handling
+        # Show Help if Value is /? or --help
         [Parameter(Position = 0)][string]$help,
+        # Show Help if Value is true.
         [Parameter()][switch]$h,
 
+        # Path to the Config.json File
         [Parameter()]
         [string]
         $configPath,
 
+        # Path to the Login.json File
         [Parameter()]
         [string]
         $LoginConfigPath,
 
+        # Path to the directory where the reports will be stored
         [Parameter()]
         [string]
         $ReportPath,
 
+        # Path to the directory where the logs will be stored
         [Parameter()]
         [string]
         $LogPath,
 
+        # Path to a server.json to use insted of searching Inventory
         [Parameter()]
         [string]
         $ServerPath,
 
+        # Array of servers to use instead of searching inventory
         [Parameter()]
         [array]
         $server,
 
+        # Loglevel between 0 and 6 (the higher the more detailled)
         [Parameter()]
         [int]
         $LogLevel = -1,
 
+        # Toggle to Activate Logging
         [Parameter()]
         [bool]
         $LoggingActivated,
 
+        # Toggle to ActivateLogging to Console
         [Parameter()]
         [bool]
         $LogToConsole,
 
+        # String that will be used to search inventory
         [Parameter()]
         [string]
         $SearchStringInventory,
 
+        # Toggle to deactivate searching in Inventory
         [Parameter()]
         [bool]
         $DoNotSearchInventory,
 
+        # Toggle to deactivate generation of MACAddress.csv
         [Parameter()]
         [bool]
         $IgnoreMACAddress,
-
+        
+        # Toggle to deactivate generation of SerialNumbers.csv
         [Parameter()]
         [bool]
         $IgnoreSerialNumbers,
 
+        # Field in Inventory tha'll be used as Hostname for the ILO
         [Parameter()]
         [string]
         $RemoteMgmntField,
 
+        # Toggle Certification process with when connecting with ilo
         [Parameter()]
         [bool]
         $DeactivateCertificateValidationILO,
 
+        # Username for ILO-Interface
         [Parameter()]
         [string]
         $Username,
 
+        # Password for ILO-Interface
         [Parameter()]
         [securestring]
         $Password
@@ -359,8 +380,9 @@ Function Get-Config {
     #>
     [CmdletBinding(PositionalBinding = $false)]
     param (
-        # Help Handling
+        # Show Help if Value is /? or --help
         [Parameter(Position = 0)][string]$help,
+        # Show Help if Value is true
         [Parameter()][switch]$h
     )
     try {

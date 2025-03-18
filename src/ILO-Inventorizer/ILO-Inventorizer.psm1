@@ -62,11 +62,13 @@ Function Get-HWInfoFromILO {
     #>
     [CmdletBinding(PositionalBinding = $false)]
     param (
-        # Help Handling
+        # Show Help if Value either /? or --help
         [Parameter(Position = 0)][string]$help,
+        
+        # Show Help if Value is true.
         [Parameter()][switch]$h,
 
-        # Config Handling
+        # Path to a config.json-File
         [Parameter(
             ParameterSetName = "Config",
             Mandatory = $true
@@ -76,18 +78,22 @@ Function Get-HWInfoFromILO {
         [string]
         $configPath,
 
+        # Path to a login.json file that contains 'Username' and 'Password'
         [Parameter()]
         [string]
         $LoginConfigPath,
 
+        # Path to a folder where the output will be saved to 
         [Parameter()]
         [string]
         $ReportPath,
     
+        # Path to a folder where the logfiles will be saved to
         [Parameter()]
         [string]
         $LogPath,
 
+        # Path to a server.json, which will be used for the ILO-Query instead of Inventory (when doNotSearchInventory is activated)
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerPath")]
         [Parameter(
@@ -96,49 +102,60 @@ Function Get-HWInfoFromILO {
         [string]
         $ServerPath,
 
+        # Array that will be used for an ILO-Query instead of Inventory
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerArray")]
         [array]
         $server,
 
+        # Level from 0 to 6 that changes the detail of any logs present (0 - None, 6 - Many)
         [Parameter()]
         [int]
         $LogLevel = -1,
 
+        # Activate or Deactivate Logging
         [Parameter()]
         [switch]
         $LoggingActivated,
 
+        # Toggle if the MAC-Address.csv will be generated
         [Parameter()]
         [switch]
         $IgnoreMACAddress,
 
+        # Toggle if the SerialNumbers.csv will be generated
         [Parameter()]
         [switch]
         $IgnoreSerialNumbers,
 
+        # Toggle if the Logs should also be printed into the console
         [Parameter()]
         [switch]
         $LogToConsole = $null,        
 
+        # String that will be used to query Inventory.psi.ch (must be like 'sf-', 'gfa-' or 'sls-)
         [Parameter(Mandatory = $true,
             ParameterSetName = "Inventory")]
         [Parameter()]
         [string]
         $SearchStringInventory,
 
+        # Toggle if Inventory should be queried or not
         [Parameter()]
         [switch]
         $DoNotSearchInventory,        
 
+        # Change Field that is used for the Management Hostname
         [Parameter()]
         [string]
         $RemoteMgmntField = "Hostname Mgnt",
 
+        # Toggle CertificateValidation with the ILO-Server when querrying.
         [Parameter()]
         [switch]
         $DeactivateCertificateValidationILO,        
 
+        # Username for the ILO-Interface
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerPath")]
         [Parameter(Mandatory = $true,
@@ -152,6 +169,7 @@ Function Get-HWInfoFromILO {
         [string]
         $Username,
 
+        # Password for the ILO-Interface
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerPath")]
         [Parameter(Mandatory = $true,
@@ -177,9 +195,10 @@ Function Get-HWInfoFromILO {
         }
         else {
 
-            try{
+            try {
                 Import-Module HPEiLOCmdlets -ErrorAction Stop;
-            }catch [System.IO.FileNotFoundException]{
+            }
+            catch [System.IO.FileNotFoundException] {
                 Write-Error ("No HPEiLOCmdlets-Module is installed. Please install it from 'https://www.powershellgallery.com/packages/HPEiLOCmdlets/4.4.0.0'") ;
                 return;
             }
@@ -328,14 +347,18 @@ Function Set-ConfigPath {
     #>
     [CmdletBinding(PositionalBinding = $false)]
     param(
+        # Show Help if Value is either /? or --help
         [Parameter(Position = 0, ParameterSetName = "Help")][string]$help,
+        # Show Help if Value is true.
         [Parameter(ParameterSetName = "Help")][switch]$h,
         
+        # Path to the new Config you want to set the program to
         [Parameter(Mandatory = $true,
             ParameterSetName = "SetPath")]
         [string]
         $Path,
 
+        # Toggle if the path should be resetted.
         [Parameter(Mandatory = $true,
             ParameterSetName = "ResetPath")]
         [switch]
@@ -405,7 +428,9 @@ Function Get-ConfigPath {
     #>
     [CmdletBinding(PositionalBinding = $false)]
     param(
+        # Show Help if Value is /? or --help 
         [Parameter(Position = 0, ParameterSetName = "Help")][string]$help,
+        # Show Help if Value is true.
         [Parameter(ParameterSetName = "Help")][switch]$h
     )
     try {
@@ -440,7 +465,9 @@ Function Get-NewConfig {
     #>
     [CmdletBinding(PositionalBinding = $false)]
     param(
+        # Show Help if Value is /? or --help
         [Parameter(Position = 0, ParameterSetName = "Help")][string]$help,
+        # Show Help if Value is true.
         [Parameter(ParameterSetName = "Help")][switch]$h
     )
     try {
