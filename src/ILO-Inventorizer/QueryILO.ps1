@@ -1,5 +1,5 @@
-. .\Constants.ps1
-. .\Functions.ps1
+. $PSScriptRoot\Constants.ps1
+. $PSScriptRoot\Functions.ps1
 
 Function Get-DataFromILO {
     param(

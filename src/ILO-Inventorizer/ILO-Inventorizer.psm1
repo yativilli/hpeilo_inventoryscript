@@ -177,8 +177,12 @@ Function Get-HWInfoFromILO {
         }
         else {
 
-            
-            Import-Module HPEiLOCmdlets;
+            try{
+                Import-Module HPEiLOCmdlets -ErrorAction Stop;
+            }catch [System.IO.FileNotFoundException]{
+                Write-Error ("No HPEiLOCmdlets-Module is installed. Please install it from 'https://www.powershellgallery.com/packages/HPEiLOCmdlets/4.4.0.0'") ;
+                return;
+            }
             ## Check for recommended ModuleVersion
             $moduleVersion = (Get-Module -Name HPEiLOCmdlets).Version.ToString()
             if ($recommendedVersion -ne ($moduleVersion)) {

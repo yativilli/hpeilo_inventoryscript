@@ -1,4 +1,4 @@
-. .\Constants.ps1
+. $PSScriptRoot\Constants.ps1
 
 Function Show-Help {
     param(
