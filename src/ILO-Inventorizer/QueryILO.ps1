@@ -215,7 +215,7 @@ Function Get-DataFromILO {
         Save-DataInCSV $report;
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -240,21 +240,21 @@ Function Register-Directory {
         if ((-not (Test-Path -Path $Path)) -and $ignoreError) {
             New-Item -Path $Path -Force -ItemType Directory;
         }
+        elseif (Test-Path -Path $path) {
+            
+            $isDirectory = (Get-Item ($Path)) -is [System.IO.DirectoryInfo];
+            if (-not $isDirectory) {
+                $Path = $Path | Split-Path -Parent -Resolve;
+            }
+            return $Path.ToString();
+        }
         else {
             throw [System.IO.DirectoryNotFoundException] "The directory at '$Path' does not exist. Please verify that the specified path and all its parent folders exist."
         }
         
-        $isDirectory = (Get-Item ($Path)) -is [System.IO.DirectoryInfo];
-        if (-not $isDirectory) {
-            $Path = $Path | Split-Path -Parent -Resolve;
-        }
-        return $Path.ToString();
-    }
-    catch [System.IO.DirectoryNotFoundException] {
-        Save-Exception $_ ($_.Exception.Message.ToString());
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -429,7 +429,7 @@ Function Save-DataInCSV {
         }
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -451,7 +451,7 @@ Function Get-StandardizedCSV {
         return $Report;
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -464,10 +464,10 @@ Function Get-InventoryData {
         }
     }
     catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {
-        
+        Save-Exception $_ "The file $path does not exist or has been moved. Do not move or delete, as it is vital to query from Inventory.";
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
     return $server;
 }

@@ -103,10 +103,8 @@ Function Get-ServersFromInventory {
         }
         return $false;
         #>   
-    }catch [System.Text.RegularExpressions.RegexParseException], [System.IO.FileNotFoundException], [System.Net.WebException]{
-        Save-Exception $_ ($_.Exception.Message.ToString());
     }
-    catch{
-        Save-Exception $_ ($_.Exception.ToString());
+    catch {
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }

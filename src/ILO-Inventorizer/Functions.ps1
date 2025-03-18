@@ -22,7 +22,7 @@ Function Show-Help {
         }
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -136,7 +136,7 @@ Function New-Config {
         Log 5 "Finished Generating Configuration-File"
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -150,13 +150,12 @@ Function New-File {
         Log 5 "Create new File at $Path";
         if ((Test-Path -Path $Path) -eq $false) {
             New-Item -ItemType File -Path $Path -Force -ErrorAction Stop;
+            return $Path;
         }
     }
-    catch [System.IO.DirectoryNotFoundException] {
-        Log 1 ("$_`n" + $_.Exception + "`n" + $_.ScriptStackTrace);
-        Write-Error "The Path '$Path' could not be found. Please verify that it exists and doesn't point to nowhere."
+    catch [System.IO.DirectoryNotFoundException], [System.IO.FileNotFoundException] {
+        Save-Exception $_ ("The Path '$Path' could not be found. Please verify that it exists and doesn't point to nowhere.")
     }
-    return $Path;
 }
 
 Function Update-Config {
@@ -318,12 +317,6 @@ Function Update-Config {
             }
             Log 5 ("Saving updated Configuration at " + $config.configPath)
 
-            if ($configPath.Length -gt 0) {
-                $config.configPath = $configPath; 
-                Copy-Item -Path $pathToConfig -Destination $configPath; 
-                Set-ConfigPath -Path $config.configPath; 
-                Write-Warning ("Config has been updated to " + (Get-ConfigPath))
-            }
             Set-Content -Path (Get-ConfigPath) -Value ($config | ConvertTo-Json -Depth 3);
             
         }
@@ -338,7 +331,7 @@ Function Update-Config {
         Save-Exception $_ ($_.Exception.ErrorRecord.ToString() + " You are missing the specified Property in your Configuration File. To Fix this Error, verify that you have this value set (even if null or empty) somewhere in your config.json");
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -392,17 +385,15 @@ Function Get-Config {
         else {   
             if ((Test-Path -Path $ENV:HPEILOCONFIG)) {
                 $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
+                return $config;
             }
             else {
                 throw [System.IO.FileNotFoundException] "No config has been specified. Use either Set-ConfigPath to set Path to an existing one or let one generate by using Get-NewConfig";
             }
         }
     }
-    catch [System.IO.FileNotFoundException] {
-        Save-Exception $_ ($_.Exception.Message.ToString());
-    }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -477,7 +468,7 @@ Function Log {
         }
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -506,6 +497,6 @@ Function Invoke-PingTest {
         }
     }
     catch {    
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }

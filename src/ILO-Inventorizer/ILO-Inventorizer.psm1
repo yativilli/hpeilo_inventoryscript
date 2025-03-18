@@ -73,8 +73,6 @@ Function Get-HWInfoFromILO {
             ParameterSetName = "Config",
             Mandatory = $true
         )]
-        [Parameter(
-            ParameterSetName = "None")]
         [string]
         $configPath,
 
@@ -96,8 +94,6 @@ Function Get-HWInfoFromILO {
         # Path to a server.json, which will be used for the ILO-Query instead of Inventory (when doNotSearchInventory is activated)
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerPath")]
-        [Parameter(
-            ParameterSetName = "None")]
         [Parameter()]
         [string]
         $ServerPath,
@@ -271,13 +267,17 @@ Function Get-HWInfoFromILO {
                             3 {
                                 Log 6 "User has selected adding existing config"
                                 $pathToConfig = Read-Host -Prompt "Where dou you have the config stored at?";
-                                Set-ConfigPath -Path $pathToConfig;
+                                if (Test-Path $pathToConfig) {
+                                    Set-ConfigPath -Path $pathToConfig;
+                                }else{
+                                    throw [System.IO.FileNotFoundException] "The specified path $pathToConfig could not be found. Verify that it exists and contains a 'config.json'"
+                                }
                                 break;
                             }
                         }
                         return;   
                     }
-                    else {
+                    elseif ($ENV:HPEILOCONFIG -gt 0) {
                         # Set Standard Values for Updating Configurations
                         $config = Get-Config;
                         $configPath = $config.Length -gt 0 ? $configPath : $config.configPath;
@@ -296,7 +296,11 @@ Function Get-HWInfoFromILO {
                     
                         $login = (Get-Content ($LoginConfigPath) | ConvertFrom-Json -Depth 3);
                         $Username = $Username.Length -gt 0 ? $Username : $login.Username;
-                        $Password = $Password.Length -gt 0 ? $Password : $login.Password;
+                        
+                        $Password = $Password.Length -gt 0 ? $Password : $login.Password.Length -ne 0 ? (ConvertTo-SecureString -String ($login.Password) -AsPlainText) : (ConvertTo-SecureString -String ("None") -AsPlainText);
+                    }
+                    else {
+                        return;
                     }
                 }
             }
@@ -326,7 +330,7 @@ Function Get-HWInfoFromILO {
         }
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -410,7 +414,7 @@ Function Set-ConfigPath {
         Save-Exception $_ ("The Path $Path does not exist. Please verify that it exists and the pact includes a config.json-File");
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -481,7 +485,7 @@ Function Get-NewConfig {
         }
     }
     catch {
-        Save-Exception $_ ($_.Exception.ToString());
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
 Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Get-Config, Update-Config, Get-NewConfig, *
