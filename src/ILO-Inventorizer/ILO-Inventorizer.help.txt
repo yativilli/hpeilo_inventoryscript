@@ -29,7 +29,6 @@ Since not everyone using this script is familiar with the way help is called in 
 ``Set-ConfigPath /?``
 ``Get-ConfigPath -h``
 ``Get-Config --help``
-``Get-NewConfig --h``
 
 For Source-Code, please reference https://github.com/yativilli/hpeilo_inventoryscript
 

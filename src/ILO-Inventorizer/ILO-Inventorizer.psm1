@@ -162,7 +162,7 @@ Function Get-HWInfoFromILO {
             ParameterSetName = "Config")]
         [Parameter(
             ParameterSetName = "None")]
-        [String]
+        [securestring]
         $Password
 
 
@@ -196,6 +196,7 @@ Function Get-HWInfoFromILO {
                     break;
                 }
                 "ServerPath" {
+                    #
                     Log 6 "Started with 'ServerPath' ParameterSet."
                     $path = New-File -Path ($defaultPath);
                     New-Config -Path $path;
@@ -378,9 +379,8 @@ Function Set-ConfigPath {
         }
         
     }
-    catch [System.Management.Automation.ItemNotFoundException] {
-        Log 1 $_
-        Write-Error "The Path $Path does not exist. Please verify that it exists."
+    catch [System.Management.Automation.ItemNotFoundException], [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {
+        Save-Exception $_ ("The Path $Path does not exist. Please verify that it exists and the pact includes a config.json-File");
     }
     catch {
         Save-Exception $_ ($_.Exception.ToString());
@@ -404,12 +404,18 @@ Function Get-ConfigPath {
         [Parameter(Position = 0, ParameterSetName = "Help")][string]$help,
         [Parameter(ParameterSetName = "Help")][switch]$h
     )
-    if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
-        Get-Help Get-ConfigPath -Full;    
+    try {
+
+        if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+            Get-Help Get-ConfigPath -Full;    
+        }
+        else {   
+            Log 5 ("Getting config path - " + $ENV:HPEILOCONFIG); 
+            return $ENV:HPEILOCONFIG;
+        }
     }
-    else {   
-        Log 5 ("Getting config path - " + $ENV:HPEILOCONFIG); 
-        return $ENV:HPEILOCONFIG;
+    catch {
+        Save-Exception $_ ($_.Exception.ToString());
     }
 }
 
@@ -433,12 +439,18 @@ Function Get-NewConfig {
         [Parameter(Position = 0, ParameterSetName = "Help")][string]$help,
         [Parameter(ParameterSetName = "Help")][switch]$h
     )
-    if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
-        Get-Help Get-ConfigPath -Full;    
+    try {
+
+        if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+            Get-Help Get-ConfigPath -Full;    
+        }
+        else {   
+            Set-ConfigPath -Reset;
+            Get-HWInfoFromILO;
+        }
     }
-    else {   
-        Set-ConfigPath -Reset;
-        Get-HWInfoFromILO;
+    catch {
+        Save-Exception $_ ($_.Exception.ToString());
     }
 }
-Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Get-Config, Update-Config, Get-NewConfig, Log
+Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Get-Config, Update-Config, Get-NewConfig, *

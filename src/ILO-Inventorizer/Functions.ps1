@@ -1,4 +1,4 @@
-. .\ILO-Inventorizer\Constants.ps1
+. .\Constants.ps1
 
 Function Show-Help {
     param(
@@ -6,14 +6,24 @@ Function Show-Help {
         [string]
         $helpString
     )
-    if ($helpString.Length -gt 0) {
-        if (($helpString -eq "/?") -or ($helpString -eq "-h") -or ($helpString -eq "--help") -or ($helpString -eq "--h")) {
-            Log 5 "User has requested help -displaying Help-Page"
-            return $true;
+    try {
+        if ($helpString.Length -gt 0) {
+            switch ($helpstring) {
+                { ($_ -eq "/?") -or ($_ -eq "--help") -or ($_ -eq "-h") } {
+                    Log 5 "User has requested help -displaying Help-Page" 
+                    return $true; 
+                    break;
+                }
+                default {
+                    return $false
+                    break;
+                }
+            }
         }
-        else { return $false; }
     }
-    else { return $false; }
+    catch {
+        Save-Exception $_ ($_.Exception.ToString());
+    }
 }
 
 Function New-Config {
@@ -123,7 +133,7 @@ Function New-Config {
         Log 5 "Finished Generating Configuration-File"
     }
     catch {
-        Log 1 $_;
+        Save-Exception $_ ($_.Exception.ToString());
     }
 }
 
@@ -234,7 +244,7 @@ Function Update-Config {
         $Username,
 
         [Parameter()]
-        [String]
+        [securestring]
         $Password
     )
     try {
@@ -281,7 +291,7 @@ Function Update-Config {
                 Log 6 "Updating Credentials."
                 $login = Get-Content -Path ($config.loginConfigPath) | ConvertFrom-Json -Depth 3;
                 if ($Username.Length -gt 0) { $login.Username = $Username; }
-                if ($Password.Length -gt 0) { $login.Password = $Password }
+                if ($Password.Length -gt 0) { $login.Password = (ConvertFrom-SecureString -SecureString $Password -AsPlainText); }
                 
                 Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);
             }
@@ -359,7 +369,7 @@ Function Get-Config {
         }
         else {   
             if ((Test-Path -Path $ENV:HPEILOCONFIG)) {
-                return (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
+                $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
             }
             else {
                 throw [System.IO.FileNotFoundException] "No config has been specified. Use either Set-ConfigPath to set Path to an existing one or let one generate by using Get-NewConfig";
@@ -367,7 +377,7 @@ Function Get-Config {
         }
     }
     catch [System.IO.FileNotFoundException] {
-        Save-Exception $_ ($_.Exception.Message);
+        Save-Exception $_ ($_.Exception.Message.ToString());
     }
     catch {
         Save-Exception $_ ($_.Exception.ToString());
@@ -391,8 +401,9 @@ Function Log {
     try {
         $currentDateTime = Get-Date -Format "yyyy/MM/dd HH:mm:ss`t";
         $saveString = $currentDateTime + $Message;
-            
-        if (Test-Path -Path $ENV:HPEILOCONFIG) {
+        
+
+        if (($ENV:HPEILOCONFIG.Length -gt 0) -and (Test-Path -Path $ENV:HPEILOCONFIG)) {
             $config = Get-Config;
 
             $logPath = $config.logPath;

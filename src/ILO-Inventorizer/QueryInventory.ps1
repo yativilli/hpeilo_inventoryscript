@@ -1,4 +1,4 @@
-. .\ILO-Inventorizer\Functions.ps1
+. .\Functions.ps1
 
 Function Get-ServersFromInventory { 
     try {
