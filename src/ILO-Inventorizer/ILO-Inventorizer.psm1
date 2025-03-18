@@ -159,8 +159,6 @@ Function Get-HWInfoFromILO {
         [Parameter(Mandatory = $true,
             ParameterSetName = "Inventory")]
         [Parameter(
-            ParameterSetName = "Config")]
-        [Parameter(
             ParameterSetName = "None")]
         [string]
         $Username,
@@ -172,8 +170,6 @@ Function Get-HWInfoFromILO {
             ParameterSetName = "ServerArray")]
         [Parameter(Mandatory = $true,
             ParameterSetName = "Inventory")]
-        [Parameter(
-            ParameterSetName = "Config")]
         [Parameter(
             ParameterSetName = "None")]
         [securestring]
@@ -218,15 +214,15 @@ Function Get-HWInfoFromILO {
                     #
                     Log 6 "Started with 'ServerPath' ParameterSet."
                     $path = New-File -Path ($defaultPath);
-                    New-Config -Path $path;
-                    $DoNotSearchInventory = $true;
+                    New-Config $path;
+                    Update-Config -DoNotSearchInventory $true;
                     break;
                 }
                 "ServerArray" {
                     Log 6 "Started with 'ServerArray' ParameterSet."
                     $path = New-File -Path ($defaultPath);
                     New-Config -Path $path;
-                    $DoNotSearchInventory = $true;
+                    Update-Config -DoNotSearchInventory $true;
                     break;
                 }
                 "Inventory" {
@@ -245,7 +241,7 @@ Function Get-HWInfoFromILO {
                             1 {
                                 Log 6 "User has selected generating empty config"
                                 $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
-                                New-Config -Path $pathToSaveAt;
+                                New-Config -Path $pathToSaveAt -;
                                 break;
                             }
                             2 {
@@ -269,7 +265,8 @@ Function Get-HWInfoFromILO {
                                 $pathToConfig = Read-Host -Prompt "Where dou you have the config stored at?";
                                 if (Test-Path $pathToConfig) {
                                     Set-ConfigPath -Path $pathToConfig;
-                                }else{
+                                }
+                                else {
                                     throw [System.IO.FileNotFoundException] "The specified path $pathToConfig could not be found. Verify that it exists and contains a 'config.json'"
                                 }
                                 break;
@@ -278,26 +275,7 @@ Function Get-HWInfoFromILO {
                         return;   
                     }
                     elseif ($ENV:HPEILOCONFIG -gt 0) {
-                        # Set Standard Values for Updating Configurations
-                        $config = Get-Config;
-                        $configPath = $config.Length -gt 0 ? $configPath : $config.configPath;
-                        $LoginConfigPath = $LoginConfigPath.Length -gt 0 ? $LoginConfigPath : $config.loginConfigPath;
-                        $ReportPath = $ReportPath.Length -gt 0 ? $ReportPath : $config.reportPath;
-                        $LogPath = $LogPath.Length -gt 0 ? $LogPath : $config.logPath;
-                        $ServerPath = $ServerPath.Length -gt 0 ? $ServerPath : $config.serverPath;
-                        $LogLevel = $LogLevel -ne -1 ? $LogLevel : $config.logLevel;
-                        $LogToConsole = $PSBoundParameters.ContainsKey('LogToConsole') -eq $true ? $LogToConsole : $config.logToConsole ;
-                        $LoggingActivated = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $LoggingActivated : $config.loggingActived;
-                        $DoNotSearchInventory = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $DoNotSearchInventory : $config.doNotSearchInventory ;
-                        $DeactivateCertificateValidationILO = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $DeactivateCertificateValidationILO : $config.deactivateCertificateValidation;
-                    
-                        $SearchStringInventory = $SearchStringInventory.Length -gt 0 ? $SearchStringInventory : $config.searchStringInventory;
-                        $RemoteMgmntField = $RemoteMgmntField.Length -gt 0 ? $RemoteMgmntField : $config.remoteMgmntField;
-                    
-                        $login = (Get-Content ($LoginConfigPath) | ConvertFrom-Json -Depth 3);
-                        $Username = $Username.Length -gt 0 ? $Username : $login.Username;
-                        
-                        $Password = $Password.Length -gt 0 ? $Password : $login.Password.Length -ne 0 ? (ConvertTo-SecureString -String ($login.Password) -AsPlainText) : (ConvertTo-SecureString -String ("None") -AsPlainText);
+ 
                     }
                     else {
                         return;
@@ -305,9 +283,30 @@ Function Get-HWInfoFromILO {
                 }
             }
             Log 3 "Import Configuration"
-            Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -IgnoreMACAddress $IgnoreMACAddress -IgnoreSerialNumbers $IgnoreSerialNumbers -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory $DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO $DeactivateCertificateValidationILO -Username $Username -Password $Password;
+            # Set Standard Values for Updating Configurations
             $config = Get-Config;
+            $configPath = $config.Length -gt 0 ? $configPath : $config.configPath;
+            $LoginConfigPath = $LoginConfigPath.Length -gt 0 ? $LoginConfigPath : $config.loginConfigPath;
+            $ReportPath = $ReportPath.Length -gt 0 ? $ReportPath : $config.reportPath;
+            $LogPath = $LogPath.Length -gt 0 ? $LogPath : $config.logPath;
+            $ServerPath = $ServerPath.Length -gt 0 ? $ServerPath : $config.serverPath;
+            $LogLevel = $LogLevel -ne -1 ? $LogLevel : $config.logLevel;
+            $LogToConsole = $PSBoundParameters.ContainsKey('LogToConsole') -eq $true ? $LogToConsole : $config.logToConsole ;
+            $LoggingActivated = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $LoggingActivated : $config.loggingActived;
+            $DoNotSearchInventory = $PSBoundParameters.ContainsKey('DoNotSearchInventory') -eq $true ? $DoNotSearchInventory : $config.doNotSearchInventory ;
+            $DeactivateCertificateValidationILO = $PSBoundParameters.ContainsKey('DeactivateCertificateValidationILO') -eq $true ? $DeactivateCertificateValidationILO : $config.deactivateCertificateValidation;
+                                   
+            $SearchStringInventory = $SearchStringInventory.Length -gt 0 ? $SearchStringInventory : $config.searchStringInventory;
+            $RemoteMgmntField = $RemoteMgmntField.Length -gt 0 ? $RemoteMgmntField : $config.remoteMgmntField;
+                                   
+            $login = (Get-Content ($LoginConfigPath) | ConvertFrom-Json -Depth 3);
+            $Username = $Username.Length -gt 0 ? $Username : $login.Username;
+                                       
+            $Password = $Password.Length -gt 0 ? $Password : $login.Password.Length -ne 0 ? (ConvertTo-SecureString -String ($login.Password) -AsPlainText) : (ConvertTo-SecureString -String ("None") -AsPlainText);
         
+            Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -IgnoreMACAddress:$IgnoreMACAddress -IgnoreSerialNumbers:$IgnoreSerialNumbers -LogToConsole:$LogToConsole -LoggingActivated:$LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory:$DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO:$DeactivateCertificateValidationILO -Username $Username -Password $Password;
+            $config = Get-Config;
+
             if (-not $config.doNotSearchInventory) {
                 Log 3 "Query from Inventory started."
                 Get-ServersFromInventory;

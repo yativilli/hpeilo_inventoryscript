@@ -89,7 +89,6 @@ Function Get-ServersFromInventory {
       
                 if (Test-Path -Path $config.serverPath) {
                     $serversToSave | ConvertTo-Json -Depth 2 | Out-File -Path ($config.serverPath);
-                    return $true;
                 }
                 else {
                     $Path = $config.serverPath;

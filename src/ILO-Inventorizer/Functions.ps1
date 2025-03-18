@@ -150,8 +150,8 @@ Function New-File {
         Log 5 "Create new File at $Path";
         if ((Test-Path -Path $Path) -eq $false) {
             New-Item -ItemType File -Path $Path -Force -ErrorAction Stop;
-            return $Path;
         }
+        return $Path;
     }
     catch [System.IO.DirectoryNotFoundException], [System.IO.FileNotFoundException] {
         Save-Exception $_ ("The Path '$Path' could not be found. Please verify that it exists and doesn't point to nowhere.")
@@ -219,12 +219,12 @@ Function Update-Config {
 
         # Toggle to Activate Logging
         [Parameter()]
-        [bool]
+        [switch]
         $LoggingActivated,
 
         # Toggle to ActivateLogging to Console
         [Parameter()]
-        [bool]
+        [switch]
         $LogToConsole,
 
         # String that will be used to search inventory
@@ -288,12 +288,12 @@ Function Update-Config {
             if ($RemoteMgmntField.Length -gt 0) { $config.remoteMgmntField = $RemoteMgmntField; }
 
             # Set Switch-Value
-            if ($null -ne $LoggingActivated) { $config.loggingActived = $LoggingActivated; }
-            if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = $DoNotSearchInventory; }
-            if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidation = $DeactivateCertificateValidationILO; }
-            if ( $null -ne $LogToConsole) { $config.logToConsole = $LogToConsole; }
-            if ($null -ne $IgnoreMACAddress) { $config.ignoreMACAddress = $IgnoreMACAddress; }
-            if ($null -ne $IgnoreSerialNumbers) { $config.ignoreSerialNumbers = $IgnoreSerialNumbers; }
+            if ($null -ne $LoggingActivated) { $config.loggingActived = [bool]$LoggingActivated; }
+            if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = [bool]$DoNotSearchInventory; }
+            if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidation = [bool]$DeactivateCertificateValidationILO; }
+            if ( $null -ne $LogToConsole) { $config.logToConsole = [bool]$LogToConsole; }
+            if ($null -ne $IgnoreMACAddress) { $config.ignoreMACAddress = [bool]$IgnoreMACAddress; }
+            if ($null -ne $IgnoreSerialNumbers) { $config.ignoreSerialNumbers = [bool]$IgnoreSerialNumbers; }
             
             # Set ServerArray
             if ($server.Length -gt 0) { 
@@ -438,7 +438,7 @@ Function Log {
                         # Directory does not exist$
                         Write-Warning ("No Path for logging exists. Logs will be stored at '" + $ENV:HPEILOCONFIG + "\logs'.")
                         $defaultLogPath = ($defaultPath + "\logs");
-                        New-Item -ItemType Directory $defaultLogPath -Force;
+                        New-Item -ItemType Directory $defaultLogPath -Force | Out-Null;
                         Update-Config -LogPath $defaultLogPath;
                         $logPath = $defaultLogPath;
                     }
