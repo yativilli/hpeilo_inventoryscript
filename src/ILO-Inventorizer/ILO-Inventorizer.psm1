@@ -73,7 +73,6 @@ Function Get-HWInfoFromILO {
         )]
         [Parameter(
             ParameterSetName = "None")]
-        [Parameter()]
         [string]
         $configPath,
 
@@ -303,10 +302,7 @@ Function Get-HWInfoFromILO {
         }
     }
     catch {
-        Write-Host $_
-        Write-Host $_.ScriptStackTrace
-        Log 1 ($_.Exception)
-        Log 1 ($_.ScriptStackTrace);
+        Save-Exception $_ ($_.Exception.ToString());
     }
 }
 
@@ -387,9 +383,7 @@ Function Set-ConfigPath {
         Write-Error "The Path $Path does not exist. Please verify that it exists."
     }
     catch {
-        Log 1 $_
-        Write-Error $_;
-        Write-Error $_.ScriptStackTrace;
+        Save-Exception $_ ($_.Exception.ToString());
     }
 }
 
@@ -420,7 +414,7 @@ Function Get-ConfigPath {
 }
 
 Function Get-NewConfig {
-        <#
+    <#
     .SYNOPSIS
     Brings up the screen to generate a new Config
     .DESCRIPTION
@@ -444,7 +438,7 @@ Function Get-NewConfig {
     }
     else {   
         Set-ConfigPath -Reset;
-        Get-HWInfoFromILO
+        Get-HWInfoFromILO;
     }
 }
-Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Get-Config, Update-Config, Get-NewConfig
+Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Get-Config, Update-Config, Get-NewConfig, Log

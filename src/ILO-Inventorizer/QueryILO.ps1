@@ -430,8 +430,15 @@ Function Get-StandardizedCSV {
 }
 
 Function Get-InventoryData {
-    $config = Get-Config;
-    $path = $config.searchForFilesAt + "\inventory_results.json";
-    $server = Get-Content $path | ConvertFrom-Json -Depth 10;
+    try{
+
+        $config = Get-Config;
+        $path = $config.searchForFilesAt + "\inventory_results.json";
+        if(Test-Path -Path $path){
+            $server = Get-Content $path | ConvertFrom-Json -Depth 10;
+        }
+    }catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException]{
+
+    }
     return $server;
 }

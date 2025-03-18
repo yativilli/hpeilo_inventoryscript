@@ -7,7 +7,6 @@ Function Show-Help {
         $helpString
     )
     if ($helpString.Length -gt 0) {
-
         if (($helpString -eq "/?") -or ($helpString -eq "-h") -or ($helpString -eq "--help") -or ($helpString -eq "--h")) {
             Log 5 "User has requested help -displaying Help-Page"
             return $true;
@@ -141,11 +140,8 @@ Function New-File {
         }
     }
     catch [System.IO.DirectoryNotFoundException] {
-        Log 1 $_ 
-        $splitPath = Split-Path($Path);
-        New-Item -ItemType Directory -Path $splitPath -Force;
-        New-Item -ItemType File -Path $Path -Force;
-        Log 1 "$_ has been caught and the appropriate directory has been generated."
+        Log 1 ("$_`n" + $_.Exception + "`n" + $_.ScriptStackTrace);
+        Write-Error "The Path '$Path' could not be found. Please verify that it exists and doesn't point to nowhere."
     }
     return $Path;
 }
@@ -301,14 +297,30 @@ Function Update-Config {
             
         }
         else {
-            throw [System.IO.FileNotFoundException] "No updatable config could be found at $pathToConfig";
+            throw [System.IO.FileNotFoundException] "No updatable config could be found at '$pathToConfig'. Verify that a configuration is set to a config.json that exists and verify that the path exists. `nIf you moved the config file, use Set-ConfigPath -Path 'C:\Somewhere' to change it.";
         }
     }
-    catch {
-        # Log 1 
-        Write-Host $_
-        Write-Host $_.ScriptStackTrace
+    catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {
+        Save-Exception $_ ($_.Exception.ErrorRecord.ToString() + "Verify that all specified path in config.json and parameters exists and any files pointed to exist");
     }
+    catch [System.Management.Automation.SetValueInvocationException] {
+        Save-Exception $_ ($_.Exception.ErrorRecord.ToString() + " You are missing the specified Property in your Configuration File. To Fix this Error, verify that you have this value set (even if null or empty) somewhere in your config.json");
+    }
+    catch {
+        Save-Exception $_ ($_.Exception.ToString());
+    }
+}
+
+Function Save-Exception {
+    param(
+        [Parameter(Mandatory = $true)]
+        $_,
+
+        [Parameter(Mandatory = $true)]
+        $Message
+    )
+    Log 1 ("$Message`n" + $_.ScriptStackTrace);
+    Write-Error ("$Message");
 }
 
 Function Get-Config {
@@ -341,14 +353,24 @@ Function Get-Config {
         [Parameter(Position = 0)][string]$help,
         [Parameter()][switch]$h
     )
-
-    if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
-        Get-Help Get-Config -Full;    
-    }
-    else {   
-        if ((Test-Path -Path $ENV:HPEILOCONFIG)) {
-            return (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
+    try {
+        if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+            Get-Help Get-Config -Full;    
         }
+        else {   
+            if ((Test-Path -Path $ENV:HPEILOCONFIG)) {
+                return (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
+            }
+            else {
+                throw [System.IO.FileNotFoundException] "No config has been specified. Use either Set-ConfigPath to set Path to an existing one or let one generate by using Get-NewConfig";
+            }
+        }
+    }
+    catch [System.IO.FileNotFoundException] {
+        Save-Exception $_ ($_.Exception.Message);
+    }
+    catch {
+        Save-Exception $_ ($_.Exception.ToString());
     }
 }
 
@@ -371,7 +393,7 @@ Function Log {
         $saveString = $currentDateTime + $Message;
             
         if (Test-Path -Path $ENV:HPEILOCONFIG) {
-            $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-JSON -Depth 3);
+            $config = Get-Config;
 
             $logPath = $config.logPath;
             $logLevel = $config.logLevel;
@@ -417,9 +439,12 @@ Function Log {
                 }
             }
         }
+        else {
+            Write-Warning "No path to logfiles exist. Please specify one in your config or via parameter as soon as possible.";
+        }
     }
     catch {
-        Write-Error $_;
+        Save-Exception $_ ($_.Exception.ToString());
     }
 }
 
@@ -448,6 +473,6 @@ Function Invoke-PingTest {
         }
     }
     catch {    
-        $_
+        Save-Exception $_ ($_.Exception.ToString());
     }
 }
