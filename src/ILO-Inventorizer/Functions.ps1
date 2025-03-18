@@ -247,6 +247,11 @@ Function Update-Config {
         [bool]
         $IgnoreSerialNumbers,
 
+        # Toggle Pingtest
+        [Parameter()]
+        [bool]
+        $DeactivatePingtest,
+
         # Field in Inventory tha'll be used as Hostname for the ILO
         [Parameter()]
         [string]
@@ -294,6 +299,7 @@ Function Update-Config {
             if ( $null -ne $LogToConsole) { $config.logToConsole = [bool]$LogToConsole; }
             if ($null -ne $IgnoreMACAddress) { $config.ignoreMACAddress = [bool]$IgnoreMACAddress; }
             if ($null -ne $IgnoreSerialNumbers) { $config.ignoreSerialNumbers = [bool]$IgnoreSerialNumbers; }
+            if ($null -ne $DeactivatePingtest) { $config.deactivatePingtest = [bool]$DeactivatePingtest; }
             
             # Set ServerArray
             if ($server.Length -gt 0) { 

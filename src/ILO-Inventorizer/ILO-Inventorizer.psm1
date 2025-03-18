@@ -127,7 +127,12 @@ Function Get-HWInfoFromILO {
         # Toggle if the Logs should also be printed into the console
         [Parameter()]
         [switch]
-        $LogToConsole = $null,        
+        $LogToConsole,  
+
+        # Toggle if the Pingtest is executed
+        [Parameter()]
+        [switch]
+        $DeactivatePingtest,
 
         # String that will be used to query Inventory.psi.ch (must be like 'sf-', 'gfa-' or 'sls-)
         [Parameter(Mandatory = $true,
@@ -291,11 +296,13 @@ Function Get-HWInfoFromILO {
             $LogPath = $LogPath.Length -gt 0 ? $LogPath : $config.logPath;
             $ServerPath = $ServerPath.Length -gt 0 ? $ServerPath : $config.serverPath;
             $LogLevel = $LogLevel -ne -1 ? $LogLevel : $config.logLevel;
+            
             $LogToConsole = $PSBoundParameters.ContainsKey('LogToConsole') -eq $true ? $LogToConsole : $config.logToConsole ;
             $LoggingActivated = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $LoggingActivated : $config.loggingActived;
             $DoNotSearchInventory = $PSBoundParameters.ContainsKey('DoNotSearchInventory') -eq $true ? $DoNotSearchInventory : $config.doNotSearchInventory ;
             $DeactivateCertificateValidationILO = $PSBoundParameters.ContainsKey('DeactivateCertificateValidationILO') -eq $true ? $DeactivateCertificateValidationILO : $config.deactivateCertificateValidation;
-                                   
+            $DeactivatePingtest = $PSBoundParameters.ContainsKey("DeactivatePingtest") -eq $true ? $DeactivatePingtest : $config.deactivatePingtest;
+            
             $SearchStringInventory = $SearchStringInventory.Length -gt 0 ? $SearchStringInventory : $config.searchStringInventory;
             $RemoteMgmntField = $RemoteMgmntField.Length -gt 0 ? $RemoteMgmntField : $config.remoteMgmntField;
                                    
@@ -304,7 +311,7 @@ Function Get-HWInfoFromILO {
                                        
             $Password = $Password.Length -gt 0 ? $Password : $login.Password.Length -ne 0 ? (ConvertTo-SecureString -String ($login.Password) -AsPlainText) : (ConvertTo-SecureString -String ("None") -AsPlainText);
         
-            Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -IgnoreMACAddress:$IgnoreMACAddress -IgnoreSerialNumbers:$IgnoreSerialNumbers -LogToConsole:$LogToConsole -LoggingActivated:$LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory:$DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO:$DeactivateCertificateValidationILO -Username $Username -Password $Password;
+            Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -DeactivatePingtest:$DeactivatePingtest -IgnoreMACAddress:$IgnoreMACAddress -IgnoreSerialNumbers:$IgnoreSerialNumbers -LogToConsole:$LogToConsole -LoggingActivated:$LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory:$DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO:$DeactivateCertificateValidationILO -Username $Username -Password $Password;
             $config = Get-Config;
 
             if (-not $config.doNotSearchInventory) {
