@@ -319,14 +319,24 @@ Function Get-HWInfoFromILO {
                 Get-ServersFromInventory;
             }
  
-            Log 3 "Start Pingtest"
-            $config = Get-Config;
-            $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
             [Array]$reachable = @();
-            foreach ($srv in $serverJSON) {
-                if (Invoke-PingTest $srv) {
-                    $reachable += $srv;
+            $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
+            $config = Get-Config;
+            if (-not $config.deactivatePingtest) {
+                Log 3 "Start Pingtest"
+
+                foreach ($srv in $serverJSON) {
+                    if (Invoke-PingTest $srv) {
+                        Log 0 "$Hostname was successfully reached via Pingtest." -IgnoreLogActive;
+                        $reachable += $srv;
+                    }
+                    else {
+                        Log 0 "$Hostname was not able to be reached via Pingtest." -IgnoreLogActive;
+                    }
                 }
+            }
+            else {
+                $reachable = $serverJSON;
             }
         
             Log 3 "Query from ILO Started"
