@@ -302,7 +302,9 @@ Function Get-HWInfoFromILO {
             $DoNotSearchInventory = $PSBoundParameters.ContainsKey('DoNotSearchInventory') -eq $true ? $DoNotSearchInventory : $config.doNotSearchInventory ;
             $DeactivateCertificateValidationILO = $PSBoundParameters.ContainsKey('DeactivateCertificateValidationILO') -eq $true ? $DeactivateCertificateValidationILO : $config.deactivateCertificateValidation;
             $DeactivatePingtest = $PSBoundParameters.ContainsKey("DeactivatePingtest") -eq $true ? $DeactivatePingtest : $config.deactivatePingtest;
-            
+            $IgnoreMACAddress = $PSBoundParameters.ContainsKey("IgnoreMACAddress") -eq $true ? $IgnoreMACAddress : $config.ignoreMACAddress;
+            $IgnoreSerialNumbers = $PSBoundParameters.ContainsKey("IgnoreSerialNumbers") -eq $true ? $IgnoreSerialNumbers : $config.ignoreSerialNumbers;
+
             $SearchStringInventory = $SearchStringInventory.Length -gt 0 ? $SearchStringInventory : $config.searchStringInventory;
             $RemoteMgmntField = $RemoteMgmntField.Length -gt 0 ? $RemoteMgmntField : $config.remoteMgmntField;
                                    
@@ -316,7 +318,7 @@ Function Get-HWInfoFromILO {
 
             if (-not $config.doNotSearchInventory) {
                 Log 3 "Query from Inventory started."
-                Get-ServersFromInventory;
+                Get-ServersFromInventory | Out-Null;
             }
  
             [Array]$reachable = @();
@@ -340,7 +342,11 @@ Function Get-HWInfoFromILO {
             }
         
             Log 3 "Query from ILO Started"
-            Get-DataFromILO $reachable;
+            if($reachable.Count -gt 0){
+                Get-DataFromILO $reachable;
+            }else{
+                throw [System.Data.DataException] "No Servers could be found. Please verify that either your server.json or inventory has at least one Server. Check also if doNotSearchInventory is set to the appropriate value."
+            }
 
             Log 2 "ILO-Inventorizer has been executed successfully."
         }
