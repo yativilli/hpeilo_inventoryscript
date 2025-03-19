@@ -246,7 +246,7 @@ Function Get-HWInfoFromILO {
                             1 {
                                 Log 6 "User has selected generating empty config"
                                 $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
-                                New-Config -Path $pathToSaveAt;
+                                New-Config -Path $pathToSaveAt -;
                                 break;
                             }
                             2 {
@@ -298,7 +298,7 @@ Function Get-HWInfoFromILO {
             $LogLevel = $LogLevel -ne -1 ? $LogLevel : $config.logLevel;
             
             $LogToConsole = $PSBoundParameters.ContainsKey('LogToConsole') -eq $true ? $LogToConsole : $config.logToConsole ;
-            $LoggingActivated = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $LoggingActivated : $config.loggingActived;
+            $LoggingActivated = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $LoggingActivated : $config.loggingActivated;
             $DoNotSearchInventory = $PSBoundParameters.ContainsKey('DoNotSearchInventory') -eq $true ? $DoNotSearchInventory : $config.doNotSearchInventory ;
             $DeactivateCertificateValidationILO = $PSBoundParameters.ContainsKey('DeactivateCertificateValidationILO') -eq $true ? $DeactivateCertificateValidationILO : $config.deactivateCertificateValidation;
             $DeactivatePingtest = $PSBoundParameters.ContainsKey("DeactivatePingtest") -eq $true ? $DeactivatePingtest : $config.deactivatePingtest;

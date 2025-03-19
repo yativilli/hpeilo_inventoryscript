@@ -55,11 +55,12 @@ Function New-Config {
             serverPath                      = ""
             logPath                         = ""
             logLevel                        = ""
-            loggingActived                  = ""
+            loggingActivated                = ""
             searchStringInventory           = ""
             doNotSearchInventory            = $false
             remoteMgmntField                = ""
             deactivateCertificateValidation = $false
+            deactivatePingtest              = $false
             logToConsole                    = $false
             ignoreMACAddress                = $false
             ignoreSerialNumbers             = $false
@@ -79,11 +80,12 @@ Function New-Config {
             $config.serverPath = $Path + "\servers.json";
             $config.logPath = $Path + "\logs";
             $config.logLevel = 0;
-            $config.loggingActived = $true;
+            $config.loggingActivated = $true;
             $config.logToConsole = $true;
             $config.searchStringInventory = "";
             $config.doNotSearchInventory = $true;
             $config.remoteMgmntField = "";
+            $config.deactivatePingtest = $false;
             $config.deactivateCertificateValidation = $true;
 
             $login.Username = "SomeFancyUsername";
@@ -103,6 +105,7 @@ Function New-Config {
             $config.logToConsole = $true;
             $config.searchStringInventory = "rmgfa-sioc-cs";
             $config.doNotSearchInventory = $false;
+            $config.deactivatePingtest = $false;
             $config.remoteMgmntField = "Hostname Mgnt";
             $config.deactivateCertificateValidation = $true;
 
@@ -116,12 +119,13 @@ Function New-Config {
             $config.serverPath = "";
             $config.logPath = "";
             $config.logLevel = 0;
-            $config.loggingActived = $null;
+            $config.loggingActivated = $null;
             $config.logToConsole = $null;
             $config.searchStringInventory = "";
             $config.doNotSearchInventory = $null;
             $config.remoteMgmntField = "";
             $config.deactivateCertificateValidation = $null;
+            $config.deactivatePingtest = $null;
             $config.ignoreMACAddress = $null;
             $config.ignoreSerialNumbers = $null;
 
@@ -293,7 +297,7 @@ Function Update-Config {
             if ($RemoteMgmntField.Length -gt 0) { $config.remoteMgmntField = $RemoteMgmntField; }
 
             # Set Switch-Value
-            if ($null -ne $LoggingActivated) { $config.loggingActived = [bool]$LoggingActivated; }
+            if ($null -ne $LoggingActivated) { $config.loggingActivated = [bool]$LoggingActivated; }
             if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = [bool]$DoNotSearchInventory; }
             if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidation = [bool]$DeactivateCertificateValidationILO; }
             if ( $null -ne $LogToConsole) { $config.logToConsole = [bool]$LogToConsole; }
@@ -368,7 +372,7 @@ Function Get-Config {
     serverPath                      : C:\Users\wernle_y\AppData\Roaming\hpeilo\server.json
     logPath                         : C:\Users\wernle_y\AppData\Roaming\hpeilo\logs
     logLevel                        : 0
-    loggingActived                  : True
+    loggingActivated                  : True
     searchStringInventory           : gfa-sioc-cs-de
     doNotSearchInventory            : False
     remoteMgmntField                : Hostname Mgnt
@@ -392,6 +396,30 @@ Function Get-Config {
             if ((Test-Path -Path $ENV:HPEILOCONFIG)) {
                 $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
 
+   
+                if (
+                        ($config.searchForFilesAt -isnot [string])-or
+                        ($config.configPath -isnot [string]) -or 
+                        ($config.loginConfigPath -isnot [string]) -or 
+                        ($config.reportPath -isnot [string]) -or 
+                        ($config.serverPath -isnot [string]) -or 
+                        ($config.logPath -isnot [string]) -or 
+                        ($config.logLevel -isnot [int64]) -or 
+                        ($config.searchStringInventory -isnot [string]) -or 
+                        ($config.remoteMgmntField -isnot [string]) -or 
+
+                        ($config.LoggingActivated -isnot [bool]) -or 
+                        ($config.doNotSearchInventory -isnot [bool]) -or 
+                        ($config.deactivateCertificateValidation -isnot [bool]) -or 
+                        ($config.logToConsole -isnot [bool]) -or 
+                        ($config.ignoreMACAddress -isnot [bool]) -or 
+                        ($config.ignoreSerialNumbers -isnot [bool]) -or 
+                        ($config.deactivatePingtest -isnot [bool])
+                ) {
+                    throw [System.IO.InvalidDataException] "Your configuration has wrong types. Please verify that the following types are met:`nlogLevel = int, LoggingActivated = bool, doNotSearchInventory = bool, deactivateCertificateValidation = bool, logToConsole = bool, ignoreMACAddress = bool, ignoreSerialNumbers = bool, deactivatePingtest = bool AND any other fields are of type string."
+                }
+
+                
                 return $config;
             }
             else {
@@ -424,12 +452,12 @@ Function Log {
         
 
         if (($ENV:HPEILOCONFIG.Length -gt 0) -and (Test-Path -Path $ENV:HPEILOCONFIG)) {
-            $config = Get-Config;
+            $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
 
             $logPath = $config.logPath;
             $logLevel = $config.logLevel;
             if ($logLevel -isnot [int64]) { throw [System.IO.InvalidDataException] "The Loglevel is not of type int. Check if you have passed anything other than a string to it." }
-            $logActive = $config.loggingActived;
+            $logActive = $config.loggingActivated;
             $logToConsoleActive = $config.logToConsole;
 
             if ($logPath.Length -gt 0) {
