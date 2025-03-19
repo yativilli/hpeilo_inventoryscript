@@ -8,4 +8,6 @@ Set-PSDebug -Trace 0
 
 
 
-Get-HWInfoFromILO;
+# Get-HWInfoFromILO;
+
+Convert-PathsToValidated;

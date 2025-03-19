@@ -318,11 +318,15 @@ Function Get-HWInfoFromILO {
             Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -DeactivatePingtest:$DeactivatePingtest -IgnoreMACAddress:$IgnoreMACAddress -IgnoreSerialNumbers:$IgnoreSerialNumbers -LogToConsole:$LogToConsole -LoggingActivated:$LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory:$DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO:$DeactivateCertificateValidationILO -Username $Username -Password $Password;
             $config = Get-Config;
 
+            Convert-PathsToValidated -IgnoreServerPath;
+            
             if (-not $config.doNotSearchInventory) {
                 Log 3 "Query from Inventory started."
                 Get-ServersFromInventory | Out-Null;
             }
- 
+
+            Convert-PathsToValidated -IgnoreServerPath;
+            
             [Array]$reachable = @();
             $config = Get-Config;
             $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;

@@ -26,6 +26,49 @@ Function Show-Help {
     }
 }
 
+Function Convert-PathsToValidated {
+    param(
+        [Parameter()]
+        [switch]
+        $IgnoreServerPath
+    )
+
+    try {
+
+        $config = Get-Config;
+        
+        if (-not(Test-Path -Path ($config.searchForFilesAt))) {
+            Write-Host $config.searchForFilesAt
+            New-Item -ItemType Directory ($config.searchForFilesAt) -Force | Out-Null;
+        }
+
+        if ((-not(Test-Path -Path ($config.loginConfigPath)))) {
+            New-Item -ItemType Directory ($config.searchForFilesAt) -Force | Out-Null;
+            $path = $config.loginConfigPath;
+            throw [System.IO.FileNotFoundException] ("Path to '$path' could not be resolved. This path must include some file like 'login.json' and it and the file must exist for the script to work. It also must include a Username and a Password.")
+        }
+
+        if ((-not(Test-Path -Path ($config.serverPath))) -and ($IgnoreServerPath -eq $false)) {
+            New-Item -ItemType Directory ($config.searchForFilesAt) -Force | Out-Null;
+            $path = $config.serverPath;
+            throw [System.IO.FileNotFoundException] ("Path to '$path' could not be resolved. This path must include some file like 'server.json' and it and the file must exist for the script to work, with it containing an array of servers.")
+        }
+
+        if ((-not(Test-Path -Path ($config.reportPath)))) {
+            Write-Host $config.reportPath
+            New-Item -ItemType Directory ($config.reportPath) -Force | Out-Null;
+        }
+
+        if ((-not(Test-Path -Path ($config.logPath)))) {
+            Write-Host $config.logPath
+            New-Item -ItemType Directory ($config.logPath) -Force | Out-Null;
+        }
+    }
+    catch {
+        Save-Exception $_ ($_.Exception.Message.ToString());
+    }
+}
+
 Function New-Config {
     param(
         # Path where the config should be stored
