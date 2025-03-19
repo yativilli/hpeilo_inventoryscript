@@ -77,7 +77,7 @@ Function New-Config {
         if ($NotEmpty -and $WithOutInventory) {
             Log 6 "Filling empty config w/o Inventory - generating supplementary 'server.json'"
             $config.reportPath = $Path;
-            $config.serverPath = $Path + "\servers.json";
+            $config.serverPath = $Path + "\server.json";
             $config.logPath = $Path;
             $config.logLevel = 0;
             $config.loggingActivated = $true;
