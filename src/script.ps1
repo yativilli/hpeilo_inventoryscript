@@ -16,11 +16,13 @@ Set-PSDebug -Trace 0
  #Set-ConfigPath -Path "C:\Users\wernle_y\AppData\Roaming\hpeilo\config.json"
 # Set-ConfigPath -Reset;
 # Get-HWInfoFromILO
-Get-HWInfoFromILO;
+# Get-HWInfoFromILO;
 #Get-Config;
-<#
+
+
 # TF-04, TF-05, TF-06, TF-07
 Get-NewConfig
+<#
 # TF-08
 Set-ConfigPath -Path "C:\Users\wernle_y\AppData\Roaming\hpeilo\Testing\TF08\config.json"
 Get-HWInfoFromILO;

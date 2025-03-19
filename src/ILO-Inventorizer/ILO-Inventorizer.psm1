@@ -246,7 +246,7 @@ Function Get-HWInfoFromILO {
                             1 {
                                 Log 6 "User has selected generating empty config"
                                 $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
-                                New-Config -Path $pathToSaveAt -;
+                                New-Config -Path $pathToSaveAt;
                                 break;
                             }
                             2 {
