@@ -51,11 +51,11 @@ Function New-Config {
             searchForFilesAt                = $Path
             configPath                      = $config_path
             loginConfigPath                 = $login_config_path
-            reportPath                      = ""
+            reportPath                      = $Path
             serverPath                      = ""
             logPath                         = ""
             logLevel                        = ""
-            loggingActivated                = ""
+            loggingActivated                = $false
             searchStringInventory           = ""
             doNotSearchInventory            = $false
             remoteMgmntField                = ""
@@ -98,11 +98,12 @@ Function New-Config {
         ## Generate Dummy (w/ Inventory)
         elseif ($NotEmpty) {
             Log 6 "Filling empty config w/ Inventory"   
-            $config.reportPath = $Path + "\reports";
+            $config.reportPath = $Path;
             $config.serverPath = "";
-            $config.logPath = $Path + "\logs";
+            $config.logPath = $Path;
             $config.logLevel = 0;
             $config.logToConsole = $true;
+            $config.loggingActivated = $true;
             $config.searchStringInventory = "rmgfa-sioc-cs";
             $config.doNotSearchInventory = $false;
             $config.deactivatePingtest = $false;
@@ -114,7 +115,7 @@ Function New-Config {
         }
         ## Generate empty
         else {
-            Log 6 "Filling empty config with no contents"
+            Log 6 "Filling empty config with no contesnts"
             $config.reportPath = "";
             $config.serverPath = "";
             $config.logPath = "";
@@ -224,12 +225,12 @@ Function Update-Config {
         # Toggle to Activate Logging
         [Parameter()]
         [switch]
-        $LoggingActivated,
+        $LoggingActivated = $null,
 
         # Toggle to ActivateLogging to Console
         [Parameter()]
         [switch]
-        $LogToConsole,
+        $LogToConsole = $null,
 
         # String that will be used to search inventory
         [Parameter()]
@@ -238,23 +239,23 @@ Function Update-Config {
 
         # Toggle to deactivate searching in Inventory
         [Parameter()]
-        [bool]
-        $DoNotSearchInventory,
+        [switch]
+        $DoNotSearchInventory = $null,
 
         # Toggle to deactivate generation of MACAddress.csv
         [Parameter()]
-        [bool]
-        $IgnoreMACAddress,
+        [switch]
+        $IgnoreMACAddress = $null,
         
         # Toggle to deactivate generation of SerialNumbers.csv
         [Parameter()]
-        [bool]
-        $IgnoreSerialNumbers,
+        [switch]
+        $IgnoreSerialNumbers = $null,
 
         # Toggle Pingtest
         [Parameter()]
-        [bool]
-        $DeactivatePingtest,
+        [switch]
+        $DeactivatePingtest = $null,
 
         # Field in Inventory tha'll be used as Hostname for the ILO
         [Parameter()]
@@ -263,8 +264,8 @@ Function Update-Config {
 
         # Toggle Certification process with when connecting with ilo
         [Parameter()]
-        [bool]
-        $DeactivateCertificateValidationILO,
+        [switch]
+        $DeactivateCertificateValidationILO = $null,
 
         # Username for ILO-Interface
         [Parameter()]
@@ -402,10 +403,10 @@ Function Get-Config {
                         ($config.configPath -isnot [string]) -or 
                         ($config.loginConfigPath -isnot [string]) -or 
                         ($config.reportPath -isnot [string]) -or 
-                        ($config.serverPath -isnot [string]) -or 
+                        ($config.serverPath -isnot [string] -and ($null -ne $config.serverPath)) -or 
                         ($config.logPath -isnot [string]) -or 
                         ($config.logLevel -isnot [int64]) -or 
-                        ($config.searchStringInventory -isnot [string]) -or 
+                        ($config.searchStringInventory -isnot [string] -and ($null -ne $config.searchStringInventory)) -or 
                         ($config.remoteMgmntField -isnot [string]) -or 
 
                         ($config.LoggingActivated -isnot [bool]) -or 

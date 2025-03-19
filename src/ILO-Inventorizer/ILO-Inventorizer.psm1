@@ -219,21 +219,21 @@ Function Get-HWInfoFromILO {
                     #
                     Log 6 "Started with 'ServerPath' ParameterSet."
                     $path = New-File -Path ($defaultPath);
-                    New-Config $path;
+                    New-Config $path -NotEmpty -WithOutInventory;
                     Update-Config -DoNotSearchInventory $true;
                     break;
                 }
                 "ServerArray" {
                     Log 6 "Started with 'ServerArray' ParameterSet."
                     $path = New-File -Path ($defaultPath);
-                    New-Config -Path $path;
+                    New-Config -Path $path -NotEmpty -WithOutInventory;
                     Update-Config -DoNotSearchInventory $true;
                     break;
                 }
                 "Inventory" {
                     Log 6 "Started with 'Inventory' ParameterSet."
                     $path = New-File -Path ($defaultPath);
-                    New-Config -Path $path;
+                    New-Config -Path $path -NotEmpty;
                     break;
                 }
                 default {
@@ -324,18 +324,18 @@ Function Get-HWInfoFromILO {
             }
  
             [Array]$reachable = @();
-            $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
             $config = Get-Config;
+            $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
             if (-not $config.deactivatePingtest) {
                 Log 3 "Start Pingtest"
 
                 foreach ($srv in $serverJSON) {
                     if (Invoke-PingTest $srv) {
-                        Log 0 "$Hostname was successfully reached via Pingtest." -IgnoreLogActive;
+                        Log 0 "$srv was successfully reached via Pingtest." -IgnoreLogActive;
                         $reachable += $srv;
                     }
                     else {
-                        Log 0 "$Hostname was not able to be reached via Pingtest." -IgnoreLogActive;
+                        Log 0 "$srv was not able to be reached via Pingtest." -IgnoreLogActive;
                     }
                 }
             }

@@ -221,7 +221,7 @@ Function Get-DataFromILO {
         if ($message -match "401") {
             Save-Exception $_ "The ILO-Server $srv returned Unauthorized. Verify that the password in your login.json is correct and you are able to log into the ILO-Interface with it.";
         }
-        elseif($message -match "SSL"){
+        elseif ($message -match "SSL") {
             Save-Exception $_ "The ILO-Server $srv returned an Error with SSL. Verify that your certificate is properly set or set the flag '-DeactivateCertificateValidationILO'.";    
         }
         else {
@@ -280,8 +280,7 @@ Function Save-DataInJSON {
         $config = Get-Config;
         $path = $config.reportPath
         if (Test-Path -Path ($path)) {
-
-            Update-Config -ReportPath (Register-Directory ($config.reportPath)).ToString();
+            Update-Config -ReportPath (Register-Directory ($config.reportPath)).ToString() -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation) ;
             [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
             $name = "$path\ilo_report_$date.json";
             $report | ConvertTo-Json -Depth 15 | Out-File -FilePath $name -Force;
@@ -305,7 +304,9 @@ Function Save-DataInCSV {
 
     try {
         $config = Get-Config;
-        Update-Config -ReportPath (Register-Directory ($config.reportPath)).ToString();
+        $generatePath = (Register-Directory ($config.reportPath)).ToString();
+        Update-Config -ReportPath $generatePath -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation);
+         
         [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
         $path = $config.reportPath;
     
@@ -411,7 +412,7 @@ Function Save-DataInCSV {
 
                     $i = 1;
                     foreach ($dev in $sr.Devices) {
-                        if ($iLOVersion -gt 5) {
+                        if ($iLOVersion -gt 5 -and (-not (($dev -match "supported")))) {
                             $dev.Serial = $dev.Serial.Length -gt 0 ? $dev.Serial : "-";
                             $csv_serial.Add(("Device$i"), $dev.Serial);
                             $csv_additional.Add(("Device_$i"), $dev.Name);

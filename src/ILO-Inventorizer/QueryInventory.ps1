@@ -83,10 +83,10 @@ Function Get-ServersFromInventory {
                 if ($config.serverPath.Length -eq 0) {
                     $generateServerPath = $config.searchForFilesAt + "\server.json"
                     New-File ($generateServerPath);
-                    Update-Config -ServerPath $generateServerPath;
                     $config = Get-Config;
+                    Update-Config -ServerPath $generateServerPath -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation);
                 }
-      
+                $config = Get-Config;
                 if (Test-Path -Path $config.serverPath) {
                     $serversToSave | ConvertTo-Json -Depth 2 | Out-File -Path ($config.serverPath);
                 }
