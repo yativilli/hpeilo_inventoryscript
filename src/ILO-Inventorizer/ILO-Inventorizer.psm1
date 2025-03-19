@@ -246,12 +246,14 @@ Function Get-HWInfoFromILO {
                             1 {
                                 Log 6 "User has selected generating empty config"
                                 $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
+                                if ((Test-Path $pathToSaveAt) -eq $false) { throw [System.IO.DirectoryNotFoundException] "The path provided ('$pathToSaveAt') does not exist. Verify that it does" }
                                 New-Config -Path $pathToSaveAt;
                                 break;
                             }
                             2 {
                                 Log 6 "User has selected generating a config with dumydata."
                                 $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
+                                if ((Test-Path $pathToSaveAt) -eq $false) { throw [System.IO.DirectoryNotFoundException] "The path provided ('$pathToSaveAt') does not exist. Verify that it does" }
                                 $withInventory = Read-Host -Prompt "Do you want to:`nRead From Inventory [y/N]?"
                                 switch ($withInventory) {
                                     "y" {
@@ -342,9 +344,10 @@ Function Get-HWInfoFromILO {
             }
         
             Log 3 "Query from ILO Started"
-            if($reachable.Count -gt 0){
+            if ($reachable.Count -gt 0) {
                 Get-DataFromILO $reachable;
-            }else{
+            }
+            else {
                 throw [System.Data.DataException] "No Servers could be found. Please verify that either your server.json or inventory has at least one Server. Check also if doNotSearchInventory is set to the appropriate value."
             }
 

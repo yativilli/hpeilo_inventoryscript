@@ -76,9 +76,9 @@ Function New-Config {
         ## Generate Dummy (w/o Inventory)
         if ($NotEmpty -and $WithOutInventory) {
             Log 6 "Filling empty config w/o Inventory - generating supplementary 'server.json'"
-            $config.reportPath = $Path + "\reports";
+            $config.reportPath = $Path;
             $config.serverPath = $Path + "\servers.json";
-            $config.logPath = $Path + "\logs";
+            $config.logPath = $Path;
             $config.logLevel = 0;
             $config.loggingActivated = $true;
             $config.logToConsole = $true;
@@ -398,7 +398,7 @@ Function Get-Config {
 
    
                 if (
-                        ($config.searchForFilesAt -isnot [string])-or
+                        ($config.searchForFilesAt -isnot [string]) -or
                         ($config.configPath -isnot [string]) -or 
                         ($config.loginConfigPath -isnot [string]) -or 
                         ($config.reportPath -isnot [string]) -or 
@@ -462,21 +462,14 @@ Function Log {
 
             if ($logPath.Length -gt 0) {
                 # Path set but not existing
-                if (-not (Test-Path -Path $logPath)) {
-                    $logPath = (Register-Directory $logPath).ToString();
-                }
+                if (-not (Test-Path -Path $logPath)) { throw [System.IO.DirectoryNotFoundException] "Your provided Path $logPath could not be found. Verify it exists" }
             }            
             
             # Log only if activated
             if ($logActive -or $IgnoreLogActive) {
                 if ($Level -le $logLevel -or $IgnoreLogActive) {
                     if ((Test-Path -Path $logPath) -eq $false) {
-                        # Directory does not exist$
-                        Write-Warning ("No Path for logging exists. Logs will be stored at '" + $ENV:HPEILOCONFIG + "\logs'.")
-                        $defaultLogPath = ($defaultPath + "\logs");
-                        New-Item -ItemType Directory $defaultLogPath -Force | Out-Null;
-                        Update-Config -LogPath $defaultLogPath;
-                        $logPath = $defaultLogPath;
+                        throw [System.IO.DirectoryNotFoundException] "Your provided Path $logPath could not be found. Verify it exists"
                     }
                     $logFilePath = "$logPath\" + (Get-Date -Format "yyyy_MM_dd") + ".txt";
 
