@@ -9,7 +9,7 @@
             "name": "PowerShell: Launch Script",
             "type": "PowerShell",
             "request": "launch",
-            "script": "${cwd}\\script.ps1",
+            "script": "${cwd}\\devscript.ps1",
             "args": []
         }
     ]
