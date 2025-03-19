@@ -391,6 +391,7 @@ Function Get-Config {
         else {   
             if ((Test-Path -Path $ENV:HPEILOCONFIG)) {
                 $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
+
                 return $config;
             }
             else {
@@ -427,6 +428,7 @@ Function Log {
 
             $logPath = $config.logPath;
             $logLevel = $config.logLevel;
+            if ($logLevel -isnot [int64]) { throw [System.IO.InvalidDataException] "The Loglevel is not of type int. Check if you have passed anything other than a string to it." }
             $logActive = $config.loggingActived;
             $logToConsoleActive = $config.logToConsole;
 
@@ -474,7 +476,7 @@ Function Log {
         }
     }
     catch {
-        Save-Exception $_ ($_.Exception.Message.ToString());
+        Write-Error $_ ($_.Exception.Message.ToString());
     }
 }
 
@@ -495,7 +497,8 @@ Function Invoke-PingTest {
             }
             # Reachable
             else {
-                return $true; }
+                return $true; 
+            }
             # Not Reachable via NSlookup
             else {
                 Log 2 "$Hostname is not reachable from within this network and could not be found via nslookup."
