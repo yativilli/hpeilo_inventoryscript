@@ -74,7 +74,7 @@ Function Get-HWInfoFromILO {
             Mandatory = $true
         )]
         [string]
-        $configPath,
+        $ConfigPath,
 
         # Path to a login.json file that contains 'Username' and 'Password'
         [Parameter()]
@@ -102,7 +102,7 @@ Function Get-HWInfoFromILO {
         [Parameter(Mandatory = $true,
             ParameterSetName = "ServerArray")]
         [array]
-        $server,
+        $Server,
 
         # Level from 0 to 6 that changes the detail of any logs present (0 - None, 6 - Many)
         [Parameter()]
@@ -212,7 +212,7 @@ Function Get-HWInfoFromILO {
             switch ($parameterSetName) {
                 "Config" { 
                     Log 6 "Started with 'Config' ParameterSet."
-                    Set-ConfigPath -Path $configPath;
+                    Set-ConfigPath -Path $ConfigPath;
                     break;
                 }
                 "ServerPath" {
@@ -292,7 +292,7 @@ Function Get-HWInfoFromILO {
             Log 3 "Import Configuration"
             # Set Standard Values for Updating Configurations
             $config = Get-Config;
-            $configPath = $config.Length -gt 0 ? $configPath : $config.configPath;
+            $ConfigPath = $config.Length -gt 0 ? $ConfigPath : $config.configPath;
             $LoginConfigPath = $LoginConfigPath.Length -gt 0 ? $LoginConfigPath : $config.loginConfigPath;
             $ReportPath = $ReportPath.Length -gt 0 ? $ReportPath : $config.reportPath;
             $LogPath = $LogPath.Length -gt 0 ? $LogPath : $config.logPath;
@@ -315,7 +315,7 @@ Function Get-HWInfoFromILO {
                                        
             $Password = $Password.Length -gt 0 ? $Password : $login.Password.Length -ne 0 ? (ConvertTo-SecureString -String ($login.Password) -AsPlainText) : (ConvertTo-SecureString -String ("None") -AsPlainText);
         
-            Update-Config -configPath $configPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -server $server -LogLevel $LogLevel -DeactivatePingtest:$DeactivatePingtest -IgnoreMACAddress:$IgnoreMACAddress -IgnoreSerialNumbers:$IgnoreSerialNumbers -LogToConsole:$LogToConsole -LoggingActivated:$LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory:$DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO:$DeactivateCertificateValidationILO -Username $Username -Password $Password;
+            Update-Config -ConfigPath $ConfigPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -Server $Server -LogLevel $LogLevel -DeactivatePingtest:$DeactivatePingtest -IgnoreMACAddress:$IgnoreMACAddress -IgnoreSerialNumbers:$IgnoreSerialNumbers -LogToConsole:$LogToConsole -LoggingActivated:$LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory:$DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO:$DeactivateCertificateValidationILO -Username $Username -Password $Password;
             $config = Get-Config;
 
             Convert-PathsToValidated -IgnoreServerPath;

@@ -114,7 +114,7 @@ Function New-Config {
             Password = ""
         };
 
-        Register-Directory $Path -ignoreError
+        Register-Directory $Path -IgnoreError
         
         ## Generate Dummy (w/o Inventory)
         if ($NotEmpty -and $WithOutInventory) {
@@ -233,7 +233,7 @@ Function Update-Config {
         # Path to the Config.json File
         [Parameter()]
         [string]
-        $configPath,
+        $ConfigPath,
 
         # Path to the Login.json File
         [Parameter()]
@@ -258,7 +258,7 @@ Function Update-Config {
         # Array of servers to use instead of searching inventory
         [Parameter()]
         [array]
-        $server,
+        $Server,
 
         # Loglevel between 0 and 6 (the higher the more detailled)
         [Parameter()]
@@ -333,6 +333,7 @@ Function Update-Config {
             $config = Get-Config;
 
             if ($LoginConfigPath.Length -gt 0) { $config.loginConfigPath = $LoginConfigPath; }
+            if ($ConfigPath.Length -gt 0) { $config.configPath = $ConfigPath; }
             if ($ReportPath.Length -gt 0) { $config.reportPath = $ReportPath; }
             if ($LogPath.Length -gt 0) { $config.logPath = $LogPath; }
             if ($ServerPath.Length -gt 0) { $config.serverPath = $ServerPath; }
@@ -350,14 +351,14 @@ Function Update-Config {
             if ($null -ne $DeactivatePingtest) { $config.deactivatePingtest = [bool]$DeactivatePingtest; }
             
             # Set ServerArray
-            if ($server.Length -gt 0) { 
+            if ($Server.Length -gt 0) { 
                 Log 6 "Updating Server Configuration."
                 if ((Test-Path -Path $config.serverPath) -eq $false) {
                     $serverPath = New-File ($defaultPath + "\server.json"); 
                     $config.serverPath = $serverPath;
 
                 }
-                Set-Content -Path ($config.serverPath) -Value ($server | ConvertTo-Json -Depth 2);
+                Set-Content -Path ($config.serverPath) -Value ($Server | ConvertTo-Json -Depth 2);
             }
         
             # Set Credentials

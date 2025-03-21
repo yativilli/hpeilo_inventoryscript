@@ -6,7 +6,7 @@ Function Get-DataFromILO {
         # Array with all the Hostnames of the Servers that will be querried
         [Parameter()]
         [Array]
-        $servers
+        $Servers
     )
     try {
         $config = Get-Config;
@@ -14,7 +14,7 @@ Function Get-DataFromILO {
         $login.Password = ConvertTo-SecureString -String ($login.Password) -AsPlainText;
 
         $report = @();
-        foreach ($srv in $servers) {
+        foreach ($srv in $Servers) {
             Log 6 "Started querying $srv" -IgnoreLogActive
 
             $findILO = Find-HPEiLO $srv;
@@ -245,11 +245,11 @@ Function Register-Directory {
         # Toggle if the Directory should be generated if it does not exist
         [Parameter()]
         [switch]
-        $ignoreError
+        $IgnoreError
 
     )
     try {
-        if ((-not (Test-Path -Path $Path)) -and $ignoreError) {
+        if ((-not (Test-Path -Path $Path)) -and $IgnoreError) {
             New-Item -Path $Path -Force -ItemType Directory | Out-Null;
         }
         elseif (Test-Path -Path $path) {   
