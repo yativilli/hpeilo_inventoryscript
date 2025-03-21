@@ -210,9 +210,10 @@ Function Get-DataFromILO {
             }
             $report += $srvReport;
         }
-        Log 0 "Ended"
-        Log 0 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
+        Log 3 "Querying ILO finished..."
+        Log 3 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
 
+        Log 3 "Begin Saving result in Files"
         Save-DataInJSON $report;
         Save-DataInCSV $report;
     }
@@ -249,10 +250,12 @@ Function Register-Directory {
 
     )
     try {
+        Log 5 "Check if Directory '$path' exists and create it if needed."
         if ((-not (Test-Path -Path $Path)) -and $IgnoreError) {
             New-Item -Path $Path -Force -ItemType Directory | Out-Null;
         }
-        elseif (Test-Path -Path $path) {   
+        elseif (Test-Path -Path $path) {  
+            Log 6 "`tPath $path already exists, now splitting it to return only the directory." 
             $isDirectory = (Get-Item ($Path)) -is [System.IO.DirectoryInfo];
             if (-not $isDirectory) {
                 $Path = $Path | Split-Path -Parent -Resolve;
@@ -277,12 +280,14 @@ Function Save-DataInJSON {
         $Report
     )
     try {
+        Log 4 "Begin saving results in JSON";
         $config = Get-Config;
         $path = $config.reportPath
         if (Test-Path -Path ($path)) {
             Update-Config -ReportPath (Register-Directory ($config.reportPath)).ToString() -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation) ;
             [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
             $name = "$path\ilo_report_$date.json";
+            Log 6 "`tSave result at $name";
             $report | ConvertTo-Json -Depth 15 | Out-File -FilePath $name -Force;
         }
         else {
@@ -303,6 +308,7 @@ Function Save-DataInCSV {
     )
 
     try {
+        Log 4 "Begin saving results in CSV"
         $config = Get-Config;
         $generatePath = (Register-Directory ($config.reportPath)).ToString();
         Update-Config -ReportPath $generatePath -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation);
@@ -311,15 +317,16 @@ Function Save-DataInCSV {
         $path = $config.reportPath;
     
         if (Test-Path -Path $path) {
-
             $name = "$path\ilo_report_$date.csv"
             $inventoryData = Get-InventoryData;
 
             # General (like in Inventory)
+            Log 6 "`tStart creating the general.csv file at '$name'."
             if ((-not $config.ignoreMACAddress) -or (-not $config.ignoreSerialNumbers)) {
 
                 $csv_report = @();
                 foreach ($sr in $Report) {
+                    Log 6 "`t`tAdding '$sr' to file."
                     $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
                     $csv_report += [ordered]@{
                         Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "-";
@@ -333,16 +340,18 @@ Function Save-DataInCSV {
                         Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : "-";
                     }
                 }
+                Log 6 "`t`tStart standardizing CSV"
                 $csv_report = Get-StandardizedCSV $csv_report;
                 $csv_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
             }
         
             # MAC (if not deactivated)
             if (-not $config.ignoreMACAddress) {
-
                 $name = "$path\ilo_report_MAC_$date.csv"
                 $csv_mac_report = @();
+                Log 6 "`tStart creating the macaddress.csv file at '$name'."
                 foreach ($sr in $Report) {
+                    Log 6 "`t`tAdd $sr to file."
                     $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
                     $csv_mac = [ordered]@{
                         Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "-";
@@ -351,6 +360,7 @@ Function Save-DataInCSV {
                         Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : "-";
                     }   
 
+                    Log 6 "`t`t`tAdd NetworkInterfaces to file."
                     [int]$i = 1;
                     foreach ($nic in $sr.NetworkInterfaces) {
                         $nic.MACAddress = $nic.MACAddress.Length -gt 0 ? $nic.MACAddress : "-";
@@ -359,6 +369,7 @@ Function Save-DataInCSV {
                     }
 
                     $i = 1
+                    Log 6 "`t`t`tAdd NetworkAdapters to file."
                     foreach ($nad in $sr.NetworkAdapter) {
                         foreach ($p in $nad.Ports) {
                             $p.MACAddress = $p.MACAddress.Length -gt 0 ? $p.MACAddress : "-";
@@ -369,6 +380,7 @@ Function Save-DataInCSV {
         
                     $csv_mac_report += $csv_mac
                 }
+                Log 6 "`t`tStart standardizing CSV"
                 $csv_mac_report = Get-StandardizedCSV $csv_mac_report;
                 $csv_mac_report | Export-Csv -Path $name -Delimiter ";" -Force;
             }
@@ -376,9 +388,11 @@ Function Save-DataInCSV {
             # SerialNumber (if not deactivated)
             if (-not $config.ignoreSerialNumbers) {
                 $name = "$path\ilo_report_SERIAL_$date.csv"
+                Log 6 "`tStart creating the serialnumbers.csv file at '$name'."
                 $csv_serial_report = @();
                 $csv_additional_info = @();
                 foreach ($sr in $Report) {
+                    Log 6 "`t`tAdd $sr to file."
                     $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
                     $csv_serial = [ordered]@{
                         Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "";
@@ -393,6 +407,7 @@ Function Save-DataInCSV {
                         Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : "-";
                     };
 
+                    Log 6 "`t`t`tAdding Powersupplies to file"
                     [int]$i = 1;
                     $pwr = $sr.PowerSupply.PowerSupplies;
                     foreach ($ps in $pwr) {
@@ -402,6 +417,7 @@ Function Save-DataInCSV {
                         $i++;
                     }
         
+                    Log 6 "`t`t`tAdding Processors to file"
                     $i = 1;
                     foreach ($pr in $sr.Processor) {
                         $pr.Serial = $pr.Serial.Length -gt 0 ? $pr.Serial : "-";
@@ -410,6 +426,7 @@ Function Save-DataInCSV {
                         $i++;
                     }
 
+                    Log 6 "`t`t`tAdding Devices to file"
                     $i = 1;
                     foreach ($dev in $sr.Devices) {
                         if ($iLOVersion -gt 5 -and (-not (($dev -match "supported")))) {
@@ -420,6 +437,7 @@ Function Save-DataInCSV {
                         }
                     }
 
+                    Log 6 "`t`t`tAdding Storage to file"
                     $i = 1;
                     foreach ($stor in $sr.Storage) {
                         if ($iLOVersion -lt 6) {
@@ -430,6 +448,7 @@ Function Save-DataInCSV {
                         }
                     }
 
+                    Log 6 "`t`t`tAdding Memory to file"
                     $i = 1;
                     foreach ($mem in $sr.Memory) {
                         $mem.Serial = $mem.Serial.Length -gt 0 ? $mem.Serial : "-";
@@ -440,6 +459,8 @@ Function Save-DataInCSV {
                     $csv_additional_info += $csv_additional;
                     $csv_serial_report += $csv_serial;
                 }
+
+                Log 6 "`t`tStart standardizing serialnumbers CSV"
                 $csv_serial_report = Get-StandardizedCSV $csv_serial_report;
                 $csv_serial_report | Export-Csv -Path $name -Delimiter ";" -Force;
                 Add-Content -Path $name -Value "`r`n`n`n`nAdditional Information for above;"
@@ -464,6 +485,7 @@ Function Get-StandardizedCSV {
         $Report
     )
     try {
+        Log 5 "Standardizing Keys across array of object passed in."
         $unique = $Report | ForEach-Object { $_.Keys } | Select-Object -Unique
         foreach ($srvObj in $Report) {
             foreach ($uniqueMember in $unique) {
@@ -483,6 +505,7 @@ Function Get-InventoryData {
     try {
         $config = Get-Config;
         $path = $config.searchForFilesAt + "\inventory_results.json";
+        Log 5 "Import Inventory Data from '$path'"
         if (Test-Path -Path $path) {
             $server = Get-Content $path | ConvertFrom-Json -Depth 10;
         }

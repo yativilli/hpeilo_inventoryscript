@@ -184,7 +184,7 @@ Function Get-HWInfoFromILO {
     )
     try {
         $ErrorActionPreference = 'Stop';
-        Log 2 "--------------------------------------`nILO-Inventorizer has been started.";
+        Log 0 "--------------------------------------`nILO-Inventorizer has been started." -IgnoreLogActive;
 
         ## Check if Help must be displayed
         if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {

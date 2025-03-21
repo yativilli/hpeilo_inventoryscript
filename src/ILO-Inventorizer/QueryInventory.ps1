@@ -2,12 +2,14 @@
 
 Function Get-ServersFromInventory { 
     try {
+        Log 5 "Starting process to get servers from Inventory"
         $config = Get-Config;
         $doNotSearchInventory = $config.doNotSearchInventory;
         $searchStringInventory = $config.searchStringInventory;
         $remoteMgmntField = $config.remoteMgmntField;
-    
+        
         # Check if it matches naming convention
+        Log 6 "`tValidate naming convention before querying inventory"
         [regex]$reg = '(gfa)?(s(f)?(ls)?)?-.*';
         $doesMatchNamingConvention = $reg.Match($searchStringInventory).Success;
         if (-not $doesMatchNamingConvention) {
@@ -17,6 +19,7 @@ Function Get-ServersFromInventory {
 
         if ((-not $doNotSearchInventory)) {
             $inventoryReachable = Invoke-PingTest -Hostname inventory.psi.ch;
+            Log 6 "`tChecking if inventory is reachable: $inventoryReachable";
             if ($inventoryReachable) {
                 # Query Inventory        
                 $uri = "https://inventory.psi.ch/DataAccess.asmx/FindObjects";
@@ -46,6 +49,7 @@ Function Get-ServersFromInventory {
                     }
                 } | ConvertTo-Json -Depth 4
 
+                Log 6 "`tSending REST-Request to Inventory"
                 $resp = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -HttpVersion 3.0
                 $servers = (($resp).d.Rows);
                 $serversClean = @();
@@ -66,6 +70,7 @@ Function Get-ServersFromInventory {
                         OS            = $srv[12]
                     }
                 }
+                Log 6 "`tFilter Inventory-Answer for servers"
                 $serversClean = $serversClean | Where-Object -Property "Label" -match "SRV*";
 
                 Register-Directory ($config.searchForFilesAt);
@@ -73,12 +78,14 @@ Function Get-ServersFromInventory {
         
                 # Save Servers in server.json
                 [Array]$serversToSave = @();
+                Log 6 "`tSaving servers in json if a Hostname_Mgnt exists."
                 foreach ($s in $serversClean) {
                     if ($s.Hostname_Mgnt.Length -gt 0) {
                         $serversToSave += $s.Hostname_Mgnt;
                     }
                 }
 
+                Log 6 "`tSave servers into file and update the configuration."
                 # No Server Path found - generate new one.
                 if ($config.serverPath.Length -eq 0) {
                     $generateServerPath = $config.searchForFilesAt + "\server.json"
