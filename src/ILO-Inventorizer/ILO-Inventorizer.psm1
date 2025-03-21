@@ -211,12 +211,13 @@ Function Get-HWInfoFromILO {
             $parameterSetName = $PSCmdlet.ParameterSetName;
             switch ($parameterSetName) {
                 "Config" { 
+                    # Started with Path to Config as Parameter
                     Log 6 "Started with 'Config' ParameterSet."
                     Set-ConfigPath -Path $ConfigPath;
                     break;
                 }
                 "ServerPath" {
-                    #
+                    # Started with Path to Servers as Parameter
                     Log 6 "Started with 'ServerPath' ParameterSet."
                     $path = New-File -Path ($defaultPath);
                     New-Config $path -NotEmpty -WithOutInventory;
@@ -224,6 +225,7 @@ Function Get-HWInfoFromILO {
                     break;
                 }
                 "ServerArray" {
+                    # Started with Array of Servers as Parameter
                     Log 6 "Started with 'ServerArray' ParameterSet."
                     $path = New-File -Path ($defaultPath);
                     New-Config -Path $path -NotEmpty -WithOutInventory;
@@ -231,12 +233,16 @@ Function Get-HWInfoFromILO {
                     break;
                 }
                 "Inventory" {
+                    # Started with SearchStringInventory as Parameter
                     Log 6 "Started with 'Inventory' ParameterSet."
                     $path = New-File -Path ($defaultPath);
                     New-Config -Path $path -NotEmpty;
                     break;
                 }
                 default {
+                    # Started without any Parameters that would trigger something different than an update to the configuration
+            
+                    # No Config Found
                     if ($ENV:HPEILOCONFIG.Length -eq 0) {
                         Log 6 "Started without specific Parameterset - displaying configuration prompt."
                         Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
@@ -244,6 +250,7 @@ Function Get-HWInfoFromILO {
             
                         switch ($configDecision) {
                             1 {
+                                # Generate Empty Config
                                 Log 6 "User has selected generating empty config"
                                 $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
                                 if ((Test-Path $pathToSaveAt) -eq $false) { throw [System.IO.DirectoryNotFoundException] "The path provided ('$pathToSaveAt') does not exist. Verify that it does" }
@@ -251,16 +258,19 @@ Function Get-HWInfoFromILO {
                                 break;
                             }
                             2 {
+                                # Generate Config with Dummydata
                                 Log 6 "User has selected generating a config with dumydata."
                                 $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
                                 if ((Test-Path $pathToSaveAt) -eq $false) { throw [System.IO.DirectoryNotFoundException] "The path provided ('$pathToSaveAt') does not exist. Verify that it does" }
                                 $withInventory = Read-Host -Prompt "Do you want to:`nRead From Inventory [y/N]?"
                                 switch ($withInventory) {
                                     "y" {
+                                        # Generate with Inventory-Preset
                                         New-Config -Path $pathToSaveAt -NotEmpty;
                                         break;
                                     }
                                     "N" {
+                                        # Generate with ServerPath-Preset
                                         New-Config -Path $pathToSaveAt -WithoutInventory -NotEmpty;
                                         break;
                                     }
@@ -268,6 +278,7 @@ Function Get-HWInfoFromILO {
                                 break;
                             }
                             3 {
+                                # Add Path to Config
                                 Log 6 "User has selected adding existing config"
                                 $pathToConfig = Read-Host -Prompt "Where dou you have the config stored at?";
                                 if (Test-Path $pathToConfig) {
@@ -290,7 +301,7 @@ Function Get-HWInfoFromILO {
                 }
             }
             Log 3 "Import Configuration"
-            # Set Standard Values for Updating Configurations
+            # Update Config with any Parameters passed along
             $config = Get-Config;
             $ConfigPath = $config.Length -gt 0 ? $ConfigPath : $config.configPath;
             $LoginConfigPath = $LoginConfigPath.Length -gt 0 ? $LoginConfigPath : $config.loginConfigPath;
@@ -318,21 +329,24 @@ Function Get-HWInfoFromILO {
             Update-Config -ConfigPath $ConfigPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -Server $Server -LogLevel $LogLevel -DeactivatePingtest:$DeactivatePingtest -IgnoreMACAddress:$IgnoreMACAddress -IgnoreSerialNumbers:$IgnoreSerialNumbers -LogToConsole:$LogToConsole -LoggingActivated:$LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory:$DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO:$DeactivateCertificateValidationILO -Username $Username -Password $Password;
             $config = Get-Config;
 
+            # Check that all Paths needed in the future are set and exist
             Convert-PathsToValidated -IgnoreServerPath;
             
+            # Query Inventory
             if (-not $config.doNotSearchInventory) {
                 Log 3 "Query from Inventory started."
                 Get-ServersFromInventory | Out-Null;
             }
 
+            # Verify that the ServerPath also exists
             Convert-PathsToValidated -IgnoreServerPath;
             
+            # Execute PingTest
             [Array]$reachable = @();
             $config = Get-Config;
             $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
             if (-not $config.deactivatePingtest) {
                 Log 3 "Start Pingtest"
-
                 foreach ($srv in $serverJSON) {
                     if (Invoke-PingTest $srv) {
                         Log 0 "$srv was successfully reached via Pingtest." -IgnoreLogActive;
@@ -347,6 +361,7 @@ Function Get-HWInfoFromILO {
                 $reachable = $serverJSON;
             }
         
+            # Query ILO
             Log 3 "Query from ILO Started"
             if ($reachable.Count -gt 0) {
                 Get-DataFromILO $reachable;

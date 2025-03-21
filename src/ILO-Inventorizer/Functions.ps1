@@ -7,6 +7,7 @@ Function Show-Help {
         $helpString
     )
     try {
+        # Handle any Help if Requested via non-conventional means (like /? instead of Get-Help)
         if ($helpString.Length -gt 0) {
             switch ($helpstring) {
                 { ($_ -eq "/?") -or ($_ -eq "--help") -or ($_ -eq "-h") } {
@@ -34,14 +35,17 @@ Function Convert-PathsToValidated {
     )
 
     try {
+        # Validate that all Paths in Array exist
         Log 5 "Validating Paths..."
         $config = Get-Config;
         
+        # searchForFilesAt-Property
         if (-not(Test-Path -Path ($config.searchForFilesAt))) {
             Log 6 ("`tCreating Path 'searchForFilesAt: " + $config.searchForFilesAt);
             New-Item -ItemType Directory ($config.searchForFilesAt) -Force | Out-Null;
         }
 
+        # loginConfigPath-Property --> Error because path must be to a file -> the contents of which cannot be generated automatically
         if ((-not(Test-Path -Path ($config.loginConfigPath)))) {
             Log 6 ("`tPath 'loginConfigPath' does not exist: " + $config.loginConfigPath);
             New-Item -ItemType Directory ($config.searchForFilesAt) -Force | Out-Null;
@@ -49,6 +53,7 @@ Function Convert-PathsToValidated {
             throw [System.IO.FileNotFoundException] ("Path to '$path' could not be resolved. Verify that loginConfigPath includes some file like 'login.json' and it and the file must exist for the script to work. It also must include a Username and a Password.")
         }
 
+        # serverPath-Property --> Error because path must be to a file -> the contents of which cannot be generated automatically
         if ((-not(Test-Path -Path ($config.serverPath))) -and ($IgnoreServerPath -eq $false)) {
             Log 6 ("`tPath 'serverPath' does not exist: " + $config.serverPath);
             New-Item -ItemType Directory ($config.searchForFilesAt) -Force | Out-Null;
@@ -56,11 +61,13 @@ Function Convert-PathsToValidated {
             throw [System.IO.FileNotFoundException] ("Path to '$path' could not be resolved. Verify that serverPath includes some file like 'server.json' and it and the file must exist for the script to work, with it containing an array of servers.")
         }
 
+        # reportPath-Property
         if ((-not(Test-Path -Path ($config.reportPath)))) {
             Log 6 ("`tCreating Path 'reportPath: " + $config.reportPath);
             New-Item -ItemType Directory ($config.reportPath) -Force | Out-Null;
         }
 
+        # logPath-Property
         if ((-not(Test-Path -Path ($config.logPath)))) {
             Log 6 ("`tCreating Path 'logPath: " + $config.logPath);
             New-Item -ItemType Directory ($config.logPath) -Force | Out-Null;
@@ -138,7 +145,7 @@ Function New-Config {
             $login.Password = "SomeFancyPassword";
 
             $servers = @("rmgfa-sioc-cs-dev", "rmgfa-sioc-cs-de3", "rmgfa-sioc-de4", "rmdl20test");
-
+            # Generate dummy server.json - File
             $servers | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\server.json");
         }
         ## Generate Dummy (w/ Inventory)
@@ -180,6 +187,7 @@ Function New-Config {
             $login.Password = "";
         }
 
+        # Handle Saving of Configs
         Log 6 "`tSaving Config files at $config_path";
         $config | ConvertTo-Json -Depth 2 | Out-File -FilePath $config_path;
         $login | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\login.json");
@@ -198,6 +206,7 @@ Function New-File {
         $Path
     )
     try {
+        # Create new File at Path
         Log 5 "Create new File at $Path";
         if ((Test-Path -Path $Path) -eq $false) {
             New-Item -ItemType File -Path $Path -Force -ErrorAction Stop;
@@ -335,6 +344,7 @@ Function Update-Config {
         if (Test-Path -Path $pathToConfig) {
             $config = Get-Config;
 
+            # Verify if any String or Int-Values are updated and do so accordingly
             Log 6 "`tCheck if any values need to be updated in the configuration"
             if ($LoginConfigPath.Length -gt 0) { $config.loginConfigPath = $LoginConfigPath; }
             if ($ConfigPath.Length -gt 0) { $config.configPath = $ConfigPath; }
@@ -345,7 +355,7 @@ Function Update-Config {
             if ($SearchStringInventory.Length -gt 0) { $config.searchStringInventory = $SearchStringInventory; }
             if ($RemoteMgmntField.Length -gt 0) { $config.remoteMgmntField = $RemoteMgmntField; }
 
-            # Set Switch-Values
+            # Verify if any bool/switch Values are updated and do so accordingly
             if ($null -ne $LoggingActivated) { $config.loggingActivated = [bool]$LoggingActivated; }
             if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = [bool]$DoNotSearchInventory; }
             if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidation = [bool]$DeactivateCertificateValidationILO; }
@@ -354,7 +364,7 @@ Function Update-Config {
             if ($null -ne $IgnoreSerialNumbers) { $config.ignoreSerialNumbers = [bool]$IgnoreSerialNumbers; }
             if ($null -ne $DeactivatePingtest) { $config.deactivatePingtest = [bool]$DeactivatePingtest; }
             
-            # Set ServerArray
+            # Check if ServerArray is set and generate a new file containing them
             if ($Server.Length -gt 0) { 
                 if ((Test-Path -Path $config.serverPath) -eq $false) {
                     Log 6 "`tUpdating Server Configuration."
@@ -402,6 +412,7 @@ Function Save-Exception {
         [Parameter(Mandatory = $true)]
         $Message
     )
+    # Save Exceptions to Logs and log them to the console
     Log 1 ("$Message`n" + $_.ScriptStackTrace);
     Write-Error ("$Message");
 }
@@ -447,6 +458,7 @@ Function Get-Config {
                 $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
 
                 Log 6 "`tValidating Configuration..."
+                # Validate Types of Configuration --> Exception for Serverpath and searchStringInventory since they can be null if the other one is not 
                 if (
                         ($config.searchForFilesAt -isnot [string]) -or
                         ($config.configPath -isnot [string]) -or 
@@ -501,19 +513,20 @@ Function Log {
         $currentDateTime = Get-Date -Format "yyyy/MM/dd HH:mm:ss`t";
         $saveString = $currentDateTime + $Message;
         
-
+        # If Config Exists
         if (($ENV:HPEILOCONFIG.Length -gt 0) -and (Test-Path -Path $ENV:HPEILOCONFIG)) {
             $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
 
             $logPath = $config.logPath;
             $logLevel = $config.logLevel;
+            # LogLevel is NaN
             if ($logLevel -isnot [int64]) { throw [System.IO.InvalidDataException] "The Loglevel is not of type int. Check if you have passed anything other than a string to it." }
             $logActive = $config.loggingActivated;
             $logToConsoleActive = $config.logToConsole;
 
+            # No LogPath is set
             if ($logPath.Length -gt 0) {
-                # Path set but not existing
-                if (-not (Test-Path -Path $logPath)) { throw [System.IO.DirectoryNotFoundException] "Your provided Path $logPath could not be found. Verify it exists" }
+                if (-not (Test-Path -Path $logPath)) { throw [System.IO.DirectoryNotFoundException] "Your provided logPath $logPath could not be found. Verify it exists" }
             }            
             
             # Log only if activated
@@ -524,15 +537,16 @@ Function Log {
                     }
                     $logFilePath = "$logPath\" + (Get-Date -Format "yyyy_MM_dd") + ".txt";
 
-                    # File already exists
+                    # Add to File if already exists
                     if (Test-Path -Path $logFilePath) {
                         Add-Content -Path $logFilePath -Value $saveString;
                     }
                     else {
-                        # File does not exist
+                        # File does not exist, create new
                         Set-Content -Path $logFilePath -Value $saveString -Force;
                     }
                     
+                    # Write to Terminal if configured
                     if ($logToConsoleActive -or $IgnoreLogActive) {
                         Write-Host ($saveString);
                     }
@@ -540,6 +554,7 @@ Function Log {
             }
         }
         else {
+            # Warning if no Logfile exists (yet)
             Write-Warning "No path to logfiles exist. Please specify one in your config or via parameter as soon as possible.";
         }
     }
@@ -557,15 +572,16 @@ Function Invoke-PingTest {
     try {
         Log 5 "Starting Pingtest";
         Log 6 "`tExecute Nslookup on $Hostname"
+        # Execute nslookup
         $nsl = nslookup.exe $Hostname;
         if ($nsl.Length -gt 3) {
             $dnsname = ($nsl | Select-String -Pattern "Name:").Line.Split(":").Trim()[1];   
-            # Reachable via NSLookup, but insufficient permissions
+            # Reachable via NSLookup, but insufficient permissions for Ping
             if ((Test-Connection $dnsname -Count 1 -Quiet) -eq $false) {
                 Log 2 "$Hostname was found via nslookup but could not be reached. Verify that you have appropriate permissions within your network to access it."
                 return $false
             }
-            # Reachable
+            # Reachable with Ping
             else {
                 Log 6 "`tPingtest executed successfully"
                 return $true; 

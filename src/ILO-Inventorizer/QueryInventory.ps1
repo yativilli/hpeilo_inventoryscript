@@ -17,6 +17,7 @@ Function Get-ServersFromInventory {
             return $false;
         }   
 
+        # Check if Inventory is configured to be querried and execute a Pingtest.
         if ((-not $doNotSearchInventory)) {
             $inventoryReachable = Invoke-PingTest -Hostname inventory.psi.ch;
             Log 6 "`tChecking if inventory is reachable: $inventoryReachable";
@@ -49,6 +50,7 @@ Function Get-ServersFromInventory {
                     }
                 } | ConvertTo-Json -Depth 4
 
+                # Requesting Data from Inventory and save it in a file.
                 Log 6 "`tSending REST-Request to Inventory"
                 $resp = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -HttpVersion 3.0
                 $servers = (($resp).d.Rows);
@@ -76,7 +78,7 @@ Function Get-ServersFromInventory {
                 Register-Directory ($config.searchForFilesAt);
                 $serversClean | ConvertTo-Json -Depth 3 | Out-File -Path ($config.searchForFilesAt + "\inventory_results.json");
         
-                # Save Servers in server.json
+                # Save Servers if a Mgnt-Hostname exists.
                 [Array]$serversToSave = @();
                 Log 6 "`tSaving servers in json if a Hostname_Mgnt exists."
                 foreach ($s in $serversClean) {
@@ -85,8 +87,9 @@ Function Get-ServersFromInventory {
                     }
                 }
 
+                # Handle Saving to file
                 Log 6 "`tSave servers into file and update the configuration."
-                # No Server Path found - generate new one.
+                # Create New Path
                 if ($config.serverPath.Length -eq 0) {
                     $generateServerPath = $config.searchForFilesAt + "\server.json"
                     New-File ($generateServerPath);
@@ -94,9 +97,11 @@ Function Get-ServersFromInventory {
                     Update-Config -ServerPath $generateServerPath -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation);
                 }
                 $config = Get-Config;
+                # Add to Existing path
                 if (Test-Path -Path $config.serverPath) {
                     $serversToSave | ConvertTo-Json -Depth 2 | Out-File -Path ($config.serverPath);
                 }
+                # Path does not Exist
                 else {
                     $Path = $config.serverPath;
                     throw [System.IO.FileNotFoundException] "The file at '$Path' could not be found. Please verify that the file exists."
@@ -108,7 +113,6 @@ Function Get-ServersFromInventory {
             }
         }
         return $false;
-        #>   
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());

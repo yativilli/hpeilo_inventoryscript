@@ -9,6 +9,7 @@ Function Get-DataFromILO {
         $Servers
     )
     try {
+        # Get config and login
         $config = Get-Config;
         $login = Get-Content -Path $config.loginConfigPath | ConvertFrom-Json -Depth 2;
         $login.Password = ConvertTo-SecureString -String ($login.Password) -AsPlainText;
@@ -17,12 +18,13 @@ Function Get-DataFromILO {
         foreach ($srv in $Servers) {
             Log 6 "Started querying $srv" -IgnoreLogActive
 
+            # Make connection with ILO and save Version.
             $findILO = Find-HPEiLO $srv;
             $iLOVersion = ([regex]"\d").Match($findILO.PN).Value;
 
             $conn = Connect-HPEiLO -Address $srv -Username $login.Username -Password (ConvertFrom-SecureString -SecureString ($login.Password) -AsPlainText) -DisableCertificateAuthentication:($config.deactivateCertificateValidation) -ErrorAction Stop;
 
-
+            # Query Powersupply
             Log 6 "`tQuerying PowerSupply" -IgnoreLogActive
             $powerSupply = ($conn | Get-HPEiLOPowerSupply);
             $powerSuppliesDetails = @();
@@ -40,6 +42,7 @@ Function Get-DataFromILO {
                 PowerSupplies         = $powerSuppliesDetails;
             }
             
+            # Query Processor
             Log 6 "`tQuerying Processor" -IgnoreLogActive
             $processor = ($conn | Get-HPEiLOProcessor).Processor;
             $processorDetails = @();
@@ -50,6 +53,7 @@ Function Get-DataFromILO {
                 }
             }
 
+            # Query Memory
             Log 6 "`tQuerying Memory" -IgnoreLogActive
             $memory = $iLOVersion -eq 4 ? ($conn | Get-HPEiLOMemoryInfo).MemoryComponent : ($conn | Get-HPEiLOMemoryInfo).MemoryDetails.MemoryData;
             $memoryDetails = @();
@@ -61,6 +65,7 @@ Function Get-DataFromILO {
                 }
             }            
 
+            # Query NetworkInterfaces
             Log 6 "`tQuerying NetworkInterfaces" -IgnoreLogActive
             $networkInterfaces = ($conn | Get-HPEiLOServerInfo).NICInfo.EthernetInterface;
             $nicDetails = @();
@@ -72,6 +77,7 @@ Function Get-DataFromILO {
                 }
             }
 
+            # QUery NetworkAdapters
             Log 6 "`tQuerying NetworkAdapters" -IgnoreLogActive
             $networkAdapter = ($conn | Get-HPEiLONICInfo).NetworkAdapter;
             $adapterDetails = @();
@@ -92,10 +98,11 @@ Function Get-DataFromILO {
                 }
             }
         
-
+            # Query Devices
             Log 6 "`tQuerying Devices" -IgnoreLogActive
             $devices = ($conn | Get-HPEiLODeviceInventory);
             $deviceDetails = @();
+            # Check for Version (function or equivalent does not exist below ILO6)
             if ($iLOVersion -eq 4 -or $iLOVersion -eq 5) { $deviceDetails = $devices.StatusInfo.Message; }else {
                 foreach ($dev in $devices.Devices) {
                     $deviceDetails += [ordered]@{
@@ -108,8 +115,10 @@ Function Get-DataFromILO {
                 }
             }
 
+            # Query Storage
             Log 6 "`tQuerying Storage" -IgnoreLogActive
             $storageDetails = @();
+            # Check for Version (Below and Above ILO 6 handle it differently)
             if (($iLOVersion -eq 4) -or ($iLOVersion -eq 5)) { 
                 $storage = ($conn | Get-HPEiLOSmartArrayStorageController).Controllers.PhysicalDrives; 
                 foreach ($st in $storage) {
@@ -131,6 +140,7 @@ Function Get-DataFromILO {
                 $storageDetails = $storage;
             }
     
+            # Query IPv4 Configuration
             Log 6 "`tQuerying IPv4-Configuration" -IgnoreLogActive
             $ipv4 = ($conn | Get-HPEiLOIPv4NetworkSetting);
             $ipv4Details = [ordered]@{
@@ -144,7 +154,7 @@ Function Get-DataFromILO {
                 DomainName        = $ipv4.DomainName;
             };
 
-
+            # Query IPv6 Configuration
             Log 6 "`tQuerying IPv6-Configuration" -IgnoreLogActive
             $ipv6 = ($conn | Get-HPEiLOIPv6NetworkSetting);
             $ipv6Details = [ordered]@{
@@ -154,6 +164,7 @@ Function Get-DataFromILO {
                 PreferredProtocol = $ipv4.PreferredProtocol;
             };
 
+            # Query Health-Summary
             Log 6 "`tQuerying Health-Summary" -IgnoreLogActive
             $healthSummary = ($conn | Get-HPEiLOHealthSummary);
             $healthDetails = [ordered]@{
@@ -165,6 +176,7 @@ Function Get-DataFromILO {
                 TemperatureStatus   = $healthSummary.TemperatureStatus;
             }
 
+            # Get MAC 1 to MAC 4 from NetworkAdapters --> to look exactly like Inventory
             Log 6 "`tPrepare MAC 1 - MAC 4" -IgnoreLogActive
             $arr = $networkAdapter.Ports;
             if ($arr.Length -gt 0) {
@@ -183,6 +195,7 @@ Function Get-DataFromILO {
             
             Log 6 "$srv querrying finished." -IgnoreLogActive
 
+            # Structure Report nicely and add it to array
             $srvReport = [ordered]@{
                 Serial            = $findILO.SerialNumber;
                 Part_Type_Name    = $conn.TargetInfo.ProductName;
@@ -210,9 +223,11 @@ Function Get-DataFromILO {
             }
             $report += $srvReport;
         }
+        # Log Result to Terminal
         Log 3 "Querying ILO finished..."
         Log 3 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
 
+        # Save Result to JSON and CSV-Files
         Log 3 "Begin Saving result in Files"
         Save-DataInJSON $report;
         Save-DataInCSV $report;
@@ -281,10 +296,12 @@ Function Save-DataInJSON {
     )
     try {
         Log 4 "Begin saving results in JSON";
+        # Guarantee that a Directory exists at reportPath
         $config = Get-Config;
         $path = $config.reportPath
+        Update-Config -ReportPath ((Register-Directory ($path)).ToString()) -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation) ;
+        # Save to File with current Date as name
         if (Test-Path -Path ($path)) {
-            Update-Config -ReportPath (Register-Directory ($config.reportPath)).ToString() -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation) ;
             [string]$date = (Get-Date -Format "yyyy_MM_dd").ToString();
             $name = "$path\ilo_report_$date.json";
             Log 6 "`tSave result at $name";
@@ -308,6 +325,7 @@ Function Save-DataInCSV {
     )
 
     try {
+        # Guarantee that a Directory exists at reportPath
         Log 4 "Begin saving results in CSV"
         $config = Get-Config;
         $generatePath = (Register-Directory ($config.reportPath)).ToString();
@@ -320,7 +338,7 @@ Function Save-DataInCSV {
             $name = "$path\ilo_report_$date.csv"
             $inventoryData = Get-InventoryData;
 
-            # General (like in Inventory)
+            # Save General.csv (like in Inventory)
             Log 6 "`tStart creating the general.csv file at '$name'."
             if ((-not $config.ignoreMACAddress) -or (-not $config.ignoreSerialNumbers)) {
 
@@ -345,7 +363,7 @@ Function Save-DataInCSV {
                 $csv_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
             }
         
-            # MAC (if not deactivated)
+            # Save MAC.csv (if not deactivated)
             if (-not $config.ignoreMACAddress) {
                 $name = "$path\ilo_report_MAC_$date.csv"
                 $csv_mac_report = @();
@@ -385,7 +403,7 @@ Function Save-DataInCSV {
                 $csv_mac_report | Export-Csv -Path $name -Delimiter ";" -Force;
             }
 
-            # SerialNumber (if not deactivated)
+            # Save SerialNumber.csv (if not deactivated) -- long because it must be mapped as simple as possible from a very nested structure
             if (-not $config.ignoreSerialNumbers) {
                 $name = "$path\ilo_report_SERIAL_$date.csv"
                 Log 6 "`tStart creating the serialnumbers.csv file at '$name'."
@@ -463,8 +481,9 @@ Function Save-DataInCSV {
                 Log 6 "`t`tStart standardizing serialnumbers CSV"
                 $csv_serial_report = Get-StandardizedCSV $csv_serial_report;
                 $csv_serial_report | Export-Csv -Path $name -Delimiter ";" -Force;
-                Add-Content -Path $name -Value "`r`n`n`n`nAdditional Information for above;"
 
+                # Add Name and location below serialnumbers to make it easier to know which means which
+                Add-Content -Path $name -Value "`r`n`n`n`nAdditional Information for above;"
                 $csv_additional_info = Get-StandardizedCSV $csv_additional_info; 
                 $csv_additional_info | ConvertTo-Csv -Delimiter ";" | Add-Content -Path $name -Force
             }
@@ -485,6 +504,7 @@ Function Get-StandardizedCSV {
         $Report
     )
     try {
+        # Guarantee that all Keys used in the entire array of objects exist on all - otherwise csv has a problem with displaying all of them
         Log 5 "Standardizing Keys across array of object passed in."
         $unique = $Report | ForEach-Object { $_.Keys } | Select-Object -Unique
         foreach ($srvObj in $Report) {
@@ -503,6 +523,7 @@ Function Get-StandardizedCSV {
 
 Function Get-InventoryData {
     try {
+        # Return Inventorydata from previously saved file.
         $config = Get-Config;
         $path = $config.searchForFilesAt + "\inventory_results.json";
         Log 5 "Import Inventory Data from '$path'"
