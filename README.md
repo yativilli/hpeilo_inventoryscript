@@ -12,12 +12,12 @@ aus der internen Datenbank 'inventory.psi.ch' ab. Seine Funktionen werden über 
 
 Es gibt ein paar wichtige Funktionen, die Sie kennen sollten:
 
-- ``Get-HWInfoFromILO`` Hauptfunktion, die die eigentliche Abfrage für ILO und Inventory übernimmt. Um das Skript dazu zu bringen, etwas zu tun (Konfiguration erstellen, Abfrage starten usw.) verwenden Sie diese Funktion.  
--  ``Set-ConfigPath`` Setzt den Pfad zur Config-Datei auf einen anderen Ort  
--  ``Get-ConfigPath ``Ermittelt den Pfad zur aktuellen Config-Datei  
--  ``Get-Config`` Gibt die aktuelle Config mit allen Werten als PowerShell-Objekt zurück  
--  ``Update-Config`` Aktualisiert die aktuelle Config (Parameter verwenden)  
--  ``Get-NewConfig`` Setzt die aktuelle Config zurück und zeigt den Bildschirm zum Erstellen einer neuen Config an
+- `Get-HWInfoFromILO` Hauptfunktion, die die eigentliche Abfrage für ILO und Inventory übernimmt. Um das Skript dazu zu bringen, etwas zu tun (Konfiguration erstellen, Abfrage starten usw.) verwenden Sie diese Funktion.
+- `Set-ConfigPath` Setzt den Pfad zur Config-Datei auf einen anderen Ort
+- `Get-ConfigPath `Ermittelt den Pfad zur aktuellen Config-Datei
+- `Get-Config` Gibt die aktuelle Config mit allen Werten als PowerShell-Objekt zurück
+- `Update-Config` Aktualisiert die aktuelle Config (Parameter verwenden)
+- `Get-NewConfig` Setzt die aktuelle Config zurück und zeigt den Bildschirm zum Erstellen einer neuen Config an
 
 Starten Sie den Teil des Skripts mit:
 `Get-HWInfoFromILO`
@@ -39,9 +39,14 @@ Um das Modul korrekt zu verwenden muss die Bibliothek [HPEiLOCmdlets](https://ww
 Ausserdem muss PowerShell von mindestens Version 7.0.0 verwendet werden.
 
 ## Start der Anwendung
+
+Starten sie das Programm entweder manuell so:
+
 ```
 Import-Module .\ILO-Inventorizer\ILO-Inventorizer.psm1;
 Import-Module HPEiLOCmdlets;
 
 Get-HWInfoFromILO
 ```
+
+oder führen Sie `.\src\script.ps1` aus.
