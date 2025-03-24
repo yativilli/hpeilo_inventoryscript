@@ -1,1 +1,0 @@
-# hpeilo_inventoryscript
