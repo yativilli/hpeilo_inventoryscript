@@ -39,8 +39,9 @@ Um das Modul korrekt zu verwenden muss die Bibliothek [HPEiLOCmdlets](https://ww
 Ausserdem muss PowerShell von mindestens Version 7.0.0 verwendet werden.
 
 ## Start der Anwendung
+```
+Import-Module .\ILO-Inventorizer\ILO-Inventorizer.psm1;
+Import-Module HPEiLOCmdlets;
 
-`Import-Module .\ILO-Inventorizer\ILO-Inventorizer.psm1;`
-`Import-Module HPEiLOCmdlets;`
-
-`Get-HWInfoFromILO`
+Get-HWInfoFromILO
+```
