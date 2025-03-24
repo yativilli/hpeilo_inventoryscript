@@ -3,7 +3,7 @@
 ## Überblick
 
 ILO-Inventarizer ist ein PowerShell-Modul, welches dazu verwendet werden kann, eine interne Daten der am PSI benützten Kameraserver per ILO abzufragen.
-Neben der Abfrage von ILO (Integrated Lights Out) gibt es auch die Möglichkeit, die PSI-interne Datenbank Inventory.psi.ch abzufragen, anstatt die Server einzeln anzugeben.s
+Neben der Abfrage von ILO (Integrated Lights Out) gibt es auch die Möglichkeit, die PSI-interne Datenbank Inventory.psi.ch abzufragen, anstatt die Server einzeln anzugeben.
 
 ## Anwendung
 
@@ -23,12 +23,13 @@ Starten Sie den Teil des Skripts mit:
 `Get-HWInfoFromILO`
 
 Da nicht jeder, der dieses Skript verwendet, mit der Art und Weise vertraut ist, wie die Hilfe in PowerShell aufgerufen wird, können Sie die Hilfe mit der folgenden Syntax abrufen (die Ausgabe ist immer die gleiche):
-`Get-Help Get-HWInfoFromILO`
-`Set-ConfigPath /?`
-`Get-ConfigPath -h`
-`Get-Config --help`
-
-Für den Source-Code verweisen Sie bitte auf https://github.com/yativilli/hpeilo_inventoryscript
+```
+Get-Help Get-HWInfoFromILO
+Set-ConfigPath /?`
+Get-ConfigPath -h
+Get-Config --help
+```
+Sie finden den Sourcecode hier: https://github.com/yativilli/hpeilo_inventoryscript
 
 Dieses Projekt wurde als Individuelle Praktische Arbeit von Yannick Wernle innerhalb von 10 Tagen entwickelt, daher kann es einige Fehler geben, die nicht behoben sind.
 © Yannick Wernle, Paul Scherrer Institut (PSI) 2025
