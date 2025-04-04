@@ -445,10 +445,10 @@ Function Get-Config {
         [Parameter()][switch]$h
     )
     try {
+        Log 5 "Getting Configuration..."
         if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
             Get-Help Get-Config -Full;    
         }
-        Log 5 "Getting Configuration..."
         else {   
             if ((Test-Path -Path $ENV:HPEILOCONFIG)) {
                 $config = (Get-Content $ENV:HPEILOCONFIG | ConvertFrom-Json -Depth 3);
