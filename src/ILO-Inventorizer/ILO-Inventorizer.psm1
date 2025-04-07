@@ -92,15 +92,13 @@ Function Get-HWInfoFromILO {
         $LogPath,
 
         # Path to a server.json, which will be used for the ILO-Query instead of Inventory (when doNotSearchInventory is activated)
-        [Parameter(Mandatory = $true,
-            ParameterSetName = "ServerPath")]
+        [Parameter(Mandatory = $true, ParameterSetName = "ServerPath")]
         [Parameter()]
         [string]
         $ServerPath,
 
         # Array that will be used for an ILO-Query instead of Inventory
-        [Parameter(Mandatory = $true,
-            ParameterSetName = "ServerArray")]
+        [Parameter(Mandatory = $true, ParameterSetName = "ServerArray")]
         [array]
         $Server,
 
