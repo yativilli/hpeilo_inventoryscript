@@ -1,0 +1,18 @@
+{
+  "searchForFilesAt": "U:\\IPA\\IPA\\IPA_Sourcecode_hpeilo_inventoryscript\\src\\demonstration\\dump",
+  "configPath": "U:\\IPA\\IPA\\IPA_Sourcecode_hpeilo_inventoryscript\\src\\demonstration\\prereq\\config.json",
+  "loginConfigPath": "U:\\IPA\\IPA\\IPA_Sourcecode_hpeilo_inventoryscript\\src\\demonstration\\prereq\\login.json",
+  "reportPath": "U:\\IPA\\IPA\\IPA_Sourcecode_hpeilo_inventoryscript\\src\\demonstration\\dump",
+  "serverPath": "C:\\Users\\wernle_y\\AppData\\Roaming\\hpeilo\\server.json",
+  "logPath": "U:\\IPA\\IPA\\IPA_Sourcecode_hpeilo_inventoryscript\\src\\demonstration\\dump",
+  "logLevel": 1,
+  "loggingActivated": true,
+  "searchStringInventory": "gfa-sioc-cs-de",
+  "doNotSearchInventory": false,
+  "remoteMgmntField": "Hostname Mgnt",
+  "deactivateCertificateValidation": true,
+  "deactivatePingtest": false,
+  "logToConsole": false,
+  "ignoreMACAddress": false,
+  "ignoreSerialNumbers": false
+}
