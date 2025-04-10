@@ -199,8 +199,8 @@ Function Get-HWInfoFromILO {
             }
             ## Check for recommended ModuleVersion
             $moduleVersion = (Get-Module -Name HPEiLOCmdlets).Version.ToString()
-            if ($recommendedVersion -ne ($moduleVersion)) {
-                Write-Warning "The installed Module HPEiLOCmdlets doesnt use the recommended Version '$recommendedVersion', but '$moduleVersion' - some features may not work correctly."
+            if ($RECOMMENDED_VERSION -ne ($moduleVersion)) {
+                Write-Warning "The installed Module HPEiLOCmdlets doesnt use the recommended Version '$RECOMMENDED_VERSION', but '$moduleVersion' - some features may not work correctly."
             }
 
             ## Check for Config
@@ -217,7 +217,7 @@ Function Get-HWInfoFromILO {
                 "ServerPath" {
                     # Started with Path to Servers as Parameter
                     Log 6 "Started with 'ServerPath' ParameterSet."
-                    $path = New-File -Path ($defaultPath);
+                    $path = New-File -Path ($DEFAULT_PATH);
                     New-Config $path -NotEmpty -WithOutInventory;
                     Update-Config -DoNotSearchInventory $true;
                     break;
@@ -225,7 +225,7 @@ Function Get-HWInfoFromILO {
                 "ServerArray" {
                     # Started with Array of Servers as Parameter
                     Log 6 "Started with 'ServerArray' ParameterSet."
-                    $path = New-File -Path ($defaultPath);
+                    $path = New-File -Path ($DEFAULT_PATH);
                     New-Config -Path $path -NotEmpty -WithOutInventory;
                     Update-Config -DoNotSearchInventory $true;
                     break;
@@ -233,7 +233,7 @@ Function Get-HWInfoFromILO {
                 "Inventory" {
                     # Started with SearchStringInventory as Parameter
                     Log 6 "Started with 'Inventory' ParameterSet."
-                    $path = New-File -Path ($defaultPath);
+                    $path = New-File -Path ($DEFAULT_PATH);
                     New-Config -Path $path -NotEmpty;
                     break;
                 }

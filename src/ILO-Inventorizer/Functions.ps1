@@ -364,7 +364,7 @@ Function Update-Config {
             if ($Server.Length -gt 0) { 
                 if ((Test-Path -Path $config.serverPath) -eq $false) {
                     Log 6 "`tUpdating Server Configuration."
-                    $serverPath = New-File ($defaultPath + "\server.json"); 
+                    $serverPath = New-File ($DEFAULT_PATH + "\server.json"); 
                     $config.serverPath = $serverPath;
 
                 }
@@ -531,7 +531,7 @@ Function Log {
                     if ((Test-Path -Path $logPath) -eq $false) {
                         throw [System.IO.DirectoryNotFoundException] "Your provided Path $logPath could not be found. Verify it exists"
                     }
-                    $logFilePath = "$logPath\" + (Get-Date -Format "yyyy_MM_dd") + ".txt";
+                    $logFilePath = "$logPath\" + (Get-Date -Format $DATE_FILENAME) + ".txt";
 
                     # Add to File if already exists
                     if (Test-Path -Path $logFilePath) {
