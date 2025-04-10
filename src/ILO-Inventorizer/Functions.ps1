@@ -475,23 +475,9 @@ Function Invoke-ConfigTypeValidation {
         [Parameter(Mandatory)]
         [System.Object]$Config
     )
+    # Type in Order of Configuration: Ordered
     $expectedType = @(
-        [string],
-        [string],
-        [string],
-        [string],
-        [string],
-        [string],
-        [Int64],
-        [string],
-        [string],
-        [bool],
-        [bool],
-        [bool],
-        [bool],
-        [bool],
-        [bool],
-        [bool]
+        [string], [string], [string], [string], [string], [string], [Int64], [string], [string], [bool], [bool], [bool], [bool], [bool], [bool], [bool]
     )
     [int]$i = 0;
     foreach ($key in $Config.Keys) {
@@ -538,7 +524,7 @@ Function Log {
             $logPath = $config.logPath;
             $logLevel = $config.logLevel;
             # LogLevel is NaN
-            if ($logLevel -isnot [int64]) { throw [System.IO.InvalidDataException] "The Loglevel is not of type int. Check if you have passed anything other than a string to it." }
+            Invoke-TypeValidation -ExpectedType ([Int64]) -Value $logLevel -Name "logLevel"
             $logActive = $config.loggingActivated;
             $logToConsoleActive = $config.logToConsole;
 
