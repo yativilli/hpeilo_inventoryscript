@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "ConfigPath",
+            "type":"PowerShell",
+            "request": "launch",
+            "script": "${cwd}\\demonstration\\2_script_CONFIGPATH.ps1",
+            "args": []
+        },
+        {
             "name": "DevScript",
             "type": "PowerShell",
             "request": "launch",

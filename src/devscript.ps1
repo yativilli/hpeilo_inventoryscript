@@ -7,5 +7,5 @@ Import-Module HPEiLOCmdlets;
 Set-PSDebug -Trace 0
 
 # Set-ConfigPath -Path "U:\IPA\IPA\IPA_Sourcecode_hpeilo_inventoryscript\src\demonstration\prereq\config.json";
-$conn = Connect-HPEILO -Address rmgfa-sioc-cs-dev -Username "Yannik" -Password "test!1234" -DisableCertificateAuthentication;
-$conn | Get-PowerSupplyData
+$d = Get-Content -Path "U:\IPA\IPA\IPA_Sourcecode_hpeilo_inventoryscript\src\demonstration\dump\ilo_report_2025_04_10.json" | ConvertFrom-Json -Depth 10;
+$d | Save-MACInformationToCSV;

@@ -41,19 +41,19 @@ Function Get-DataFromILO {
                 MAC_4             = $macs.MAC4;
                 Mgnt_MAC          = ($conn | Get-HPEiLOIPv4NetworkSetting).PermanentMACAddress.ToLower();
                 
-                PowerSupply       = $conn | Get-PowerSupplyData; ;
+                PowerSupply       = ($conn | Get-PowerSupplyData); 
                 
-                Health_Summary    = $conn | Get-HealthSummaryData; ;
-                Processor         = $conn | Get-ProcessorData;
+                Health_Summary    = ($conn | Get-HealthSummaryData); 
+                Processor         = ($conn | Get-ProcessorData);
                 
-                Memory            = $conn | Get-MemoryData;
-                NetworkInterfaces = $conn | Get-NICData; ;
-                NetworkAdapter    = $conn | Get-NetAdapterData; ;
-                Devices           = $conn | Get-DeviceData; ;
-                Storage           = $conn | Get-StorageData; ;
+                Memory            = ($conn | Get-MemoryData);
+                NetworkInterfaces = ($conn | Get-NICData); 
+                NetworkAdapter    = ($conn | Get-NetAdapterData); 
+                Devices           = ($conn | Get-DeviceData); 
+                Storage           = ($conn | Get-StorageData); 
                 
-                IPv4Configuration = $conn | Get-IPv4Data; ;
-                IPv6Configuration = $conn | Get-IPv6Data; ;
+                IPv4Configuration = ($conn | Get-IPv4Data); 
+                IPv6Configuration = ($conn | Get-IPv6Data); 
             }
             Log 6 "$srv querrying finished." -IgnoreLogActive
             $report += $srvReport;
@@ -165,19 +165,21 @@ Function Save-DataInCSV {
         $config = Get-Config;
         $generatePath = (Register-Directory ($config.reportPath)).ToString();
         Update-Config -ReportPath $generatePath -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation);
+         
+        $path = $config.reportPath;
     
         if (Test-Path -Path $path) {
             # Save General.csv (like in Inventory)
-            $Report | Save-GeneralInformationToCSV;
+            Save-GeneralInformationToCSV -Report $Report;
         
             # Save MAC.csv (if not deactivated)
             if (-not $config.ignoreMACAddress) {
-                $Report | Save-MACInformationToCSV;
+                Save-MACInformationToCSV -Report $Report;
             }
 
             # Save SerialNumber.csv (if not deactivated) -- long because it must be mapped as simple as possible from a very nested structure
             if (-not $config.ignoreSerialNumbers) {
-                $Report | Save-SerialInformationToCSV;
+                Save-SerialInformationToCSV -Report $Report;
             }
         }
         else {
