@@ -1,16 +1,17 @@
 . $PSScriptRoot\Constants.ps1
 . $PSScriptRoot\Functions.ps1
 
+### QUERYING FROM ILO
 Function Get-PowerSupplyData {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         # Query Powersupply
         Log 6 "`tQuerying PowerSupply" -IgnoreLogActive
-        $powerSupply = ($conn | Get-HPEiLOPowerSupply);
+        $powerSupply = ($Connection | Get-HPEiLOPowerSupply);
         $powerSuppliesDetails = @();
         foreach ($ps in $powerSupply.PowerSupplies) {
             $powerSuppliesDetails += [ordered]@{
@@ -33,12 +34,12 @@ Function Get-ProcessorData {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         # Query Processor
         Log 6 "`tQuerying Processor" -IgnoreLogActive
-        $processor = ($conn | Get-HPEiLOProcessor).Processor;
+        $processor = ($Connection | Get-HPEiLOProcessor).Processor;
         $processorDetails = @();
         foreach ($pr in $processor) {
             $processorDetails += [ordered]@{
@@ -54,12 +55,12 @@ Function Get-MemoryData {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         # Query Memory
         Log 6 "`tQuerying Memory" -IgnoreLogActive
-        $memory = $iLOVersion -eq 4 ? ($conn | Get-HPEiLOMemoryInfo).MemoryComponent : ($conn | Get-HPEiLOMemoryInfo).MemoryDetails.MemoryData;
+        $memory = $iLOVersion -eq 4 ? ($Connection | Get-HPEiLOMemoryInfo).MemoryComponent : ($Connection | Get-HPEiLOMemoryInfo).MemoryDetails.MemoryData;
         $memoryDetails = @();
         foreach ($me in $memory) {
             $memoryDetails += [ordered]@{
@@ -76,12 +77,12 @@ Function Get-NICData {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         # Query NetworkInterfaces
         Log 6 "`tQuerying NetworkInterfaces" -IgnoreLogActive
-        $networkInterfaces = ($conn | Get-HPEiLOServerInfo).NICInfo.EthernetInterface;
+        $networkInterfaces = ($Connection | Get-HPEiLOServerInfo).NICInfo.EthernetInterface;
         $nicDetails = @();
         foreach ($nic in $networkInterfaces) {
             $nicDetails += [ordered]@{
@@ -98,12 +99,12 @@ Function Get-NetAdapterData {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         # QUery NetworkAdapters
         Log 6 "`tQuerying NetworkAdapters" -IgnoreLogActive
-        $networkAdapter = ($conn | Get-HPEiLONICInfo).NetworkAdapter;
+        $networkAdapter = ($Connection | Get-HPEiLONICInfo).NetworkAdapter;
         $adapterDetails = @();
         foreach ($na in $networkAdapter) {
             $adapt = @();
@@ -129,12 +130,12 @@ Function Get-DeviceData {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         # Query Devices
         Log 6 "`tQuerying Devices" -IgnoreLogActive
-        $devices = ($conn | Get-HPEiLODeviceInventory);
+        $devices = ($Connection | Get-HPEiLODeviceInventory);
         $deviceDetails = @();
         # Check for Version (function or equivalent does not exist below ILO6)
         if ($iLOVersion -eq 4 -or $iLOVersion -eq 5) { $deviceDetails = $devices.StatusInfo.Message; }else {
@@ -156,15 +157,15 @@ Function Get-StorageData {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         # Query Storage
         Log 6 "`tQuerying Storage" -IgnoreLogActive
         $storageDetails = @();
         # Check for Version (Below and Above ILO 6 handle it differently)
         if (($iLOVersion -eq 4) -or ($iLOVersion -eq 5)) { 
-            $storage = ($conn | Get-HPEiLOSmartArrayStorageController).Controllers.PhysicalDrives; 
+            $storage = ($Connection | Get-HPEiLOSmartArrayStorageController).Controllers.PhysicalDrives; 
             foreach ($st in $storage) {
                 $storageDetails += [ordered]@{
                     CapacityGB         = $st.CapacityGB;
@@ -180,7 +181,7 @@ Function Get-StorageData {
         }
         else {
             # Not testable on my configuration
-            $storage = ($conn | Get-HPEiLOStorageController -ErrorAction SilentlyContinue).StorageControllers;
+            $storage = ($Connection | Get-HPEiLOStorageController -ErrorAction SilentlyContinue).StorageControllers;
             $storageDetails = $storage;
         }
         return $storageDetails;
@@ -191,12 +192,12 @@ Function Get-IPv4Data {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         # Query IPv4 Configuration
         Log 6 "`tQuerying IPv4-Configuration" -IgnoreLogActive
-        $ipv4 = ($conn | Get-HPEiLOIPv4NetworkSetting);
+        $ipv4 = ($Connection | Get-HPEiLOIPv4NetworkSetting);
         $ipv4Details = [ordered]@{
             MACAddress        = $ipv4.MACAddress;
             IPv4Address       = $ipv4.IPv4Address;
@@ -215,12 +216,12 @@ Function Get-IPv6Data {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         # Query IPv6 Configuration
         Log 6 "`tQuerying IPv6-Configuration" -IgnoreLogActive
-        $ipv6 = ($conn | Get-HPEiLOIPv6NetworkSetting);
+        $ipv6 = ($Connection | Get-HPEiLOIPv6NetworkSetting);
         $ipv6Details = [ordered]@{
             MACAddress        = $ipv6.MACAddress.ToLower();
             IPv6Address       = $ipv6.IPv6Address.Value.ToLower();
@@ -235,12 +236,12 @@ Function Get-HealthSummaryData {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         # Query Health-Summary
         Log 6 "`tQuerying Health-Summary" -IgnoreLogActive
-        $healthSummary = ($conn | Get-HPEiLOHealthSummary);
+        $healthSummary = ($Connection | Get-HPEiLOHealthSummary);
         $healthDetails = [ordered]@{
             FanStatus           = $healthSummary.FanStatus;
             MemoryStatus        = $healthSummary.MemoryStatus;
@@ -257,9 +258,9 @@ Function Format-MACAddressesLikeInventory {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]
-        $conn
+        $Connection
     )
-    if ($null -ne $conn) {
+    if ($null -ne $Connection) {
         $macs = @{
             MAC1 = "";
             MAC2 = "";
@@ -281,5 +282,191 @@ Function Format-MACAddressesLikeInventory {
             }
         }     
         return $macs;
+    }
+}
+
+#### SAVING TO FILES
+Function Save-GeneralInformationToCSV {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Object]
+        $Report
+    )
+    if ($null -ne $Report) {
+        [string]$date = (Get-Date -Format $DATE_FILENAME).ToString();
+        $config = Get-Config;
+        $path = $config.reportPath;
+        $inventoryData = Get-InventoryData;
+
+        Log 6 "`tStart creating the general.csv file at '$name'."
+        if ((-not $config.ignoreMACAddress) -or (-not $config.ignoreSerialNumbers)) {
+
+            $csv_report = @();
+            foreach ($sr in $Report) {
+                Log 6 "`t`tAdding '$sr' to file."
+                $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
+                $csv_report += [ordered]@{
+                    Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : $NO_VALUE_FOUND_SYMBOL;
+                    Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : $NO_VALUE_FOUND_SYMBOL;
+                    Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : $NO_VALUE_FOUND_SYMBOL;
+                    Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : $NO_VALUE_FOUND_SYMBOL;
+                    MAC_1         = $sr.MAC_1.Length -gt 0 ? $sr.MAC_1: $NO_VALUE_FOUND_SYMBOL;
+                    MAC_2         = $sr.MAC_2.Length -gt 0 ? $sr.MAC_2 : $NO_VALUE_FOUND_SYMBOL;
+                    MAC_3         = $sr.MAC_3.Length -gt 0 ? $sr.MAC_3 : $NO_VALUE_FOUND_SYMBOL;
+                    MAC_4         = $sr.MAC_4.Length -gt 0 ? $sr.MAC_4 : $NO_VALUE_FOUND_SYMBOL;
+                    Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : $NO_VALUE_FOUND_SYMBOL;
+                }
+            }
+            Log 6 "`t`tStart standardizing CSV"
+            $csv_report = Get-StandardizedCSV $csv_report;
+            $csv_report | ConvertTo-Csv -Delimiter ";" | Out-File -FilePath $name -Force;
+        }
+    }
+}
+
+Function Save-MACInformationToCSV {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Object]
+        $Report
+    )
+    if ($null -ne $Report) {
+        [string]$date = (Get-Date -Format $DATE_FILENAME).ToString();
+        $config = Get-Config;
+        $path = $config.reportPath;
+        $inventoryData = Get-InventoryData;
+
+        $name = "$path\ilo_report_MAC_$date.csv"
+        $csv_mac_report = @();
+        Log 6 "`tStart creating the macaddress.csv file at '$name'."
+        foreach ($sr in $Report) {
+            Log 6 "`t`tAdd $sr to file."
+            $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
+            $csv_mac = [ordered]@{
+                Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : $NO_VALUE_FOUND_SYMBOL;
+                Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : $NO_VALUE_FOUND_SYMBOL;
+                Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : $NO_VALUE_FOUND_SYMBOL;
+                Mgnt_MAC      = $sr.Mgnt_MAC.Length -gt 0 ? $sr.Mgnt_MAC : $NO_VALUE_FOUND_SYMBOL;
+            }   
+
+            Log 6 "`t`t`tAdd NetworkInterfaces to file."
+            [int]$i = 1;
+            foreach ($nic in $sr.NetworkInterfaces) {
+                $nic.MACAddress = $nic.MACAddress.Length -gt 0 ? $nic.MACAddress : $NO_VALUE_FOUND_SYMBOL;
+                $csv_mac.Add(("NetInterf_MAC_$i"), $nic.MACAddress);
+                $i++;
+            }
+
+            $i = 1
+            Log 6 "`t`t`tAdd NetworkAdapters to file."
+            foreach ($nad in $sr.NetworkAdapter) {
+                foreach ($p in $nad.Ports) {
+                    $p.MACAddress = $p.MACAddress.Length -gt 0 ? $p.MACAddress : $NO_VALUE_FOUND_SYMBOL;
+                    $csv_mac.Add(("NetAdap_MAC_$i"), $p.MACAddress);   
+                    $i++; 
+                }
+            }
+
+            $csv_mac_report += $csv_mac
+        }
+        Log 6 "`t`tStart standardizing CSV"
+        $csv_mac_report = Get-StandardizedCSV $csv_mac_report;
+        $csv_mac_report | Export-Csv -Path $name -Delimiter ";" -Force;
+    }
+}
+
+Function Save-SerialInformationToCSV {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Object]
+        $Report
+    )
+    if ($null -ne $Report) {
+        [string]$date = (Get-Date -Format $DATE_FILENAME).ToString();
+        $config = Get-Config;
+        $path = $config.reportPath;
+        $inventoryData = Get-InventoryData;
+
+        $name = "$path\ilo_report_SERIAL_$date.csv"
+        Log 6 "`tStart creating the serialnumbers.csv file at '$name'."
+        $csv_serial_report = @();
+        $csv_additional_info = @();
+        foreach ($sr in $Report) {
+            Log 6 "`t`tAdd $sr to file."
+            $inventorySrv = $inventoryData | Where-Object -Property "Hostname" -Contains -Value ($sr.Hostname);
+            $csv_serial = [ordered]@{
+                Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "";
+                Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : $NO_VALUE_FOUND_SYMBOL;
+                Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : $NO_VALUE_FOUND_SYMBOL;
+                Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : $NO_VALUE_FOUND_SYMBOL;
+            }   
+            $csv_additional = [ordered]@{
+                Label         = (($inventorySrv | Select-Object -Property "Label").Label).Length -gt 0 ? ($inventorySrv | Select-Object -Property "Label").Label : "";
+                Hostname      = $sr.Hostname.Length -gt 0 ? $sr.Hostname : $NO_VALUE_FOUND_SYMBOL;
+                Hostname_Mgnt = $sr.Hostname_Mgnt.Length -gt 0 ?  $sr.Hostname_Mgnt : $NO_VALUE_FOUND_SYMBOL;
+                Serial        = $sr.Serial.Length -gt 0 ? $sr.Serial : $NO_VALUE_FOUND_SYMBOL;
+            };
+
+            Log 6 "`t`t`tAdding Powersupplies to file"
+            [int]$i = 1;
+            $pwr = $sr.PowerSupply.PowerSupplies;
+            foreach ($ps in $pwr) {
+                $ps.Serial = $ps.Serial.Length -gt 0 ? $ps.Serial : $NO_VALUE_FOUND_SYMBOL;
+                $csv_serial.Add(("PowerSupply$i"), $ps.Serial);
+                $csv_additional.Add(("PowerSupply_$i"), $ps.Name);
+                $i++;
+            }
+
+            Log 6 "`t`t`tAdding Processors to file"
+            $i = 1;
+            foreach ($pr in $sr.Processor) {
+                $pr.Serial = $pr.Serial.Length -gt 0 ? $pr.Serial : $NO_VALUE_FOUND_SYMBOL;
+                $csv_serial.Add(("Processor$i"), $pr.Serial);
+                $csv_additional.Add(("Processor_$i"), $pr.Model);
+                $i++;
+            }
+
+            Log 6 "`t`t`tAdding Devices to file"
+            $i = 1;
+            foreach ($dev in $sr.Devices) {
+                if ($iLOVersion -gt 5 -and (-not (($dev -match "supported")))) {
+                    $dev.Serial = $dev.Serial.Length -gt 0 ? $dev.Serial : $NO_VALUE_FOUND_SYMBOL;
+                    $csv_serial.Add(("Device$i"), $dev.Serial);
+                    $csv_additional.Add(("Device_$i"), $dev.Name);
+                    $i++;
+                }
+            }
+
+            Log 6 "`t`t`tAdding Storage to file"
+            $i = 1;
+            foreach ($stor in $sr.Storage) {
+                if ($iLOVersion -lt 6) {
+                    $stor.Serial = $stor.Serial.Length -gt 0 ? $stor.Serial : $NO_VALUE_FOUND_SYMBOL;
+                    $csv_serial.Add(("Storage$i"), $stor.Serial);
+                    $csv_additional.Add(("Storage_$i"), $stor.Name + "," + $stor.Model);
+                    $i++;
+                }
+            }
+
+            Log 6 "`t`t`tAdding Memory to file"
+            $i = 1;
+            foreach ($mem in $sr.Memory) {
+                $mem.Serial = $mem.Serial.Length -gt 0 ? $mem.Serial : $NO_VALUE_FOUND_SYMBOL;
+                $csv_serial.Add(("Memory$i"), $mem.Serial)
+                $csv_additional.Add(("Memory_$i"), $mem.Location)
+                $i++;
+            }
+            $csv_additional_info += $csv_additional;
+            $csv_serial_report += $csv_serial;
+        }
+
+        Log 6 "`t`tStart standardizing serialnumbers CSV"
+        $csv_serial_report = Get-StandardizedCSV $csv_serial_report;
+        $csv_serial_report | Export-Csv -Path $name -Delimiter ";" -Force;
+
+        # Add Name and location below serialnumbers to make it easier to know which means which
+        Add-Content -Path $name -Value "`r`n`n`n`nAdditional Information for above;"
+        $csv_additional_info = Get-StandardizedCSV $csv_additional_info; 
+        $csv_additional_info | ConvertTo-Csv -Delimiter ";" | Add-Content -Path $name -Force
     }
 }
