@@ -530,4 +530,4 @@ Function Get-NewConfig {
         Save-Exception $_ ($_.Exception.Message.ToString());
     }
 }
-Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Get-Config, Update-Config, Get-NewConfig
+Export-ModuleMember -Function Get-HWInfoFromILO, Set-ConfigPath, Get-ConfigPath, Get-Config, Update-Config, Get-NewConfig, *

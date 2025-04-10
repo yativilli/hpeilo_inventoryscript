@@ -455,28 +455,7 @@ Function Get-Config {
 
                 Log 6 "`tValidating Configuration..."
                 # Validate Types of Configuration --> Exception for Serverpath and searchStringInventory since they can be null if the other one is not 
-                if (
-                        ($config.searchForFilesAt -isnot [string]) -or
-                        ($config.configPath -isnot [string]) -or 
-                        ($config.loginConfigPath -isnot [string]) -or 
-                        ($config.reportPath -isnot [string]) -or 
-                        ($config.serverPath -isnot [string] -and ($null -ne $config.serverPath)) -or 
-                        ($config.logPath -isnot [string]) -or 
-                        ($config.logLevel -isnot [int64]) -or 
-                        ($config.searchStringInventory -isnot [string] -and ($null -ne $config.searchStringInventory)) -or 
-                        ($config.remoteMgmntField -isnot [string]) -or 
-
-                        ($config.LoggingActivated -isnot [bool]) -or 
-                        ($config.doNotSearchInventory -isnot [bool]) -or 
-                        ($config.deactivateCertificateValidation -isnot [bool]) -or 
-                        ($config.logToConsole -isnot [bool]) -or 
-                        ($config.ignoreMACAddress -isnot [bool]) -or 
-                        ($config.ignoreSerialNumbers -isnot [bool]) -or 
-                        ($config.deactivatePingtest -isnot [bool])
-                ) {
-                    throw [System.IO.InvalidDataException] "Your configuration has wrong types. Please verify that the following types are met:`nlogLevel = int, LoggingActivated = bool, doNotSearchInventory = bool, deactivateCertificateValidation = bool, logToConsole = bool, ignoreMACAddress = bool, ignoreSerialNumbers = bool, deactivatePingtest = bool AND any other fields are of type string."
-                }
-
+                Invoke-ConfigTypeValidation -Config $config;
                 
                 Log 5 "Configuration successfully read and will be returned..."
                 return $config;
@@ -488,6 +467,49 @@ Function Get-Config {
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
+    }
+}
+
+Function Invoke-ConfigTypeValidation {
+    param(
+        [Parameter(Mandatory)]
+        [System.Object]$Config
+    )
+    $expectedType = @(
+        [string],
+        [string],
+        [string],
+        [string],
+        [string],
+        [string],
+        [Int64],
+        [string],
+        [string],
+        [bool],
+        [bool],
+        [bool],
+        [bool],
+        [bool],
+        [bool],
+        [bool]
+    )
+    [int]$i = 0;
+    foreach ($key in $Config.Keys) {
+        $type = $expectedType[$i];
+        Invoke-TypeValidation -ExpectedType $type -Value ($Config[$key]) -Name $key;
+        $i++;
+    }
+}
+
+Function Invoke-TypeValidation {
+    param(
+        [type]$ExpectedType,
+        [System.Object]$Value,
+        [string]$Name
+    )
+    $valueType = $Value.GetType();
+    if ($ExpectedType -ne $valueType) {
+        throw [System.IO.InvalidDataException] "Your configuration has wrong types: '$Name' must be of type '$ExpectedType' but is instead of type '$valueType'. Please change your configuration and/or Parameters to match the Type '$ExpectedType'";
     }
 }
 
@@ -522,14 +544,14 @@ Function Log {
 
             # No LogPath is set
             if ($logPath.Length -gt 0) {
-                if (-not (Test-Path -Path $logPath)) { throw [System.IO.DirectoryNotFoundException] "Your provided logPath $logPath could not be found. Verify it exists" }
+                if (-not (Test-Path -Path $logPath)) { throw [System.IO.DirectoryNotFoundException] "Your provided logPath '$logPath' could not be found. Verify it exists" }
             }            
             
             # Log only if activated
             if ($logActive -or $IgnoreLogActive) {
                 if ($Level -le $logLevel -or $IgnoreLogActive) {
                     if ((Test-Path -Path $logPath) -eq $false) {
-                        throw [System.IO.DirectoryNotFoundException] "Your provided Path $logPath could not be found. Verify it exists"
+                        throw [System.IO.DirectoryNotFoundException] "Your provided Path '$logPath' could not be found. Verify it exists"
                     }
                     $logFilePath = "$logPath\" + (Get-Date -Format $DATE_FILENAME) + ".txt";
 
