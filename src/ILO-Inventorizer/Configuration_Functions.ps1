@@ -123,7 +123,7 @@ Function Update-Config {
         Log 5 "Start Updating Configuraton File"
 
         ## Check if Help must be displayed
-        if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+        if (($h ) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
             Get-Help Update-Config -Full;    
         }
         else {     

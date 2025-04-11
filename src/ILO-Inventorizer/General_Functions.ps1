@@ -140,7 +140,7 @@ Function Get-Config {
         [Parameter()][switch]$h
     )
     try {
-        if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+        if (($h ) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
             Get-Help Get-Config -Full;    
         }
         # Log 5 "Getting Configuration..."

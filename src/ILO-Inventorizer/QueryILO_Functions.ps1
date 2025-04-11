@@ -66,7 +66,7 @@ Function Get-MemoryData {
             $memoryDetails += [ordered]@{
                 Location = $iLOVersion -eq 4 ? $me.MemoryLocation.ToString() : $me.DeviceLocator.ToString();
                 SizeMB   = $iLOVersion -eq 4 ? $me.MemorySizeMB.ToString() : $me.CapacityMiB.ToString();
-                Serial   = $iLOVersion -eq 4 ? "- in ILO4" : $me.SerialNumber;
+                Serial   = $iLOVersion -eq 4 ? "N/A in ILO4" : $me.SerialNumber;
             }
         }   
         return $memoryDetails;
@@ -74,6 +74,7 @@ Function Get-MemoryData {
 }
 
 Function Get-NICData {
+
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]

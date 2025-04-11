@@ -8,23 +8,23 @@ Function Get-DataFromILO {
         # Array with all the Hostnames of the Servers that will be querried
         [Parameter()]
         [Array]
-        $Servers
+        $Servers,
+
+        [Parameter()]
+        [string]
+        $Username,
+
+        [Parameter()]
+        [securestring]
+        $Password
     )
     try {
-        # Get config and login
-        $config = Get-Config;
-        $login = Get-Content -Path $config.loginConfigPath | ConvertFrom-Json -Depth 2;
-        $login.Password = ConvertTo-SecureString -String ($login.Password) -AsPlainText;
-
         $report = @();
         foreach ($srv in $Servers) {
             Log 6 "Started querying $srv" -IgnoreLogActive
 
-            # Make connection with ILO and save Version.
-            $findILO = Find-HPEiLO $srv;
-            $iLOVersion = ([regex]"\d").Match($findILO.PN).Value;
-
-            $conn = Connect-HPEiLO -Address $srv -Username $login.Username -Password (ConvertFrom-SecureString -SecureString ($login.Password) -AsPlainText) -DisableCertificateAuthentication:($config.deactivateCertificateValidation) -ErrorAction Stop;
+            # Make connection with ILO.
+            $conn = Connect-HPEiLO -Address $srv -Username $Username -Password (ConvertFrom-SecureString -SecureString ($Password) -AsPlainText) -DisableCertificateAuthentication:($config.deactivateCertificateValidation) -ErrorAction Stop;
 
             # Get MAC 1 to MAC 4 from NetworkAdapters --> to look exactly like Inventory
             Log 6 "`tPrepare MAC 1 - MAC 4" -IgnoreLogActive
@@ -36,6 +36,7 @@ Function Get-DataFromILO {
                 Part_Type_Name    = $conn.TargetInfo.ProductName;
                 Hostname          = ($conn | Get-HPEiLOAccessSetting).ServerName.ToLower();
                 Hostname_Mgnt     = $conn.Hostname.ToLower();
+                ILO_Version       = ([regex]"\d").Match((Find-HPEiLO $srv).PN).Value;
                 MAC_1             = $macs.MAC1;
                 MAC_2             = $macs.MAC2;
                 MAC_3             = $macs.MAC3;

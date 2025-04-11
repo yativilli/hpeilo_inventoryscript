@@ -9,6 +9,7 @@ Scripting-Module to query information from HPE-Servers via ILO
 . $PSScriptRoot\QueryILO.ps1
 . $PSScriptRoot\ILO-Inventorizer_Functions.ps1
 . $PSScriptRoot\Configuration_Functions.ps1
+. $PSScriptRoot\Server_Scanner.ps1
 
 # Main Function
 Function Get-HWInfoFromILO {
@@ -187,7 +188,7 @@ Function Get-HWInfoFromILO {
         Log 0 "--------------------------------------`nILO-Inventorizer has been started." -IgnoreLogActive;
 
         ## Check if Help must be displayed
-        if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+        if (($h ) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
             Get-Help Get-HWInfoFromILO -Full;    
         }
         else {
@@ -232,7 +233,10 @@ Function Get-HWInfoFromILO {
             
             Log 3 "Query from ILO Started"
             if ($reachableServers.Count -gt 0) {
-                $report = Get-DataFromILO $reachableServers;
+                $login = Get-Content -Path $config.loginConfigPath | ConvertFrom-Json -Depth 2;
+                $login.Password = ConvertTo-SecureString -String ($login.Password) -AsPlainText;
+
+                $report = Get-DataFromILO $reachableServers -Username $login.Username -Password $login.Password;
                 Log 3 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
 
                 # Save Result to JSON and CSV-Files
@@ -290,7 +294,7 @@ Function Set-ConfigPath {
         ## Check if Help must be displayed
         switch ($PSCmdlet.ParameterSetName) {
             "Help" { 
-                if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+                if (($h ) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
                     Get-Help Set-ConfigPath -Full;    
                 }
                 break;
@@ -356,7 +360,7 @@ Function Get-ConfigPath {
     )
     try {
 
-        if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+        if (($h ) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
             Get-Help Get-ConfigPath -Full;    
         }
         else {   
@@ -393,7 +397,7 @@ Function Get-NewConfig {
     )
     try {
 
-        if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
+        if (($h ) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
             Get-Help Get-ConfigPath -Full;    
         }
         else {   
