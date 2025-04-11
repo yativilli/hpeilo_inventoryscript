@@ -6,4 +6,5 @@ Import-Module HPEiLOCmdlets;
 
 Set-PSDebug -Trace 0
 
-Set-ConfigPath -Path "U:\IPA\IPA\IPA_Sourcecode_hpeilo_inventoryscript\src\demonstration\dump\config.json";
+Set-ConfigPath -Path "C:\Users\wernle_y\AppData\Roaming\hpeilo\Scanner\config.json";
+Update-Config -LogToConsole:$false

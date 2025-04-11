@@ -191,12 +191,12 @@ Function Test-ForChangesToUpdate {
     $config.searchForFilesAt = ($BoundParameter["SearchForFilesAt"] | Resolve-NullValues -ValueOnNull $config.searchForFilesAt);
     
     # Verify if any bool/switch Values are updated and do so accordingly
-    if ($LoggingActivated.IsPresent) { $config.loggingActivated = $BoundParameter["LoggingActivated"]; }
-    if($DoNotSearchInventory.IsPresent) { $config.doNotSearchInventory = $BoundParameter["DoNotSearchInventory"]; }
-    if ($LogToConsole.IsPresent) { $config.logToConsole = $BoundParameter["LogToConsole"]; }
-    if ($IgnoreMACAddress.IsPresent) { $config.ignoreMACAddress = $BoundParameter["IgnoreMACAddress"]; }
-    if ($IgnoreSerialNumbers.IsPresent) { $config.ignoreSerialNumbers = $BoundParameter["IgnoreSerialNumbers"]; }
-    if ($DeactivatePingtest.IsPresent) { $config.deactivatePingtest = $BoundParameter["DeactivatePingtest"]; }
+    if ($LoggingActivated.IsPresent -or $BoundParameter.ContainsKey("LoggingActivated")) { $config.loggingActivated = [bool]$BoundParameter["LoggingActivated"]; }
+    if($DoNotSearchInventory.IsPresent -or $BoundParameter.ContainsKey("DoNotSearchInventory")) { $config.doNotSearchInventory = [bool]$BoundParameter["DoNotSearchInventory"]; }
+    if ($LogToConsole.IsPresent -or $BoundParameter.ContainsKey("LogToConsole")) { $config.logToConsole = [bool]$BoundParameter["LogToConsole"]; }
+    if ($IgnoreMACAddress.IsPresent -or $BoundParameter.ContainsKey("IgnoreMACAddress")) { $config.ignoreMACAddress = [bool]$BoundParameter["IgnoreMACAddress"]; }
+    if ($IgnoreSerialNumbers.IsPresent -or $BoundParameter.ContainsKey("IgnoreSerialNumbers")) { $config.ignoreSerialNumbers = [bool]$BoundParameter["IgnoreSerialNumbers"]; }
+    if ($DeactivatePingtest.IsPresent -or $BoundParameter.ContainsKey("DeactivatePingtest")) { $config.deactivatePingtest = [bool]$BoundParameter["DeactivatePingtest"]; }
 
     return $config; 
 }
