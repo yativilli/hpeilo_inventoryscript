@@ -1,5 +1,6 @@
 . $PSScriptRoot\Constants.ps1
 . $PSScriptRoot\General_Functions.ps1
+. $PSScriptRoot\Configuration_Functions.ps1
 
 Function Invoke-ParameterSetHandler {
     param(
@@ -52,14 +53,14 @@ Function Invoke-ParameterSetHandler {
             }
         }
     }
-    # exit;
+    exit 0;
 }
 
 Function Invoke-NoConfigFoundHandler {
     param()
 
     Log 6 "Started without specific Parameterset - displaying configuration prompt."
-    Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
+    Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with example data?`n[3] Add Path to an Existing config?";
     [int]$configDecision = Read-Host -Prompt "Enter the corresponding number:";
  
     switch ($configDecision) {
@@ -72,7 +73,7 @@ Function Invoke-NoConfigFoundHandler {
             break;
         }
         2 {
-            # Generate Config with Dummydata
+            # Generate Config with exampledata
             Log 6 "User has selected generating a config with dumydata."
             $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
             if ((Test-Path $pathToSaveAt) -eq $false) { throw [System.IO.DirectoryNotFoundException] "The path provided ('$pathToSaveAt') does not exist. Verify that it does" }

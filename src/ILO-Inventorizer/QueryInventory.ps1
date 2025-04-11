@@ -1,4 +1,5 @@
 . $PSScriptRoot\General_Functions.ps1
+. $PSScriptRoot\Configuration_Functions.ps1
 
 Function Get-ServersFromInventory { 
     try {

@@ -8,6 +8,7 @@ Scripting-Module to query information from HPE-Servers via ILO
 . $PSScriptRoot\QueryInventory.ps1
 . $PSScriptRoot\QueryILO.ps1
 . $PSScriptRoot\ILO-Inventorizer_Functions.ps1
+. $PSScriptRoot\Configuration_Functions.ps1
 
 # Main Function
 Function Get-HWInfoFromILO {
@@ -18,7 +19,7 @@ Function Get-HWInfoFromILO {
     This function is the main function for starting the program.
     It will first check for a config file - if none is found, you'll be prompted to either:
     1. Generate an empty one or 
-    2. Generate one filled with dummy data or 
+    2. Generate one filled with example data or 
     3. Add the path to an already existing config file.
 
     After correctly configuring the config, restart this function and depending on your choices,
@@ -378,7 +379,7 @@ Function Get-NewConfig {
     PS> Get-NewConfig
     No Configuration has been found. Would you like to:
     [1] Generate an empty config?
-    [2] Generate a config with dummy data?
+    [2] Generate a config with example data?
     [3] Add Path to an Existing config?
 
     Will reset the current config and bring up the screen to generate a new one.

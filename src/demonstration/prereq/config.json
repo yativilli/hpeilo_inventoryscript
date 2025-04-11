@@ -14,5 +14,5 @@
   "deactivatePingtest": false,
   "logToConsole": false,
   "ignoreMACAddress": false,
-  "ignoreSerialNumbers": false
+  "ignoreSerialNumbers": true
 }
