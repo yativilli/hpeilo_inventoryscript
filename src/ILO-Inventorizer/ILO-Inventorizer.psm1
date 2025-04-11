@@ -7,6 +7,7 @@ Scripting-Module to query information from HPE-Servers via ILO
 . $PSScriptRoot\General_Functions.ps1
 . $PSScriptRoot\QueryInventory.ps1
 . $PSScriptRoot\QueryILO.ps1
+. $PSScriptRoot\ILO-Inventorizer_Functions.ps1
 
 # Main Function
 Function Get-HWInfoFromILO {
@@ -206,9 +207,8 @@ Function Get-HWInfoFromILO {
             ## Check for Config
             # Check for Parameterset for configuration
             Log 3 "Configure new Configuration"
-            Invoke-ParameterSetHandler -ParameterSetName ($PSCmdlet.ParameterSetName) -ConfigPath $ConfigPath;
-            
-
+            Invoke-ParameterSetHandler -ParameterSetName $PSCmdlet.ParameterSetName -ConfigPath $ConfigPath;
+           
             Log 3 "Import Configuration"
             # Update Config with any Parameters passed along
             $config = Get-Config;
