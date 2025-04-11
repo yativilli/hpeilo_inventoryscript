@@ -1,4 +1,4 @@
-. $PSScriptRoot\Functions.ps1
+. $PSScriptRoot\General_Functions.ps1
 
 Function Get-ServersFromInventory { 
     try {
@@ -14,7 +14,6 @@ Function Get-ServersFromInventory {
         $doesMatchNamingConvention = $reg.Match($searchStringInventory).Success;
         if (-not $doesMatchNamingConvention) {
             throw [System.Text.RegularExpressions.RegexParseException] "The search string does not match the naming convention. The search String must contain something like 'gfa-', 'sf-', 'sls-'.";
-            return $false;
         }   
 
         # Check if Inventory is configured to be querried and execute a Pingtest.
@@ -53,59 +52,8 @@ Function Get-ServersFromInventory {
                 # Requesting Data from Inventory and save it in a file.
                 Log 6 "`tSending REST-Request to Inventory"
                 $resp = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -HttpVersion 3.0
-                $servers = (($resp).d.Rows);
-                $serversClean = @();
-                foreach ($srv in $servers) {
-                    $serversClean += [ordered]@{
-                        Label         = $srv[0]
-                        Hostname      = $srv[1]
-                        Hostname_Mgnt = $srv[2]
-                        Serial        = $srv[3]
-                        Part_Type     = $srv[4]
-                        Facility      = $srv[5]
-                        MAC_1         = $srv[6]
-                        MAC_2         = $srv[7]
-                        MAC_3         = $srv[8]
-                        MAC_4         = $srv[9]
-                        Mgnt_MAC      = $srv[10]
-                        HW_Status     = $srv[11]
-                        OS            = $srv[12]
-                    }
-                }
-                Log 6 "`tFilter Inventory-Answer for servers"
-                $serversClean = $serversClean | Where-Object -Property "Label" -match "SRV*";
-
-                Register-Directory ($config.searchForFilesAt);
-                $serversClean | ConvertTo-Json -Depth 3 | Out-File -Path ($config.searchForFilesAt + "\inventory_results.json");
-        
-                # Save Servers if a Mgnt-Hostname exists.
-                [Array]$serversToSave = @();
-                Log 6 "`tSaving servers in json if a Hostname_Mgnt exists."
-                foreach ($s in $serversClean) {
-                    if ($s.Hostname_Mgnt.Length -gt 0) {
-                        $serversToSave += $s.Hostname_Mgnt;
-                    }
-                }
-
-                # Handle Saving to file
-                Log 6 "`tSave servers into file and update the configuration."
-                # Create New Path
-                if ($config.serverPath.Length -eq 0) {
-                    $generateServerPath = $config.searchForFilesAt + "\server.json"
-                    New-File ($generateServerPath);
-                    $config = Get-Config;
-                    Update-Config -ServerPath $generateServerPath -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation);
-                }
-                $config = Get-Config;
-                # Add to Existing path
-                if (Test-Path -Path $config.serverPath) {
-                    $serversToSave | ConvertTo-Json -Depth 2 | Out-File -Path ($config.serverPath);
-                }
-                # Path does not Exist
-                else {
-                    $Path = $config.serverPath;
-                    throw [System.IO.FileNotFoundException] "The file at '$Path' could not be found. Please verify that the file exists."
-                }
+                Invoke-InventoryResponseCleaner -Response $resp;
+                
             }
             # Inventory not found with Pingtest
             else {
@@ -116,5 +64,82 @@ Function Get-ServersFromInventory {
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
+    }
+}
+
+Function Invoke-InventoryResponseCleaner {
+    param(
+        [Parameter(Mandatory = $true)]
+        [psobject]
+        $Response
+    )
+    if ($null -ne $Response) {
+        $config = Get-Config;
+
+        $servers = (($Response).d.Rows);
+        $serversClean = @();
+        foreach ($srv in $servers) {
+            $serversClean += [ordered]@{
+                Label         = $srv[0]
+                Hostname      = $srv[1]
+                Hostname_Mgnt = $srv[2]
+                Serial        = $srv[3]
+                Part_Type     = $srv[4]
+                Facility      = $srv[5]
+                MAC_1         = $srv[6]
+                MAC_2         = $srv[7]
+                MAC_3         = $srv[8]
+                MAC_4         = $srv[9]
+                Mgnt_MAC      = $srv[10]
+                HW_Status     = $srv[11]
+                OS            = $srv[12]
+            }
+        }
+        Log 6 "`tFilter Inventory-Answer for servers"
+        $serversClean = $serversClean | Where-Object -Property "Label" -match "SRV*";
+
+        Register-Directory ($config.searchForFilesAt);
+        $serversClean | ConvertTo-Json -Depth 3 | Out-File -Path ($config.searchForFilesAt + "\inventory_results.json");
+        
+        # Save Servers if a Mgnt-Hostname exists.
+        [Array]$serversToSave = @();
+        Log 6 "`tSaving servers in json if a Hostname_Mgnt exists."
+        foreach ($s in $serversClean) {
+            if ($s.Hostname_Mgnt.Length -gt 0) {
+                $serversToSave += $s.Hostname_Mgnt;
+            }
+        }
+
+        Save-ServersFromInventory -ServersToSave $serversToSave;
+    }
+}
+
+Function Save-ServersFromInventory {
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [psobject]
+        $ServersToSave
+    )
+    if ($null -ne $ServersToSave) {
+        $config = Get-Config;
+        # Handle Saving to file
+        Log 6 "`tSave servers into file and update the configuration."
+        # Create New Path
+        if ($config.serverPath.Length -eq 0) {
+            $generateServerPath = $config.searchForFilesAt + "\server.json"
+            New-File ($generateServerPath);
+            $config = Get-Config;
+            Update-Config -ServerPath $generateServerPath -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation);
+        }
+        $config = Get-Config;
+        # Add to Existing path
+        if (Test-Path -Path $config.serverPath) {
+            $ServersToSave | ConvertTo-Json -Depth 2 | Out-File -Path ($config.serverPath);
+        }
+        # Path does not Exist
+        else {
+            $Path = $config.serverPath;
+            throw [System.IO.FileNotFoundException] "The server-path at '$Path' could not be found. Please verify that the file exists."
+        }
     }
 }

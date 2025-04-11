@@ -1,5 +1,5 @@
 . $PSScriptRoot\Constants.ps1
-. $PSScriptRoot\Functions.ps1
+. $PSScriptRoot\General_Functions.ps1
 
 ### QUERYING FROM ILO
 Function Get-PowerSupplyData {
