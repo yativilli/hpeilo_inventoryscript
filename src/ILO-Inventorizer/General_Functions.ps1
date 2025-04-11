@@ -382,7 +382,7 @@ Function Update-Config {
             }
             Log 5 ("Saving updated Configuration at " + $config.configPath)
 
-            Set-Content -Path (Get-ConfigPath) -Value ($config | ConvertTo-Json -Depth 3);
+           Set-Content -Path (Get-ConfigPath) -Value ($config | ConvertTo-Json -Depth 3);
             
         }
         else {
@@ -600,4 +600,26 @@ Function Invoke-PingTest {
     catch {    
         Save-Exception $_ ($_.Exception.Message.ToString());
     }
+}
+
+Function Resolve-NullValuesToSymbol {
+    param(
+        [Parameter(ValueFromPipeline = $true)]
+        $Value
+    )
+    Resolve-NullValues -Value $Value -ValueOnNull $NO_VALUE_FOUND_SYMBOL;
+}
+
+Function Resolve-NullValues {
+    param(
+        [Parameter(ValueFromPipeline = $true)]
+        $Value,
+
+        [Parameter(ValueFromPipeline = $false)]
+        $ValueOnNull
+    )
+    if (($null -eq $Value) -or ($Value.Length -le 0)) {
+        return $ValueOnNull;
+    }
+    return $Value
 }

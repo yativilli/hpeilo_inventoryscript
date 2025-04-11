@@ -6,5 +6,5 @@ Import-Module HPEiLOCmdlets;
 
 Set-PSDebug -Trace 0
 
-Set-ConfigPath -Reset #-Path "U:\IPA\IPA\IPA_Sourcecode_hpeilo_inventoryscript\src\demonstration\prereq\config.json";
-Get-HWInfoFromILO # "U:\IPA\IPA\IPA_Sourcecode_hpeilo_inventoryscript\src\demonstration\prereq\config.json";
+# Set-ConfigPath -Path "U:\IPA\IPA\IPA_Sourcecode_hpeilo_inventoryscript\src\demonstration\prereq\config.json";
+Get-HWInfoFromILO -SearchStringInventory "gfa-sioc-cs-de" -Username "Yannik" -Password (ConvertTo-SecureString -String "test!1234" -AsPlainText) -LogToConsole:$false

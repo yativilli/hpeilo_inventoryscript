@@ -117,7 +117,7 @@ Function Invoke-InventoryResponseCleaner {
 Function Save-ServersFromInventory {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [psobject]
+        [PSCustomObject]
         $ServersToSave
     )
     if ($null -ne $ServersToSave) {

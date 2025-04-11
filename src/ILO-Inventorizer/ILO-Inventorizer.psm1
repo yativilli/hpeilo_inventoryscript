@@ -100,7 +100,7 @@ Function Get-HWInfoFromILO {
 
         # Array that will be used for an ILO-Query instead of Inventory
         [Parameter(Mandatory = $true, ParameterSetName = "ServerArray")]
-        [array]
+        [psobject]
         $Server,
 
         # Level from 0 to 6 that changes the detail of any logs present (0 - None, 6 - Many)
@@ -190,7 +190,6 @@ Function Get-HWInfoFromILO {
             Get-Help Get-HWInfoFromILO -Full;    
         }
         else {
-
             try {
                 Import-Module HPEiLOCmdlets -ErrorAction Stop;
             }
@@ -204,41 +203,16 @@ Function Get-HWInfoFromILO {
                 Write-Warning "The installed Module HPEiLOCmdlets doesnt use the recommended Version '$RECOMMENDED_VERSION', but '$moduleVersion' - some features may not work correctly."
             }
 
-            ## Check for Config
             # Check for Parameterset for configuration
             Log 3 "Configure new Configuration"
-            Invoke-ParameterSetHandler -ParameterSetName $PSCmdlet.ParameterSetName -ConfigPath $ConfigPath;
+            Invoke-ParameterSetHandler -ParameterSetName ($PSCmdlet.ParameterSetName) -ConfigPath $ConfigPath;
            
             Log 3 "Import Configuration"
             # Update Config with any Parameters passed along
-            $config = Get-Config;
-            $ConfigPath = $config.Length -gt 0 ? $ConfigPath : $config.configPath;
-            $LoginConfigPath = $LoginConfigPath.Length -gt 0 ? $LoginConfigPath : $config.loginConfigPath;
-            $ReportPath = $ReportPath.Length -gt 0 ? $ReportPath : $config.reportPath;
-            $LogPath = $LogPath.Length -gt 0 ? $LogPath : $config.logPath;
-            $ServerPath = $ServerPath.Length -gt 0 ? $ServerPath : $config.serverPath;
-            $LogLevel = $LogLevel -ne -1 ? $LogLevel : $config.logLevel;
-            
-            $LogToConsole = $PSBoundParameters.ContainsKey('LogToConsole') -eq $true ? $LogToConsole : $config.logToConsole ;
-            $LoggingActivated = $PSBoundParameters.ContainsKey('LoggingActivated') -eq $true ? $LoggingActivated : $config.loggingActivated;
-            $DoNotSearchInventory = $PSBoundParameters.ContainsKey('DoNotSearchInventory') -eq $true ? $DoNotSearchInventory : $config.doNotSearchInventory ;
-            $DeactivateCertificateValidationILO = $PSBoundParameters.ContainsKey('DeactivateCertificateValidationILO') -eq $true ? $DeactivateCertificateValidationILO : $config.deactivateCertificateValidation;
-            $DeactivatePingtest = $PSBoundParameters.ContainsKey("DeactivatePingtest") -eq $true ? $DeactivatePingtest : $config.deactivatePingtest;
-            $IgnoreMACAddress = $PSBoundParameters.ContainsKey("IgnoreMACAddress") -eq $true ? $IgnoreMACAddress : $config.ignoreMACAddress;
-            $IgnoreSerialNumbers = $PSBoundParameters.ContainsKey("IgnoreSerialNumbers") -eq $true ? $IgnoreSerialNumbers : $config.ignoreSerialNumbers;
-
-            $SearchStringInventory = $SearchStringInventory.Length -gt 0 ? $SearchStringInventory : $config.searchStringInventory;
-            $RemoteMgmntField = $RemoteMgmntField.Length -gt 0 ? $RemoteMgmntField : $config.remoteMgmntField;
-                                   
-            $login = (Get-Content ($LoginConfigPath) | ConvertFrom-Json -Depth 3);
-            $Username = $Username.Length -gt 0 ? $Username : $login.Username;
-                                       
-            $Password = $Password.Length -gt 0 ? $Password : $login.Password.Length -ne 0 ? (ConvertTo-SecureString -String ($login.Password) -AsPlainText) : (ConvertTo-SecureString -String ("None") -AsPlainText);
-        
-            Update-Config -ConfigPath $ConfigPath -LoginConfigPath $LoginConfigPath -ReportPath $ReportPath -LogPath $LogPath -ServerPath $ServerPath -Server $Server -LogLevel $LogLevel -DeactivatePingtest:$DeactivatePingtest -IgnoreMACAddress:$IgnoreMACAddress -IgnoreSerialNumbers:$IgnoreSerialNumbers -LogToConsole:$LogToConsole -LoggingActivated:$LoggingActivated -SearchStringInventory $SearchStringInventory -DoNotSearchInventory:$DoNotSearchInventory -RemoteMgmntField $RemoteMgmntField -DeactivateCertificateValidationILO:$DeactivateCertificateValidationILO -Username $Username -Password $Password;
-            $config = Get-Config;
-
+            $PSBoundParameters | Optimize-ParameterStartedForUpdate; 
+       
             # Check that all Paths needed in the future are set and exist
+            $config = Get-Config;
             Convert-PathsToValidated -IgnoreServerPath;
             
             # Query Inventory
@@ -251,33 +225,24 @@ Function Get-HWInfoFromILO {
             Convert-PathsToValidated -IgnoreServerPath;
             
             # Execute PingTest
-            [Array]$reachable = @();
-            $config = Get-Config;
-            $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
-            if (-not $config.deactivatePingtest) {
-                Log 3 "Start Pingtest"
-                foreach ($srv in $serverJSON) {
-                    if (Invoke-PingTest $srv) {
-                        Log 0 "$srv was successfully reached via Pingtest." -IgnoreLogActive;
-                        $reachable += $srv;
-                    }
-                    else {
-                        Log 0 "$srv was not able to be reached via Pingtest." -IgnoreLogActive;
-                    }
-                }
-            }
-            else {
-                $reachable = $serverJSON;
-            }
+            $reachableServers = Start-PingtestOnServers;
         
             # Query ILO
+            
             Log 3 "Query from ILO Started"
-            if ($reachable.Count -gt 0) {
-                Get-DataFromILO $reachable;
+            if ($reachableServers.Count -gt 0) {
+                $report = Get-DataFromILO $reachableServers;
+                Log 3 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
+
+                # Save Result to JSON and CSV-Files
+                Log 3 "Begin Saving result in Files"
+                Save-DataInJSON $report;
+                Save-DataInCSV $report;
             }
             else {
                 throw [System.Data.DataException] "No Servers could be found. Please verify that either your server.json or inventory has at least one Server. Check also if doNotSearchInventory is set to the appropriate value."
             }
+            #>
 
             Log 2 "ILO-Inventorizer has been executed successfully."
         }
@@ -336,9 +301,7 @@ Function Set-ConfigPath {
                 break;
             }
             "SetPath" {
-
                 Log 5 "Set Config Path has been started with 'Path' $Path and reset:$Reset"
-                
                 if (Test-Path -Path $Path -ErrorAction Stop) {
                     if ($Path.Contains("\config.json")) {
                         Log 6 "Config Path already contains config.json"

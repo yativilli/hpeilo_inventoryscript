@@ -52,7 +52,7 @@ Function Invoke-ParameterSetHandler {
             }
         }
     }
-    exit;
+    # exit;
 }
 
 Function Invoke-NoConfigFoundHandler {
@@ -61,7 +61,7 @@ Function Invoke-NoConfigFoundHandler {
     Log 6 "Started without specific Parameterset - displaying configuration prompt."
     Write-Host "No Configuration has been found. Would you like to:`n[1] Generate an empty config? `n[2] Generate a config with dummy data?`n[3] Add Path to an Existing config?";
     [int]$configDecision = Read-Host -Prompt "Enter the corresponding number:";
-    
+ 
     switch ($configDecision) {
         1 {
             # Generate Empty Config
@@ -104,4 +104,38 @@ Function Invoke-NoConfigFoundHandler {
             break;
         }
     }
+}
+
+Function Start-PingtestOnServers {
+    [Array]$reachable = @();
+    $config = Get-Config;
+    $serverJSON = Get-Content ($config.serverPath) | ConvertFrom-JSON -Depth 2;
+    if (-not $config.deactivatePingtest) {
+        Log 3 "Start Pingtest"
+        foreach ($srv in $serverJSON) {
+            if (Invoke-PingTest $srv) {
+                Log 0 "$srv was successfully reached via Pingtest." -IgnoreLogActive;
+                $reachable += $srv;
+            }
+            else {
+                Log 0 "$srv was not able to be reached via Pingtest." -IgnoreLogActive;
+            }
+        }
+    }
+    else {
+        $reachable = $serverJSON;
+    }
+    return $reachable;
+}
+
+Function Optimize-ParameterStartedForUpdate {
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [PSCustomObject]
+        $BoundParameters
+    )
+    $config = Get-Config; 
+    $login = (Get-Content ($config.loginConfigPath) | ConvertFrom-Json -Depth 3);
+ 
+    Update-Config -ConfigPath ($BoundParameters["ConfigPath"] | Resolve-NullValues -ValueOnNull $config.configPath) -LoginConfigPath ($BoundParameters["LoginConfigPath"] | Resolve-NullValues -ValueOnNull $config.loginConfigPath) -ReportPath ($BoundParameters["ReportPath"] | Resolve-NullValues -ValueOnNull $config.reportPath) -LogPath ($BoundParameters["LogPath"] | Resolve-NullValues -ValueOnNull $config.logPath)  -ServerPath ($BoundParameters["ServerPath"] | Resolve-NullValues -ValueOnNull $config.serverPath)  -Server ($BoundParameters["Server"]) -LogLevel  ($BoundParameters["LogLevel"] | Resolve-NullValues -ValueOnNull $config.logLevel) -DeactivatePingtest:($BoundParameters["DeactivatePingtest"] | Resolve-NullValues -ValueOnNull $config.deactivatePingtest)  -IgnoreMACAddress:($BoundParameters["IgnoreMACAddress"] | Resolve-NullValues -ValueOnNull $config.ignoreMACAddress) -IgnoreSerialNumbers($BoundParameters["IgnoreSerialNumbers"] | Resolve-NullValues -ValueOnNull $config.ignoreSerialNumbers)  -LogToConsole:($BoundParameters["LogToConsole"] | Resolve-NullValues  -ValueOnNull $config.logToConsole) -LoggingActivated:($BoundParameters["LoggingActivated"] | Resolve-NullValues -ValueOnNull $config.loggingActivated) -SearchStringInventory ($BoundParameters["SearchStringInventory"] | Resolve-NullValues -ValueOnNull $config.searchStringInventory) -DoNotSearchInventory:($BoundParameters["DoNotSearchInventory"] | Resolve-NullValues -ValueOnNull $config.doNotSearchInventory) -RemoteMgmntField ($BoundParameters["RemoteMgmntField"] | Resolve-NullValues -ValueOnNull $config.remoteMgmntField) -DeactivateCertificateValidationILO:($BoundParameters["DeactivateCertificateValidationILO"] | Resolve-NullValues -ValueOnNull $config.deactivateCertificateValidation) -Username ($BoundParameters["Username"] | Resolve-NullValues -ValueOnNull $login.Username) -Password ($BoundParameters["Password"] | Resolve-NullValues -ValueOnNull (ConvertTo-SecureString -String ($login.Password) -AsPlainText));
 }

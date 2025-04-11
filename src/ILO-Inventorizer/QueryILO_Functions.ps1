@@ -500,14 +500,3 @@ Function Save-SerialInformationToCSV {
         $csv_additional_info | ConvertTo-Csv -Delimiter ";" | Add-Content -Path $name -Force
     }
 }
-
-Function Resolve-NullValuesToSymbol {
-    param(
-        [Parameter(ValueFromPipeline = $true)]
-        $Value
-    )
-    if (($null -eq $Value) -or ($Value.Length -le 0)) {
-        return $NO_VALUE_FOUND_SYMBOL;
-    }
-    return $Value;
-}

@@ -60,12 +60,8 @@ Function Get-DataFromILO {
         }
         # Log Result to Terminal
         Log 3 "Querying ILO finished..."
-        Log 3 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
+        return $report;
 
-        # Save Result to JSON and CSV-Files
-        Log 3 "Begin Saving result in Files"
-        Save-DataInJSON $report;
-        Save-DataInCSV $report;
     }
     catch {
         $message = $_.Exception.Message.ToString();
