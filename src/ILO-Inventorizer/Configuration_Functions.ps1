@@ -34,6 +34,11 @@ Function Update-Config {
         [string]
         $LoginConfigPath,
 
+        # Path to where some output files will be located
+        [Parameter()]
+        [string]
+        $SearchForFilesAt,
+
         # Path to the directory where the reports will be stored
         [Parameter()]
         [string]
@@ -62,12 +67,12 @@ Function Update-Config {
         # Toggle to Activate Logging
         [Parameter()]
         [switch]
-        $LoggingActivated = $null,
+        $LoggingActivated,
 
         # Toggle to ActivateLogging to Console
         [Parameter()]
         [switch]
-        $LogToConsole = $null,
+        $LogToConsole,
 
         # String that will be used to search inventory
         [Parameter()]
@@ -77,22 +82,22 @@ Function Update-Config {
         # Toggle to deactivate searching in Inventory
         [Parameter()]
         [switch]
-        $DoNotSearchInventory = $null,
+        $DoNotSearchInventory,
 
         # Toggle to deactivate generation of MACAddress.csv
         [Parameter()]
         [switch]
-        $IgnoreMACAddress = $null,
+        $IgnoreMACAddress,
         
         # Toggle to deactivate generation of SerialNumbers.csv
         [Parameter()]
         [switch]
-        $IgnoreSerialNumbers = $null,
+        $IgnoreSerialNumbers,
 
         # Toggle Pingtest
         [Parameter()]
         [switch]
-        $DeactivatePingtest = $null,
+        $DeactivatePingtest,
 
         # Field in Inventory tha'll be used as Hostname for the ILO
         [Parameter()]
@@ -102,7 +107,7 @@ Function Update-Config {
         # Toggle Certification process with when connecting with ilo
         [Parameter()]
         [switch]
-        $DeactivateCertificateValidationILO = $null,
+        $DeactivateCertificateValidationILO,
 
         # Username for ILO-Interface
         [Parameter()]
@@ -121,58 +126,39 @@ Function Update-Config {
         if (($h -eq $true) -or ((Show-Help $help) -and ($help.Length -gt 0)) ) {
             Get-Help Update-Config -Full;    
         }
+        else {     
+            $pathToConfig = Get-ConfigPath;
+            if (Test-Path -Path $pathToConfig) {
+                # Verify if any String or Int-Values are updated and do so accordingly
+                Log 6 "`tCheck if any values need to be updated in the configuration"
+                $config = $PSBoundParameters | Test-ForChangesToUpdate;
 
-        $pathToConfig = Get-ConfigPath;
-        if (Test-Path -Path $pathToConfig) {
-            $config = Get-Config;
+                # Check if ServerArray is set and generate a new file containing them
+                if ($Server.Length -gt 0) { 
+                    if ((Test-Path -Path $config.serverPath) -eq $false) {
+                        Log 6 "`tUpdating Server Configuration."
+                        $serverPath = New-File ($DEFAULT_PATH + "\server.json"); 
+                        $config.serverPath = $serverPath;
 
-            # Verify if any String or Int-Values are updated and do so accordingly
-            Log 6 "`tCheck if any values need to be updated in the configuration"
-            if ($LoginConfigPath.Length -gt 0) { $config.loginConfigPath = $LoginConfigPath; }
-            if ($ConfigPath.Length -gt 0) { $config.configPath = $ConfigPath; }
-            if ($ReportPath.Length -gt 0) { $config.reportPath = $ReportPath; }
-            if ($LogPath.Length -gt 0) { $config.logPath = $LogPath; }
-            if ($ServerPath.Length -gt 0) { $config.serverPath = $ServerPath; }
-            if ($LogLevel -ne -1) { $config.logLevel = $LogLevel; }
-            if ($SearchStringInventory.Length -gt 0) { $config.searchStringInventory = $SearchStringInventory; }
-            if ($RemoteMgmntField.Length -gt 0) { $config.remoteMgmntField = $RemoteMgmntField; }
-
-            # Verify if any bool/switch Values are updated and do so accordingly
-            if ($null -ne $LoggingActivated) { $config.loggingActivated = [bool]$LoggingActivated; }
-            if ($null -ne $DoNotSearchInventory) { $config.doNotSearchInventory = [bool]$DoNotSearchInventory; }
-            if ($null -ne $DeactivateCertificateValidationILO) { $config.deactivateCertificateValidation = [bool]$DeactivateCertificateValidationILO; }
-            if ( $null -ne $LogToConsole) { $config.logToConsole = [bool]$LogToConsole; }
-            if ($null -ne $IgnoreMACAddress) { $config.ignoreMACAddress = [bool]$IgnoreMACAddress; }
-            if ($null -ne $IgnoreSerialNumbers) { $config.ignoreSerialNumbers = [bool]$IgnoreSerialNumbers; }
-            if ($null -ne $DeactivatePingtest) { $config.deactivatePingtest = [bool]$DeactivatePingtest; }
-            
-            # Check if ServerArray is set and generate a new file containing them
-            if ($Server.Length -gt 0) { 
-                if ((Test-Path -Path $config.serverPath) -eq $false) {
-                    Log 6 "`tUpdating Server Configuration."
-                    $serverPath = New-File ($DEFAULT_PATH + "\server.json"); 
-                    $config.serverPath = $serverPath;
-
+                    }
+                    Set-Content -Path ($config.serverPath) -Value ($Server | ConvertTo-Json -Depth 2);
                 }
-                Set-Content -Path ($config.serverPath) -Value ($Server | ConvertTo-Json -Depth 2);
-            }
         
-            # Set Credentials
-            if (Test-Path -Path ($config.loginConfigPath)) {
-                Log 6 "`tUpdating Credentials."
-                $login = Get-Content -Path ($config.loginConfigPath) | ConvertFrom-Json -Depth 3;
-                if ($Username.Length -gt 0) { $login.Username = $Username; }
-                if ($Password.Length -gt 0) { $login.Password = (ConvertFrom-SecureString -SecureString $Password -AsPlainText); }
+                # Set Credentials
+                if (Test-Path -Path ($config.loginConfigPath)) {
+                    Log 6 "`tUpdating Credentials."
+                    $login = Get-Content -Path ($config.loginConfigPath) | ConvertFrom-Json -Depth 3;
+                    if ($Username.Length -gt 0) { $login.Username = $Username; }
+                    if ($Password.Length -gt 0) { $login.Password = (ConvertFrom-SecureString -SecureString $Password -AsPlainText); }
                 
-                Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);
+                    Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);
+                }
+                Log 5 ("Saving updated Configuration at " + $config.configPath)
+                Set-Content -Path (Get-ConfigPath) -Value ($config | ConvertTo-Json -Depth 3);
             }
-            Log 5 ("Saving updated Configuration at " + $config.configPath)
-
-            Set-Content -Path (Get-ConfigPath) -Value ($config | ConvertTo-Json -Depth 3);
-            
-        }
-        else {
-            throw [System.IO.FileNotFoundException] "No updatable config could be found at '$pathToConfig'. Verify that a configuration is set to a config.json that exists and verify that the path exists. `nIf you moved the config file, use Set-ConfigPath -Path 'C:\Somewhere' to change it.";
+            else {
+                throw [System.IO.FileNotFoundException] "No updatable config could be found at '$pathToConfig'. Verify that a configuration is set to a config.json that exists and verify that the path exists. `nIf you moved the config file, use Set-ConfigPath -Path 'C:\Somewhere' to change it.";
+            }
         }
     }
     catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {
@@ -184,6 +170,35 @@ Function Update-Config {
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
     }
+}
+
+Function Test-ForChangesToUpdate {
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [psobject]
+        $BoundParameter
+    )
+    $config = Get-Config;
+
+    $config.loginConfigPath = ($BoundParameter["LoginConfigPath"] | Resolve-NullValues -ValueOnNull $config.loginConfigPath);
+    $config.configPath = ($BoundParameter["ConfigPath"] | Resolve-NullValues -ValueOnNull $config.configPath);
+    $config.reportPath = ($BoundParameter["ReportPath"] | Resolve-NullValues -ValueOnNull $config.reportPath);
+    $config.logPath = ($BoundParameter["LogPath"] | Resolve-NullValues -ValueOnNull $config.logPath);
+    $config.serverPath = ($BoundParameter["ServerPath"] | Resolve-NullValues -ValueOnNull $config.serverPath);
+    $config.logLevel = ($BoundParameter["LogLevel"] | Resolve-NullValues -ValueOnNull $config.logLevel);
+    $config.searchStringInventory = ($BoundParameter["SearchStringInventory"] | Resolve-NullValues -ValueOnNull $config.searchStringInventory);
+    $config.remoteMgmntField = ($BoundParameter["RemoteMgmntField"] | Resolve-NullValues -ValueOnNull $config.remoteMgmntField);
+    $config.searchForFilesAt = ($BoundParameter["SearchForFilesAt"] | Resolve-NullValues -ValueOnNull $config.searchForFilesAt);
+    
+    # Verify if any bool/switch Values are updated and do so accordingly
+    if ($LoggingActivated.IsPresent) { $config.loggingActivated = $BoundParameter["LoggingActivated"]; }
+    if($DoNotSearchInventory.IsPresent) { $config.doNotSearchInventory = $BoundParameter["DoNotSearchInventory"]; }
+    if ($LogToConsole.IsPresent) { $config.logToConsole = $BoundParameter["LogToConsole"]; }
+    if ($IgnoreMACAddress.IsPresent) { $config.ignoreMACAddress = $BoundParameter["IgnoreMACAddress"]; }
+    if ($IgnoreSerialNumbers.IsPresent) { $config.ignoreSerialNumbers = $BoundParameter["IgnoreSerialNumbers"]; }
+    if ($DeactivatePingtest.IsPresent) { $config.deactivatePingtest = $BoundParameter["DeactivatePingtest"]; }
+
+    return $config; 
 }
 
 Function New-Config {
