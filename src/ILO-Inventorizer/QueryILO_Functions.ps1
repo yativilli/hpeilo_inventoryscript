@@ -262,12 +262,14 @@ Function Format-MACAddressesLikeInventory {
         $Connection
     )
     if ($null -ne $Connection) {
+        Log 6 "`tPrepare MAC 1 - MAC 4" -IgnoreLogActive
         $macs = @{
             MAC1 = "";
             MAC2 = "";
             MAC3 = "";
             MAC4 = "";
         }
+        $networkadapter = $conn | Get-NetAdapterData;
         $ports = $networkAdapter.Ports;
         if ($ports.Length -gt 0) {
             $macAddressNotEmbeded = $ports[2..($ports.Length - 1)]

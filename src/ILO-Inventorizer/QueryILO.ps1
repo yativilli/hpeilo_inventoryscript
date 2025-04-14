@@ -22,13 +22,11 @@ Function Get-DataFromILO {
         $report = @();
         foreach ($srv in $Servers) {
             Log 6 "Started querying $srv" -IgnoreLogActive
-
+            
             # Make connection with ILO.
             $conn = Connect-HPEiLO -Address $srv -Username $Username -Password (ConvertFrom-SecureString -SecureString ($Password) -AsPlainText) -DisableCertificateAuthentication:($config.deactivateCertificateValidation) -ErrorAction Stop;
-
+            
             # Get MAC 1 to MAC 4 from NetworkAdapters --> to look exactly like Inventory
-            Log 6 "`tPrepare MAC 1 - MAC 4" -IgnoreLogActive
-            $macs = $conn | Format-MACAddressesLikeInventory;
             
             # Structure Report nicely and add it to array
             $srvReport = [ordered]@{
@@ -37,10 +35,10 @@ Function Get-DataFromILO {
                 Hostname          = ($conn | Get-HPEiLOAccessSetting).ServerName.ToLower();
                 Hostname_Mgnt     = $conn.Hostname.ToLower();
                 ILO_Version       = ([regex]"\d").Match((Find-HPEiLO $srv).PN).Value;
-                MAC_1             = $macs.MAC1;
-                MAC_2             = $macs.MAC2;
-                MAC_3             = $macs.MAC3;
-                MAC_4             = $macs.MAC4;
+                MAC_1             = ($conn | Format-MACAddressesLikeInventory).MAC1;
+                MAC_2             = ($conn | Format-MACAddressesLikeInventory).MAC2;
+                MAC_3             = ($conn | Format-MACAddressesLikeInventory).MAC3;
+                MAC_4             = ($conn | Format-MACAddressesLikeInventory).MAC4;
                 Mgnt_MAC          = ($conn | Get-HPEiLOIPv4NetworkSetting).PermanentMACAddress.ToLower();
                 
                 PowerSupply       = ($conn | Get-PowerSupplyData); 
