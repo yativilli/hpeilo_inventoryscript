@@ -60,14 +60,16 @@ Function Get-ServerByScanner {
             if (Invoke-PingTest -Hostname $server) {
                 # Call the function to query the server with the provided password
                 $report += Get-DataFromILO -Servers $server -Username $DEFAULT_USERNAME_ILO -Password $password;
+                
+                # Save the report
+                Save-DataInJSON -Report $report;
+                Save-DataInCSV -Report $report;
+                Log 2 "The Report has been saved at $DEFAULT_PATH"
             }
             else {
                 Write-Host "Server $server is not reachable - check that it has been assigned a DNS-Entry (f.ex. in hosts-File). Skipping...";
             }
         }
-        Save-DataInJSON -Report $report;
-        Save-DataInCSV -Report $report;
-        Log 2 "Report have been saved at $DEFAULT_PATH"
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
