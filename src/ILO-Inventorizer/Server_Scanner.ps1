@@ -106,6 +106,11 @@ Function Resolve-ErrorsInInput {
     $expectedHostname = $($Hostname).ToLower();
     $expectedSerialNumber = $($SerialNumber).ToLower();
     $res = @{};
+
+    # Filter Out Prod Id
+    $expectedPasswordLower -like "-[A-Z][0-9]{2}" ? ($expectedPassword = $null) : $false;
+    $expectedHostname -like "-[A-Z][0-9]{2}" ? ($expectedHostname = $null) : $false;
+    $expectedSerialNumber -like "-[A-Z][0-9]{2}" ? ($expectedSerialNumber = $null) : $false;
     
     # Filter Hostname
     $expectedPasswordLower -like "ilo*" ? ($res["Hostname"] = ($expectedPassword)) : $false;
@@ -121,6 +126,26 @@ Function Resolve-ErrorsInInput {
     $expectedPasswordLower -notlike "ilo*" -and $expectedPasswordLower.Length -le 8 ? ($res["Password"] = ($expectedPassword)) : $false;
     $expectedHostname -notlike "ilo*" -and $expectedHostname.Length -le 8 ? ($res["Password"] = ($Hostname)) : $false;
     $expectedSerialNumber -notlike "ilo*" -and $expectedSerialNumber.Length -le 8 ? ($res["Password"] = ($SerialNumber)) : $false;
+
+    if ($null -eq $res["Password"]) {
+        throw [System.IO.InvalidDataException]
+    }
+    elseif ($null -eq $res["Hostname"]) {
+        if ($null -eq $res["SerialNumber"]) {
+            throw [System.IO.InvalidDataException]
+        }
+        else {
+            $res["Hostname"] = ("ILO" + $res["SerialNumber"]);
+        }
+    }
+    elseif ($null -eq $res["SerialNumber"]) {
+        if ($null -eq $res["Hostname"]) {
+            throw [System.IO.InvalidDataException]
+        }
+        else {
+            $res["SerialNumber"] = ($res["Hostname"]).replace("ILO", "");
+        }
+    }
 
     return $res;
 }
