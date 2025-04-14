@@ -15,8 +15,9 @@ Function Get-ServerByScanner {
         $servers = @();
         $passwords = @();
 
-        New-Config -Path $DEFAULT_PATH -ForScanner
+        New-Config -Path ($DEFAULT_PATH + "\Scanner") -ForScanner | Out-Null;
 
+        ## Get Scanned Servers
         while ($true) {
             do {
                 $serialNumber = Read-Host -Prompt "Please enter the Serial Number";
@@ -32,8 +33,10 @@ Function Get-ServerByScanner {
             } while ($password -eq "" -or $password -eq "exit");
             $password = (ConvertTo-SecureString -String $password -AsPlainText -Force);
     
-            Resolve-ErrorsInInput -Hostname $hostname -Password $password -SerialNumber $serialNumber;
-            
+
+            $res = Resolve-ErrorsInInput -Hostname $hostname -Password $password -SerialNumber $serialNumber;
+            Write-Host "---`nScanned Information:`nHostname: $($res.Hostname)`nSerial Number: $($res.SerialNumber)`nPassword: $($res.Password)";
+
             do {
                 $corr = Read-Host -Prompt "---`nIs the scanned information correct? [y/N]";
             } while ($corr -ne "y" -and $corr -ne "N");
@@ -47,10 +50,7 @@ Function Get-ServerByScanner {
             }
         }
 
-        ## Execute 
-        $servers;
-        $passwords;
-
+        ## Query Scanned Servers 
         $report = @();
         for ([int]$i = 0; $i -le $servers.Count - 1; $i++) {
             $server = $servers[$i];
@@ -65,8 +65,9 @@ Function Get-ServerByScanner {
                 Write-Host "Server $server is not reachable - check that it has been assigned a DNS-Entry (f.ex. in hosts-File). Skipping...";
             }
         }
-        # Save-DataInJSON -Report $report;
-        # Save-DataInCSV -Report $report;
+        Save-DataInJSON -Report $report;
+        Save-DataInCSV -Report $report;
+        Log 2 "Report have been saved at $DEFAULT_PATH"
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
@@ -110,9 +111,9 @@ Function Resolve-ErrorsInInput {
     $expectedSerialNumber -like "ilo*" ? ($res["Hostname"] = ($SerialNumber)) : $false;
 
     # Filter SerialNumber
-    $expectedPasswordLower -notlike "ilo*" -and $expectedPasswordLower.Length -eq 10 ? ($res["SerialNumber"] = ($expectedPassword)) : $false;
-    $expectedHostname -notlike "ilo*" -and $expectedHostname.Length -eq 10 ? ($res["SerialNumber"] = ($Hostname)) : $false;
-    $expectedSerialNumber -notlike "ilo*" -and $expectedSerialNumber.Length -eq 10 ? ($res["SerialNumber"] = ($SerialNumber)) : $false;
+    $expectedPasswordLower -notlike "ilo*" -and $expectedPasswordLower.Length -ge 9 ? ($res["SerialNumber"] = ($expectedPassword)) : $false;
+    $expectedHostname -notlike "ilo*" -and $expectedHostname.Length -ge 9 ? ($res["SerialNumber"] = ($Hostname)) : $false;
+    $expectedSerialNumber -notlike "ilo*" -and $expectedSerialNumber.Length -ge 9 ? ($res["SerialNumber"] = ($SerialNumber)) : $false;
     
     # Filter Password
     $expectedPasswordLower -notlike "ilo*" -and $expectedPasswordLower.Length -le 8 ? ($res["Password"] = ($expectedPassword)) : $false;
@@ -121,4 +122,3 @@ Function Resolve-ErrorsInInput {
 
     return $res;
 }
-

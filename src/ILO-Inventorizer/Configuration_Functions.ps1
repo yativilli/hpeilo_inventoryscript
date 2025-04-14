@@ -263,7 +263,7 @@ Function New-Config {
         }
         # Generate for Scanner
         elseif ($ForScanner) {
-            $config | Add-ScannerConfiguration;
+            $config | Add-ScannerConfiguration -Path $Path;
         }
         ## Generate empty
         else {
@@ -327,17 +327,17 @@ Function Add-ExampleConfigWithInventory {
         $Path
     )
     Log 6 "`tFilling empty config w/ Inventory"   
-    $config.reportPath = $Path;
-    $config.serverPath = "";
-    $config.logPath = $Path;
-    $config.logLevel = 0;
-    $config.logToConsole = $true;
-    $config.loggingActivated = $true;
-    $config.searchStringInventory = "rmgfa-sioc-cs";
-    $config.doNotSearchInventory = $false;
-    $config.deactivatePingtest = $false;
-    $config.remoteMgmntField = "Hostname Mgnt";
-    $config.deactivateCertificateValidation = $true;
+    $Config.reportPath = $Path;
+    $Config.serverPath = "";
+    $Config.logPath = $Path;
+    $Config.logLevel = 0;
+    $Config.logToConsole = $true;
+    $Config.loggingActivated = $true;
+    $Config.searchStringInventory = "rmgfa-sioc-cs";
+    $Config.doNotSearchInventory = $false;
+    $Config.deactivatePingtest = $false;
+    $Config.remoteMgmntField = "Hostname Mgnt";
+    $Config.deactivateCertificateValidation = $true;
 
     $login.Username = "SomeFancyUsername";
     $login.Password = "SomeFancyPassword";
@@ -349,10 +349,29 @@ Function Add-ScannerConfiguration {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [psobject]
-        $Config
+        $Config,
+
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Path
     )
     
+    $Config;
     
+    Log 6 "`tFilling empty config for Scanner"   
+    $Config.reportPath = $Path;
+    $Config.serverPath = "";
+    $Config.logPath = ($Config.searchForFilesAt);
+    $Config.logLevel = 1;
+    $Config.logToConsole = $true;
+    $Config.loggingActivated = $true;
+    $Config.searchStringInventory = "NONE - Scanner";
+    $Config.doNotSearchInventory = $true;
+    $Config.deactivatePingtest = $false;
+    $Config.remoteMgmntField = "";
+    $Config.deactivateCertificateValidation = $true;
+    
+    $Config | Save-Config -Path $Path;
 }
 
 Function Add-EmptyConfig {
@@ -370,19 +389,19 @@ Function Add-EmptyConfig {
         $Path
     )
     Log 6 "`tFilling empty config with no contesnts"
-    $config.reportPath = "";
-    $config.serverPath = "";
-    $config.logPath = "";
-    $config.logLevel = 0;
-    $config.loggingActivated = $null;
-    $config.logToConsole = $null;
-    $config.searchStringInventory = "";
-    $config.doNotSearchInventory = $null;
-    $config.remoteMgmntField = "";
-    $config.deactivateCertificateValidation = $null;
-    $config.deactivatePingtest = $null;
-    $config.ignoreMACAddress = $null;
-    $config.ignoreSerialNumbers = $null;
+    $Config.reportPath = "";
+    $Config.serverPath = "";
+    $Config.logPath = "";
+    $Config.logLevel = 0;
+    $Config.loggingActivated = $null;
+    $Config.logToConsole = $null;
+    $Config.searchStringInventory = "";
+    $Config.doNotSearchInventory = $null;
+    $Config.remoteMgmntField = "";
+    $Config.deactivateCertificateValidation = $null;
+    $Config.deactivatePingtest = $null;
+    $Config.ignoreMACAddress = $null;
+    $Config.ignoreSerialNumbers = $null;
 
     $login.Username = "";
     $login.Password = "";
@@ -396,7 +415,7 @@ Function Save-Config {
         [psobject]
         $Config,
         
-        [Parameter(Mandatory = $true)]
+        [Parameter()]
         [psobject]
         $Login,
 
@@ -407,7 +426,9 @@ Function Save-Config {
 
     Log 6 "`tSaving Config files at $config_path";
     $Config | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\config.json");
-    $Login | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\login.json");
+    if ($null -ne $Login) {
+        $Login | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\login.json");
+    }
     Set-ConfigPath -Path $config_path;
     Log 5 "Finished Generating Configuration-File";
 }
