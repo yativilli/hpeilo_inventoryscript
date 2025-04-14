@@ -192,7 +192,7 @@ Function Test-ForChangesToUpdate {
     
     # Verify if any bool/switch Values are updated and do so accordingly
     if ($LoggingActivated.IsPresent -or $BoundParameter.ContainsKey("LoggingActivated")) { $config.loggingActivated = [bool]$BoundParameter["LoggingActivated"]; }
-    if($DoNotSearchInventory.IsPresent -or $BoundParameter.ContainsKey("DoNotSearchInventory")) { $config.doNotSearchInventory = [bool]$BoundParameter["DoNotSearchInventory"]; }
+    if ($DoNotSearchInventory.IsPresent -or $BoundParameter.ContainsKey("DoNotSearchInventory")) { $config.doNotSearchInventory = [bool]$BoundParameter["DoNotSearchInventory"]; }
     if ($LogToConsole.IsPresent -or $BoundParameter.ContainsKey("LogToConsole")) { $config.logToConsole = [bool]$BoundParameter["LogToConsole"]; }
     if ($IgnoreMACAddress.IsPresent -or $BoundParameter.ContainsKey("IgnoreMACAddress")) { $config.ignoreMACAddress = [bool]$BoundParameter["IgnoreMACAddress"]; }
     if ($IgnoreSerialNumbers.IsPresent -or $BoundParameter.ContainsKey("IgnoreSerialNumbers")) { $config.ignoreSerialNumbers = [bool]$BoundParameter["IgnoreSerialNumbers"]; }
@@ -216,7 +216,12 @@ Function New-Config {
         # Toggle to switch off inventory
         [Parameter()]
         [switch]
-        $WithOutInventory
+        $WithOutInventory,
+
+        # Toggle to generate Configuration for scanner
+        [Parameter()]
+        [switch]
+        $ForScanner
     )
     try {
         Log 5 "Started generating new Configuration - intitalising empty object."
@@ -255,6 +260,10 @@ Function New-Config {
         ## Generate example (w/ Inventory)
         elseif ($NotEmpty) {
             $config | Add-ExampleConfigWithInventory -Login $login -Path $Path;
+        }
+        # Generate for Scanner
+        elseif ($ForScanner) {
+            $config | Add-ScannerConfiguration;
         }
         ## Generate empty
         else {
@@ -334,6 +343,16 @@ Function Add-ExampleConfigWithInventory {
     $login.Password = "SomeFancyPassword";
 
     $Config | Save-Config -Login $Login -Path $Path;
+}
+
+Function Add-ScannerConfiguration {
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [psobject]
+        $Config
+    )
+    
+    
 }
 
 Function Add-EmptyConfig {

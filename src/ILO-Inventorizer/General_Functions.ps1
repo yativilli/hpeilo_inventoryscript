@@ -272,9 +272,9 @@ Function Invoke-PingTest {
         Log 5 "Starting Pingtest";
         Log 6 "`tExecute Nslookup on $Hostname"
         # Execute nslookup
-        $nsl = nslookup.exe $Hostname;
-        if ($nsl.Length -gt 3) {
-            $dnsname = ($nsl | Select-String -Pattern "Name:").Line.Split(":").Trim()[1];   
+        $nsl = Resolve-DnsName $Hostname -ErrorAction SilentlyContinue;
+        if ($nsl.Length -gt 0) {
+            $dnsname = $nsl.Name;   
             # Reachable via NSLookup, but insufficient permissions for Ping
             if ((Test-Connection $dnsname -Count 1 -Quiet) -eq $false) {
                 Log 2 "$Hostname was found via nslookup but could not be reached. Verify that you have appropriate permissions within your network to access it."
@@ -285,11 +285,11 @@ Function Invoke-PingTest {
                 Log 6 "`tPingtest executed successfully"
                 return $true; 
             }
+        }
+        else {
             # Not Reachable via NSlookup
-            else {
-                Log 2 "$Hostname is not reachable from within this network and could not be found via nslookup."
-                return $false
-            }
+            Log 2 "$Hostname is not reachable from within this network and could not be found via nslookup."
+            return $false
         }
     }
     catch {    
