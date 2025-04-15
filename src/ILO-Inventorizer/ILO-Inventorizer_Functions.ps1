@@ -23,24 +23,24 @@ Function Invoke-ParameterSetHandler {
         "ServerPath" {
             # Started with Path to Servers as Parameter
             Log 6 "Started with 'ServerPath' ParameterSet."
-            $path = New-File -Path ($DEFAULT_PATH);
-            New-Config $path -NotEmpty -WithOutInventory;
+            $path = New-File -Path ($DEFAULT_PATH_TEMPORARY);
+            New-Config $path -NotEmpty -WithOutInventory -StoreAsTemporary;
             Update-Config -DoNotSearchInventory $true;
             break;
         }
         "ServerArray" {
             # Started with Array of Servers as Parameter
             Log 6 "Started with 'ServerArray' ParameterSet."
-            $path = New-File -Path ($DEFAULT_PATH);
-            New-Config -Path $path -NotEmpty -WithOutInventory;
+            $path = New-File -Path ($DEFAULT_PATH_TEMPORARY);
+            New-Config -Path $path -NotEmpty -WithOutInventory -StoreAsTemporary;
             Update-Config -DoNotSearchInventory $true;
             break;
         }
         "Inventory" {
             # Started with SearchStringInventory as Parameter
             Log 6 "Started with 'Inventory' ParameterSet."
-            $path = New-File -Path ($DEFAULT_PATH);
-            New-Config -Path $path -NotEmpty;
+            $path = New-File -Path ($DEFAULT_PATH_TEMPORARY);
+            New-Config -Path $path -NotEmpty -StoreAsTemporary;
             break;
         }
         default {

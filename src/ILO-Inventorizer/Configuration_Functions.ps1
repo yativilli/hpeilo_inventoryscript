@@ -221,12 +221,23 @@ Function New-Config {
         # Toggle to generate Configuration for scanner
         [Parameter()]
         [switch]
-        $ForScanner
+        $ForScanner,
+
+        # As Temporary
+        [Parameter()]
+        [switch]   
+        $StoreAsTemporary
     )
     try {
         Log 5 "Started generating new Configuration - intitalising empty object."
-        $config_path = ($Path + "\config.json");
-        $login_config_path = ($Path + "\login.json");
+        if ($StoreAsTemporary) {
+            $config_path = $Path + "hpeilo_config.tmp";
+            $login_config_path = $Path + "hpeilo_login.tmp";
+        }
+        else {
+            $config_path = ($Path + "\config.json");
+            $login_config_path = ($Path + "\login.json");
+        }
         $config = [ordered]@{
             searchForFilesAt                = $Path
             configPath                      = $config_path
@@ -287,11 +298,22 @@ Function Add-ExampleConfigWithoutInventory {
 
         [Parameter(Mandatory = $true)]
         [string]
-        $Path
+        $Path,
+
+        [Parameter()]
+        [switch]
+        $StoreAsTemporary
     )
     Log 6 "`tFilling empty config w/o Inventory - generating supplementary 'server.json'"
+    if ($StoreAsTemporary) {
+        $serverPath = $DEFAULT_PATH_TEMPORARY + "hpeilo_server.tmp";
+        $Path = $ENV:TEMP;
+    }
+    else {
+        $serverPath = $Path + "\server.json";
+    }
     $Config.reportPath = $Path;
-    $Config.serverPath = $Path + "\server.json";
+    $Config.serverPath = $serverPath;
     $Config.logPath = $Path;
     $Config.logLevel = 0;
     $Config.loggingActivated = $true;
@@ -307,7 +329,7 @@ Function Add-ExampleConfigWithoutInventory {
 
     $servers = @("rmgfa-sioc-cs-dev", "rmgfa-sioc-cs-de3", "rmgfa-sioc-de4", "rmdl20test");
     # Generate example server.json - File
-    $servers | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\server.json");
+    $servers | ConvertTo-Json -Depth 2 | Out-File -FilePath ($serverPath);
 
     $Config | Save-Config -Login $Login -Path $Path;
 }
@@ -324,8 +346,16 @@ Function Add-ExampleConfigWithInventory {
 
         [Parameter(Mandatory = $true)]
         [string]
-        $Path
+        $Path,
+
+        [Parameter()]
+        [switch]
+        $StoreAsTemporary
     )
+    if ($StoreAsTemporary) {
+        $Path = $ENV:TEMP;
+    }
+    
     Log 6 "`tFilling empty config w/ Inventory"   
     $Config.reportPath = $Path;
     $Config.serverPath = "";
@@ -353,10 +383,15 @@ Function Add-ScannerConfiguration {
 
         [Parameter(Mandatory = $true)]
         [string]
-        $Path
+        $Path,
+
+        [Parameter()]
+        [switch]
+        $StoreAsTemporary
     )
-    
-    $Config;
+    if ($StoreAsTemporary) {
+        $Path = $ENV:TEMP;
+    }
     
     Log 6 "`tFilling empty config for Scanner"   
     $Config.reportPath = $Path;
@@ -386,8 +421,16 @@ Function Add-EmptyConfig {
 
         [Parameter(Mandatory = $true)]
         [string]
-        $Path
+        $Path,
+
+        [Parameter()]
+        [switch]
+        $StoreAsTemporary
     )
+    if ($StoreAsTemporary) {
+        $Path = $ENV:TEMP;
+    }
+    
     Log 6 "`tFilling empty config with no contesnts"
     $Config.reportPath = "";
     $Config.serverPath = "";
@@ -424,11 +467,11 @@ Function Save-Config {
         $Path
     )
 
-    Log 6 "`tSaving Config files at $config_path";
-    $Config | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\config.json");
+    Log 6 "`tSaving Config files at $($Config.configPath)";
+    $Config | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Config.configPath) -Force;
     if ($null -ne $Login) {
-        $Login | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Path + "\login.json");
+        $Login | ConvertTo-Json -Depth 2 | Out-File -FilePath ($Config.loginConfigPath) -Force;
     }
-    Set-ConfigPath -Path $config_path;
+    Set-ConfigPath -Path $Config.configPath;
     Log 5 "Finished Generating Configuration-File";
 }

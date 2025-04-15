@@ -6,10 +6,19 @@ Function Get-ServerByScanner {
     param(
         [Parameter()]
         [switch]
-        $RequireSingleValidation
+        $RequireSingleValidation,
+
+        [Parameter()]
+        [string]
+        [ValidateNotNullOrEmpty()]
+        $ReportPath,
+
+        [Parameter()]
+        [string]
+        [ValidateNotNullOrEmpty()]
+        $LogPath
     )
     try {
-
         Write-Host "------------------------`nStarted Scanner:`nTo capture any Server for ILO-Query, please scan the 'Password' and 'Hostname' printed on the Server itself with a barcode scanner."
         Write-Host "A Loop will run, prompting you to scan the 'Serial Number', 'Hostname' and 'Password' as many times as you please. `nATTENTION: Ensure that any hostname entered starts with 'Ilo'`nTo Stop the programme, please type 'exit'."
 
@@ -18,7 +27,8 @@ Function Get-ServerByScanner {
         $passwords = @();
         $serialNumbers = @();
 
-        New-Config -Path ($DEFAULT_PATH + "\Scanner") -ForScanner | Out-Null;
+        New-Config -Path ($DEFAULT_PATH_TEMPORARY) -ForScanner -StoreAsTemporary | Out-Null;
+        Update-Config -ReportPath $ReportPath -LogPath $LogPath;
 
         ## Get Scanned Servers
         while ($true) {
@@ -29,18 +39,9 @@ Function Get-ServerByScanner {
             $serialNumbers += $res.SerialNumber;
         }
 
-        ## Edit Scanned Servers
-        Write-Host "`n`n---`nPlease verify that every Server scanned is correct:"
-        for ([int]$i = 0; $i -le $servers.Count - 1; $i++) {
-            Write-Host "Server: $($servers[$i]), Serialnumber: $($serialNumbers[$i]), Password: $($passwords[$i])" -ForegroundColor Green;
-            do {
-                $isScannedCorrect = Read-Host -Prompt "Is this correct? [y/N]";
-                if ($isScannedCorrect -eq "N") {
-                    $res = Invoke-ScanServer;
-                }
-            }while ($isScannedCorrect -eq "" -or $isScannedCorrect -ne "y")            
-        }
-    
+        $config = Get-Config;
+        $servers | ConvertTo-Json -Depth 3 | Out-File -FilePath ($config.searchForFilesAt + "\scanned_servers.tmp") -Force;
+
 
         ## Query Scanned Servers 
         $report = @();
@@ -59,13 +60,15 @@ Function Get-ServerByScanner {
                     # Save the report
                     Save-DataInJSON -Report $report;
                     Save-DataInCSV -Report $report;
-                    Log 2 "The Report has been saved at $DEFAULT_PATH" -IgnoreLogActive;
+                    Log 2 "The Report has been saved at $($config.reportPath)" -IgnoreLogActive;
                 }
             }
             else {
                 Write-Host "Server $server is not reachable - check that it has been assigned a DNS-Entry (f.ex. in hosts-File). Skipping...";
             }
         }
+
+        Restore-Conditions
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
@@ -89,7 +92,6 @@ Function Invoke-ScanServer {
         $password = Read-Host -Prompt "Please enter the Password";
     } while ($password -eq "" -or $password -eq "exit");
     $password = (ConvertTo-SecureString -String $password -AsPlainText -Force);
-
 
     $res = Resolve-ErrorsInInput -Hostname $hostname -Password $password -SerialNumber $serialNumber;
     return $res;
@@ -168,3 +170,4 @@ Function Resolve-ErrorsInInput {
 
     return $res;
 }
+

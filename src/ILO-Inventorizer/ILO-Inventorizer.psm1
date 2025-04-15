@@ -250,6 +250,9 @@ Function Get-HWInfoFromILO {
             #>
 
             Log 2 "ILO-Inventorizer has been executed successfully."
+            if ($PSCmdlet.ParameterSetName -ne "None") {
+                Restore-Conditions;
+            }
         }
     }
     catch {
@@ -308,8 +311,9 @@ Function Set-ConfigPath {
             "SetPath" {
                 Log 5 "Set Config Path has been started with 'Path' $Path and reset:$Reset"
                 if (Test-Path -Path $Path -ErrorAction Stop) {
-                    if ($Path.Contains("\config.json")) {
-                        Log 6 "Config Path already contains config.json"
+                    $checkForFile = $Path | Split-Path -Extension
+                    if ($checkForFile.Length -ne 0) {
+                        Log 6 "Config Path already contains file"
                         $ENV:HPEILOCONFIG = $Path;
                     }
                     else {

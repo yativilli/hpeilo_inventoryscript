@@ -318,3 +318,9 @@ Function Resolve-NullValues {
     }
     return $Value
 }
+
+Function Restore-Conditions{
+    param()
+    Remove-Item -Path  ($DEFAULT_PATH_TEMPORARY) -Recurse -Force -ErrorAction SilentlyContinue;
+    Set-ConfigPath -Reset
+}
