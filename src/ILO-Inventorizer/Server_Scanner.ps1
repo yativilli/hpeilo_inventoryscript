@@ -4,7 +4,9 @@
 
 Function Get-ServerByScanner {
     param(
-
+        [Parameter()]
+        [switch]
+        $RequireSingleValidation
     )
     try {
 
@@ -14,57 +16,51 @@ Function Get-ServerByScanner {
         ## Save Servers
         $servers = @();
         $passwords = @();
+        $serialNumbers = @();
 
         New-Config -Path ($DEFAULT_PATH + "\Scanner") -ForScanner | Out-Null;
 
         ## Get Scanned Servers
         while ($true) {
-            do {
-                $serialNumber = Read-Host -Prompt "Please enter the Serial Number";
-            }while ($serialNumber -eq "");
-            $serialNumber | Stop-OnExit;
-
-            do {
-                $hostname = Read-Host -Prompt "Please enter the Hostname";
-            } while ($hostname -eq "" -or $password -eq "exit");
+            $res = Invoke-ScanServer;
             
-            do {
-                $password = Read-Host -Prompt "Please enter the Password";
-            } while ($password -eq "" -or $password -eq "exit");
-            $password = (ConvertTo-SecureString -String $password -AsPlainText -Force);
-    
-
-            $res = Resolve-ErrorsInInput -Hostname $hostname -Password $password -SerialNumber $serialNumber;
-            Write-Host "---`nScanned Information:`nHostname: $($res.Hostname)`nSerial Number: $($res.SerialNumber)`nPassword: $($res.Password)";
-
-            do {
-                $corr = Read-Host -Prompt "---`nIs the scanned information correct? [y/N]";
-            } while ($corr -ne "y" -and $corr -ne "N");
-
-            if ($corr -eq "y") {
-                $servers += $res.Hostname;
-                $passwords += $res.Password;
-            }
-            else {
-                Write-Host "Please scan the information again.";
-            }
+            $servers += $res.Hostname;
+            $passwords += $res.Password;
+            $serialNumbers += $res.SerialNumber;
         }
+
+        ## Edit Scanned Servers
+        Write-Host "`n`n---`nPlease verify that every Server scanned is correct:"
+        for ([int]$i = 0; $i -le $servers.Count - 1; $i++) {
+            Write-Host "Server: $($servers[$i]), Serialnumber: $($serialNumbers[$i]), Password: $($passwords[$i])" -ForegroundColor Green;
+            do {
+                $isScannedCorrect = Read-Host -Prompt "Is this correct? [y/N]";
+                if ($isScannedCorrect -eq "N") {
+                    $res = Invoke-ScanServer;
+                }
+            }while ($isScannedCorrect -eq "" -or $isScannedCorrect -ne "y")            
+        }
+    
 
         ## Query Scanned Servers 
         $report = @();
         for ([int]$i = 0; $i -le $servers.Count - 1; $i++) {
+            Write-Host "`n-------------`nStart querying:"
             $server = $servers[$i];
             $password = $passwords[$i];
 
-            Write-Host "Server: $server, Password: $password";
             if (Invoke-PingTest -Hostname $server) {
+                Log 2 "Server $server is reachable. Querying..." -IgnoreLogActive;
                 # Call the function to query the server with the provided password
-                $report += Get-DataFromILO -Servers $server -Username $DEFAULT_USERNAME_ILO -Password $password;
+                $report += Get-DataFromILO -Servers $server -Username $DEFAULT_USERNAME_ILO -Password (ConvertTo-SecureString -String $password -AsPlainText);
                 
-                # Save the report
-                Save-DataInJSON -Report $report;
-                Save-DataInCSV -Report $report;
-                Log 2 "The Report has been saved at $DEFAULT_PATH"
+                if ($null -ne $report) {
+
+                    # Save the report
+                    Save-DataInJSON -Report $report;
+                    Save-DataInCSV -Report $report;
+                    Log 2 "The Report has been saved at $DEFAULT_PATH" -IgnoreLogActive;
+                }
             }
             else {
                 Write-Host "Server $server is not reachable - check that it has been assigned a DNS-Entry (f.ex. in hosts-File). Skipping...";
@@ -73,7 +69,30 @@ Function Get-ServerByScanner {
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
+    
     }
+}
+
+Function Invoke-ScanServer {
+    param()
+
+    do {
+        $serialNumber = Read-Host -Prompt "Please enter the Serial Number";
+    }while ($serialNumber -eq "");
+    $serialNumber | Stop-OnExit;
+
+    do {
+        $hostname = Read-Host -Prompt "Please enter the Hostname";
+    } while ($hostname -eq "" -or $password -eq "exit");
+    
+    do {
+        $password = Read-Host -Prompt "Please enter the Password";
+    } while ($password -eq "" -or $password -eq "exit");
+    $password = (ConvertTo-SecureString -String $password -AsPlainText -Force);
+
+
+    $res = Resolve-ErrorsInInput -Hostname $hostname -Password $password -SerialNumber $serialNumber;
+    return $res;
 }
 
 Function Stop-OnExit {
@@ -128,11 +147,11 @@ Function Resolve-ErrorsInInput {
     $expectedSerialNumber -notlike "ilo*" -and $expectedSerialNumber.Length -le 8 ? ($res["Password"] = ($SerialNumber)) : $false;
 
     if ($null -eq $res["Password"]) {
-        throw [System.IO.InvalidDataException]
+        $res["Password"] = "ACTION NEEDED"
     }
     elseif ($null -eq $res["Hostname"]) {
         if ($null -eq $res["SerialNumber"]) {
-            throw [System.IO.InvalidDataException]
+            $res["Hostname"] = "ACTION NEEDED"
         }
         else {
             $res["Hostname"] = ("ILO" + $res["SerialNumber"]);
@@ -140,7 +159,7 @@ Function Resolve-ErrorsInInput {
     }
     elseif ($null -eq $res["SerialNumber"]) {
         if ($null -eq $res["Hostname"]) {
-            throw [System.IO.InvalidDataException]
+            $res["SerialNumber"] = "ACTION NEEDED"
         }
         else {
             $res["SerialNumber"] = ($res["Hostname"]).replace("ILO", "");
