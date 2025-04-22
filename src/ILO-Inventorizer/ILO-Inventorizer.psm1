@@ -158,33 +158,18 @@ Function Get-HWInfoFromILO {
         $DeactivateCertificateValidationILO,        
 
         # Username for the ILO-Interface
-        [Parameter(Mandatory = $true,
-            ParameterSetName = "ServerPath")]
-        [Parameter(Mandatory = $true,
-            ParameterSetName = "ServerArray")]
-        [Parameter(Mandatory = $true,
-            ParameterSetName = "Inventory")]
-        [Parameter(
-            ParameterSetName = "None")]
+        [Parameter()]
         [string]
         $Username,
 
         # Password for the ILO-Interface
-        [Parameter(Mandatory = $true,
-            ParameterSetName = "ServerPath")]
-        [Parameter(Mandatory = $true,
-            ParameterSetName = "ServerArray")]
-        [Parameter(Mandatory = $true,
-            ParameterSetName = "Inventory")]
-        [Parameter(
-            ParameterSetName = "None")]
+        [Parameter()]
         [securestring]
         $Password
 
 
     )
     try {
-        $ErrorActionPreference = 'Stop';
         Log 0 "--------------------------------------`nILO-Inventorizer has been started." -IgnoreLogActive;
 
         ## Check if Help must be displayed
@@ -207,14 +192,13 @@ Function Get-HWInfoFromILO {
 
             # Check for Parameterset for configuration
             Log 3 "Configure new Configuration"
-            Invoke-ParameterSetHandler -ParameterSetName ($PSCmdlet.ParameterSetName) -ConfigPath $ConfigPath;
-           
+            Invoke-ParameterSetHandler -ParameterSetName ($PSCmdlet.ParameterSetName) -ConfigPath $ConfigPath -LoginPath $LoginConfigPath;
             Log 3 "Import Configuration"
             # Update Config with any Parameters passed along
             $PSBoundParameters | Optimize-ParameterStartedForUpdate; 
        
             # Check that all Paths needed in the future are set and exist
-            $config = Get-Config;
+   
             Convert-PathsToValidated -IgnoreServerPath;
             
             # Query Inventory
@@ -230,13 +214,12 @@ Function Get-HWInfoFromILO {
             $reachableServers = Start-PingtestOnServers;
         
             # Query ILO
-            
+            $config = Get-Config;
             Log 3 "Query from ILO Started"
             if ($reachableServers.Count -gt 0) {
                 $login = Get-Content -Path $config.loginConfigPath | ConvertFrom-Json -Depth 2;
-                $login.Password = ConvertTo-SecureString -String ($login.Password) -AsPlainText;
 
-                $report = Get-DataFromILO $reachableServers -Username $login.Username -Password $login.Password;
+                $report = Get-DataFromILO $reachableServers -Login $login;
                 Log 3 ($report | ConvertTo-Json -Depth 10) -IgnoreLogActive;
 
                 # Save Result to JSON and CSV-Files
@@ -257,6 +240,7 @@ Function Get-HWInfoFromILO {
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
+        Write-Host $_.ScriptStackTrace
     }
 }
 

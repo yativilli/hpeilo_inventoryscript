@@ -148,9 +148,16 @@ Function Update-Config {
                 if (Test-Path -Path ($config.loginConfigPath)) {
                     Log 6 "`tUpdating Credentials."
                     $login = Get-Content -Path ($config.loginConfigPath) | ConvertFrom-Json -Depth 3;
-                    if ($Username.Length -gt 0) { $login.Username = $Username; }
-                    if ($Password.Length -gt 0) { $login.Password = (ConvertFrom-SecureString -SecureString $Password -AsPlainText); }
-                
+                    if ($Username.Length -gt 0) { 
+                        for ($i = 0; $i -lt $login.Count; $i++) {
+                            ($login[$i]).Username = $Username; 
+                        }
+                    }
+                    if ($Password.Length -gt 0) {
+                        for ($i = 0; $i -lt $login.Count; $i++) {
+                            ($login[$i]).Password = (ConvertFrom-SecureString -String $Password -AsPlainText); 
+                        }
+                    }
                     Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);
                 }
                 Log 5 ("Saving updated Configuration at " + $config.configPath)
@@ -226,22 +233,24 @@ Function New-Config {
         # As Temporary
         [Parameter()]
         [switch]   
-        $StoreAsTemporary
+        $StoreAsTemporary,
+
+        [Parameter()]
+        [psobject]
+        $LoginPath
     )
     try {
         Log 5 "Started generating new Configuration - intitalising empty object."
         if ($StoreAsTemporary) {
-            $config_path = $Path + "hpeilo_config.tmp";
-            $login_config_path = $Path + "hpeilo_login.tmp";
+            $login = Set-LoginConfigurationForNewConfig -FileEnding "tmp" -Path $Path -LoginPath $LoginPath;
         }
         else {
-            $config_path = ($Path + "\config.json");
-            $login_config_path = ($Path + "\login.json");
+            $login = Set-LoginConfigurationForNewConfig -FileEnding "json" -Path $Path -LoginPath $LoginPath;
         }
         $config = [ordered]@{
             searchForFilesAt                = $Path
-            configPath                      = $config_path
-            loginConfigPath                 = $login_config_path
+            configPath                      = ($login.config_path)
+            loginConfigPath                 = ($login.login_config_path)
             reportPath                      = $Path
             serverPath                      = ""
             logPath                         = ""
@@ -255,22 +264,17 @@ Function New-Config {
             logToConsole                    = $false
             ignoreMACAddress                = $false
             ignoreSerialNumbers             = $false
-        };
-    
-        $login = [ordered]@{
-            Username = ""
-            Password = ""
-        };
+        }; 
 
         Register-Directory $Path -IgnoreError
         
         ## Generate Example (w/o Inventory)
         if ($NotEmpty -and $WithOutInventory) {
-            $config | Add-ExampleConfigWithoutInventory -Login $login -Path $Path;
+            $config | Add-ExampleConfigWithoutInventory -Login ($login.login) -Path $Path;
         }
         ## Generate example (w/ Inventory)
         elseif ($NotEmpty) {
-            $config | Add-ExampleConfigWithInventory -Login $login -Path $Path;
+            $config | Add-ExampleConfigWithInventory -Login ($login.login) -Path $Path;
         }
         # Generate for Scanner
         elseif ($ForScanner) {
@@ -278,7 +282,7 @@ Function New-Config {
         }
         ## Generate empty
         else {
-            $config | Add-EmptyConfig -Login $login -Path $Path;
+            $config | Add-EmptyConfig -Login ($login.login) -Path $Path;
         }
     }
     catch {
@@ -324,14 +328,48 @@ Function Add-ExampleConfigWithoutInventory {
     $Config.deactivatePingtest = $false;
     $Config.deactivateCertificateValidation = $true;
 
-    $Login.Username = "SomeFancyUsername";
-    $Login.Password = "SomeFancyPassword";
-
     $servers = @("rmgfa-sioc-cs-dev", "rmgfa-sioc-cs-de3", "rmgfa-sioc-de4", "rmdl20test");
     # Generate example server.json - File
     $servers | ConvertTo-Json -Depth 2 | Out-File -FilePath ($serverPath);
 
     $Config | Save-Config -Login $Login -Path $Path;
+}
+
+Function Set-LoginConfigurationForNewConfig {
+    param(
+        [Parameter()]
+        [string]
+        $FileEnding,
+
+        [Parameter()]
+        [string]
+        $Path,
+
+        [Parameter()]
+        [string]
+        $LoginPath
+    )
+
+    $config_path = $Path + "\hpeilo_config.$FileEnding";
+    if ($LoginPath -ne $null -and $LoginPath.Length -gt 0) {
+        $login_config_path = $LoginPath;
+        $login = Get-Content -Path ($LoginPath) | ConvertFrom-Json -Depth 3;
+    }
+    else {
+        ($login_config_path = $Path + "\hpeilo_login.$FileEnding");
+        $login = @(
+            [ordered]@{
+                Username = "SomeFancyUsername"
+                Password = "SomeFancyPassword"
+            }
+        ) 
+    }
+
+    return @{
+        config_path = $config_path
+        login_config_path = $login_config_path
+        login = $login
+    };
 }
 
 Function Add-ExampleConfigWithInventory {
@@ -368,9 +406,6 @@ Function Add-ExampleConfigWithInventory {
     $Config.deactivatePingtest = $false;
     $Config.remoteMgmntField = "Hostname Mgnt";
     $Config.deactivateCertificateValidation = $true;
-
-    $login.Username = "SomeFancyUsername";
-    $login.Password = "SomeFancyPassword";
 
     $Config | Save-Config -Login $Login -Path $Path;
 }
@@ -446,8 +481,8 @@ Function Add-EmptyConfig {
     $Config.ignoreMACAddress = $null;
     $Config.ignoreSerialNumbers = $null;
 
-    $login.Username = "";
-    $login.Password = "";
+    $login[0].Username = "";
+    $login[0].Password = "";
 
     $Config | Save-Config -Login $Login -Path $Path; 
 }

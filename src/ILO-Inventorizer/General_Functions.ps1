@@ -255,6 +255,7 @@ Function Log {
         else {
             # Warning if no Logfile exists (yet)
             Write-Warning "No path to logfiles exist. Please specify one in your config or via parameter as soon as possible.";
+            Write-Warning $Message;
         }
     }
     catch {

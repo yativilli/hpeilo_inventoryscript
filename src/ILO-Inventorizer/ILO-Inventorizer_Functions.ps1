@@ -10,7 +10,11 @@ Function Invoke-ParameterSetHandler {
 
         [Parameter()]
         [string]
-        $ConfigPath
+        $ConfigPath,
+
+        [Parameter()]
+        [string]
+        $LoginPath
     )
 
     switch ($ParameterSetName) {
@@ -23,24 +27,21 @@ Function Invoke-ParameterSetHandler {
         "ServerPath" {
             # Started with Path to Servers as Parameter
             Log 6 "Started with 'ServerPath' ParameterSet."
-            $path = New-File -Path ($DEFAULT_PATH_TEMPORARY);
-            New-Config $path -NotEmpty -WithOutInventory -StoreAsTemporary;
+            New-Config $DEFAULT_PATH_TEMPORARY -NotEmpty -WithOutInventory -StoreAsTemporary -LoginPath $LoginPath;
             Update-Config -DoNotSearchInventory $true;
             break;
         }
         "ServerArray" {
             # Started with Array of Servers as Parameter
             Log 6 "Started with 'ServerArray' ParameterSet."
-            $path = New-File -Path ($DEFAULT_PATH_TEMPORARY);
-            New-Config -Path $path -NotEmpty -WithOutInventory -StoreAsTemporary;
+            New-Config -Path $DEFAULT_PATH_TEMPORARY -NotEmpty -WithOutInventory -StoreAsTemporary -LoginPath $LoginPath;
             Update-Config -DoNotSearchInventory $true;
             break;
         }
         "Inventory" {
             # Started with SearchStringInventory as Parameter
             Log 6 "Started with 'Inventory' ParameterSet."
-            $path = New-File -Path ($DEFAULT_PATH_TEMPORARY);
-            New-Config -Path $path -NotEmpty -StoreAsTemporary;
+            New-Config -Path $DEFAULT_PATH_TEMPORARY -NotEmpty -StoreAsTemporary -LoginPath $LoginPath;
             break;
         }
         default {
@@ -53,7 +54,6 @@ Function Invoke-ParameterSetHandler {
             }
         }
     }
-    exit 0;
 }
 
 Function Invoke-NoConfigFoundHandler {
@@ -138,5 +138,5 @@ Function Optimize-ParameterStartedForUpdate {
     $config = Get-Config; 
     $login = (Get-Content ($config.loginConfigPath) | ConvertFrom-Json -Depth 3);
  
-    Update-Config -ConfigPath ($BoundParameters["ConfigPath"] | Resolve-NullValues -ValueOnNull $config.configPath) -LoginConfigPath ($BoundParameters["LoginConfigPath"] | Resolve-NullValues -ValueOnNull $config.loginConfigPath) -ReportPath ($BoundParameters["ReportPath"] | Resolve-NullValues -ValueOnNull $config.reportPath) -LogPath ($BoundParameters["LogPath"] | Resolve-NullValues -ValueOnNull $config.logPath)  -ServerPath ($BoundParameters["ServerPath"] | Resolve-NullValues -ValueOnNull $config.serverPath)  -Server ($BoundParameters["Server"]) -LogLevel  ($BoundParameters["LogLevel"] | Resolve-NullValues -ValueOnNull $config.logLevel) -DeactivatePingtest:($BoundParameters["DeactivatePingtest"] | Resolve-NullValues -ValueOnNull $config.deactivatePingtest)  -IgnoreMACAddress:($BoundParameters["IgnoreMACAddress"] | Resolve-NullValues -ValueOnNull $config.ignoreMACAddress) -IgnoreSerialNumbers($BoundParameters["IgnoreSerialNumbers"] | Resolve-NullValues -ValueOnNull $config.ignoreSerialNumbers)  -LogToConsole:($BoundParameters["LogToConsole"] | Resolve-NullValues  -ValueOnNull $config.logToConsole) -LoggingActivated:($BoundParameters["LoggingActivated"] | Resolve-NullValues -ValueOnNull $config.loggingActivated) -SearchStringInventory ($BoundParameters["SearchStringInventory"] | Resolve-NullValues -ValueOnNull $config.searchStringInventory) -DoNotSearchInventory:($BoundParameters["DoNotSearchInventory"] | Resolve-NullValues -ValueOnNull $config.doNotSearchInventory) -RemoteMgmntField ($BoundParameters["RemoteMgmntField"] | Resolve-NullValues -ValueOnNull $config.remoteMgmntField) -DeactivateCertificateValidationILO:($BoundParameters["DeactivateCertificateValidationILO"] | Resolve-NullValues -ValueOnNull $config.deactivateCertificateValidation) -Username ($BoundParameters["Username"] | Resolve-NullValues -ValueOnNull $login.Username) -Password ($BoundParameters["Password"] | Resolve-NullValues -ValueOnNull (ConvertTo-SecureString -String ($login.Password) -AsPlainText));
+    Update-Config -ConfigPath ($BoundParameters["ConfigPath"] | Resolve-NullValues -ValueOnNull $config.configPath) -LoginConfigPath ($BoundParameters["LoginConfigPath"] | Resolve-NullValues -ValueOnNull $config.loginConfigPath) -ReportPath ($BoundParameters["ReportPath"] | Resolve-NullValues -ValueOnNull $config.reportPath) -LogPath ($BoundParameters["LogPath"] | Resolve-NullValues -ValueOnNull $config.logPath)  -ServerPath ($BoundParameters["ServerPath"] | Resolve-NullValues -ValueOnNull $config.serverPath)  -Server ($BoundParameters["Server"]) -LogLevel  ($BoundParameters["LogLevel"] | Resolve-NullValues -ValueOnNull $config.logLevel) -DeactivatePingtest:($BoundParameters["DeactivatePingtest"] | Resolve-NullValues -ValueOnNull $config.deactivatePingtest)  -IgnoreMACAddress:($BoundParameters["IgnoreMACAddress"] | Resolve-NullValues -ValueOnNull $config.ignoreMACAddress) -IgnoreSerialNumbers($BoundParameters["IgnoreSerialNumbers"] | Resolve-NullValues -ValueOnNull $config.ignoreSerialNumbers)  -LogToConsole:($BoundParameters["LogToConsole"] | Resolve-NullValues  -ValueOnNull $config.logToConsole) -LoggingActivated:($BoundParameters["LoggingActivated"] | Resolve-NullValues -ValueOnNull $config.loggingActivated) -SearchStringInventory ($BoundParameters["SearchStringInventory"] | Resolve-NullValues -ValueOnNull $config.searchStringInventory) -DoNotSearchInventory:($BoundParameters["DoNotSearchInventory"] | Resolve-NullValues -ValueOnNull $config.doNotSearchInventory) -RemoteMgmntField ($BoundParameters["RemoteMgmntField"] | Resolve-NullValues -ValueOnNull $config.remoteMgmntField) -DeactivateCertificateValidationILO:($BoundParameters["DeactivateCertificateValidationILO"] | Resolve-NullValues -ValueOnNull $config.deactivateCertificateValidation) -Username ($BoundParameters["Username"] | Resolve-NullValues -ValueOnNull $login[0].Username) -Password ($BoundParameters["Password"] | Resolve-NullValues -ValueOnNull (ConvertTo-SecureString -String ($login[0].Password) -AsPlainText));
 }

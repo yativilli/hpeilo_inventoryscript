@@ -11,20 +11,22 @@ Function Get-DataFromILO {
         $Servers,
 
         [Parameter()]
-        [string]
-        $Username,
-
-        [Parameter()]
-        [securestring]
-        $Password
+        [psobject]
+        $Login
     )
     try {
         $report = @();
+        [int]$i = 0;
         foreach ($srv in $Servers) {
             Log 6 "Started querying $srv" -IgnoreLogActive
+
+            $log = $Login[$i]
+            if($null -eq $log){
+                $log = $Login[($i -1)]
+            }
             
             # Make connection with ILO.
-            $conn = Connect-HPEiLO -Address $srv -Username $Username -Password (ConvertFrom-SecureString -SecureString ($Password) -AsPlainText) -DisableCertificateAuthentication:($config.deactivateCertificateValidation) -ErrorAction Stop;
+            $conn = Connect-HPEiLO -Address $srv -Username $log.Username -Password ($log.Password) -DisableCertificateAuthentication:($config.deactivateCertificateValidation) -ErrorAction Stop;
             
             # Get MAC 1 to MAC 4 from NetworkAdapters --> to look exactly like Inventory
             
@@ -57,6 +59,8 @@ Function Get-DataFromILO {
             }
             Log 6 "$srv querrying finished." -IgnoreLogActive
             $report += $srvReport;
+
+            $i++;
         }
         # Log Result to Terminal
         Log 3 "Querying ILO finished..."

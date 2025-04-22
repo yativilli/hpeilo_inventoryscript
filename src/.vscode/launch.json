@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Searchstring",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${cwd}\\demonstration\\3_script_SEARCHSTRING.ps1",
+            "cwd": "${cwd}"
+        },
+        {
             "name": "ConfigPath",
             "type":"PowerShell",
             "request": "launch",
