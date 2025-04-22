@@ -5,4 +5,4 @@ Import-Module HPEiLOCmdlets;
 
 
 Set-ConfigPath -Reset
-Get-ServerByScanner -LogPath "C:\Users\wernle_y\AppData\Roaming\hpeilo\Scanner" -ReportPath "C:\Users\wernle_y\AppData\Roaming\hpeilo\Scanner";
+Get-ServerByScanner -LogPath "C:\Users\wernle_y\AppData\Roaming\hpeilo\Scanner" -ReportPath "C:\Users\wernle_y\AppData\Roaming\hpeilo\Scanner" -KeepTemporaryConfig;

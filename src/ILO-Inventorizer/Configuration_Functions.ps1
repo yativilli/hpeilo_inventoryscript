@@ -284,6 +284,7 @@ Function New-Config {
         else {
             $config | Add-EmptyConfig -Login ($login.login) -Path $Path;
         }
+        ($login.login) | ConvertTo-Json -Depth 2 | Out-File -FilePath ($login.login_config_path) -Force;
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
@@ -351,7 +352,7 @@ Function Set-LoginConfigurationForNewConfig {
     )
 
     $config_path = $Path + "\hpeilo_config.$FileEnding";
-    if ($LoginPath -ne $null -and $LoginPath.Length -gt 0) {
+    if ($null -ne $LoginPath -and $LoginPath.Length -gt 0) {
         $login_config_path = $LoginPath;
         $login = Get-Content -Path ($LoginPath) | ConvertFrom-Json -Depth 3;
     }

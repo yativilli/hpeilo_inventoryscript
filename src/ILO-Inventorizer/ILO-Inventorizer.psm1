@@ -158,14 +158,25 @@ Function Get-HWInfoFromILO {
         $DeactivateCertificateValidationILO,        
 
         # Username for the ILO-Interface
-        [Parameter()]
+        [Parameter(ParameterSetName = "ServerPath")]
+        [Parameter(ParameterSetName = "ServerArray")]
+        [Parameter(ParameterSetName = "Inventory")]
+        [Parameter(ParameterSetName = "None")]
         [string]
         $Username,
 
         # Password for the ILO-Interface
-        [Parameter()]
+        [Parameter(ParameterSetName = "ServerPath")]
+        [Parameter(ParameterSetName = "ServerArray")]
+        [Parameter(ParameterSetName = "Inventory")]
+        [Parameter(ParameterSetName = "None")]
         [securestring]
-        $Password
+        $Password,
+
+        # Keep Temporary Configurations after use
+        [Parameter()]
+        [switch]
+        $KeepTemporaryConfig
 
 
     )
@@ -233,7 +244,7 @@ Function Get-HWInfoFromILO {
             #>
 
             Log 2 "ILO-Inventorizer has been executed successfully."
-            if ($PSCmdlet.ParameterSetName -ne "None") {
+            if ($PSCmdlet.ParameterSetName -ne "None" -and (-not $KeepTemporaryConfig)) {
                 Restore-Conditions;
             }
         }

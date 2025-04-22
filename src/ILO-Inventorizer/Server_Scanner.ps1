@@ -16,7 +16,11 @@ Function Get-ServerByScanner {
         [Parameter()]
         [string]
         [ValidateNotNullOrEmpty()]
-        $LogPath
+        $LogPath,
+
+        [Parameter()]
+        [switch]
+        $KeepTemporaryConfig
     )
     try {
         Write-Host "------------------------`nStarted Scanner:`nTo capture any Server for ILO-Query, please scan the 'Password' and 'Hostname' printed on the Server itself with a barcode scanner."
@@ -24,7 +28,7 @@ Function Get-ServerByScanner {
 
         ## Save Servers
         $servers = @();
-        $passwords = @();
+        $iloCredentials = @();
         $serialNumbers = @();
 
         New-Config -Path ($DEFAULT_PATH_TEMPORARY) -ForScanner -StoreAsTemporary | Out-Null;
@@ -35,25 +39,34 @@ Function Get-ServerByScanner {
             $res = Invoke-ScanServer;
             
             $servers += $res.Hostname;
-            $passwords += $res.Password;
+            $iloCredentials += @{
+                Username = $DEFAULT_USERNAME_ILO;
+                Password = $res.Password;
+            }
             $serialNumbers += $res.SerialNumber;
         }
 
         $config = Get-Config;
-        $servers | ConvertTo-Json -Depth 3 | Out-File -FilePath ($config.searchForFilesAt + "\scanned_servers.tmp") -Force;
+        $serverPath = $config.searchForFilesAt + "\scanned_servers.tmp";
+        $servers | ConvertTo-Json -Depth 3 | Out-File -FilePath ($serverPath) -Force;
+        Update-Config -ServerPath $serverPath
 
-
+        $loginConfigPath = $config.LoginConfigPath;
+        $iloCredentials | ConvertTo-Json -Depth 3 | Out-File -FilePath ($loginConfigPath) -Force;
+        
+        
         ## Query Scanned Servers 
         $report = @();
         for ([int]$i = 0; $i -le $servers.Count - 1; $i++) {
             Write-Host "`n-------------`nStart querying:"
             $server = $servers[$i];
-            $password = $passwords[$i];
+            $username = $iloCredentials[$i].Username;
+            $password = $iloCredentials[$i].Password;
 
             if (Invoke-PingTest -Hostname $server) {
                 Log 2 "Server $server is reachable. Querying..." -IgnoreLogActive;
                 # Call the function to query the server with the provided password
-                $report += Get-DataFromILO -Servers $server -Username $DEFAULT_USERNAME_ILO -Password (ConvertTo-SecureString -String $password -AsPlainText);
+                $report += Get-DataFromILO -Servers $server -Username $username -Password (ConvertTo-SecureString -String $password -AsPlainText);
                 
                 if ($null -ne $report) {
 
@@ -67,8 +80,9 @@ Function Get-ServerByScanner {
                 Write-Host "Server $server is not reachable - check that it has been assigned a DNS-Entry (f.ex. in hosts-File). Skipping...";
             }
         }
-
-        Restore-Conditions
+        if (-not $KeepTemporaryConfig) {
+            Restore-Conditions;
+        }
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
@@ -86,11 +100,13 @@ Function Invoke-ScanServer {
 
     do {
         $hostname = Read-Host -Prompt "Please enter the Hostname";
-    } while ($hostname -eq "" -or $password -eq "exit");
+    } while ($hostname -eq "");
+    $hostname | Stop-OnExit;
     
     do {
         $password = Read-Host -Prompt "Please enter the Password";
-    } while ($password -eq "" -or $password -eq "exit");
+    } while ($password -eq "");
+    $password | Stop-OnExit;
     $password = (ConvertTo-SecureString -String $password -AsPlainText -Force);
 
     $res = Resolve-ErrorsInInput -Hostname $hostname -Password $password -SerialNumber $serialNumber;
@@ -147,26 +163,6 @@ Function Resolve-ErrorsInInput {
     $expectedPasswordLower -notlike "ilo*" -and $expectedPasswordLower.Length -le 8 ? ($res["Password"] = ($expectedPassword)) : $false;
     $expectedHostname -notlike "ilo*" -and $expectedHostname.Length -le 8 ? ($res["Password"] = ($Hostname)) : $false;
     $expectedSerialNumber -notlike "ilo*" -and $expectedSerialNumber.Length -le 8 ? ($res["Password"] = ($SerialNumber)) : $false;
-
-    if ($null -eq $res["Password"]) {
-        $res["Password"] = "ACTION NEEDED"
-    }
-    elseif ($null -eq $res["Hostname"]) {
-        if ($null -eq $res["SerialNumber"]) {
-            $res["Hostname"] = "ACTION NEEDED"
-        }
-        else {
-            $res["Hostname"] = ("ILO" + $res["SerialNumber"]);
-        }
-    }
-    elseif ($null -eq $res["SerialNumber"]) {
-        if ($null -eq $res["Hostname"]) {
-            $res["SerialNumber"] = "ACTION NEEDED"
-        }
-        else {
-            $res["SerialNumber"] = ($res["Hostname"]).replace("ILO", "");
-        }
-    }
 
     return $res;
 }

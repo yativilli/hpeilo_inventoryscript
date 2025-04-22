@@ -41,8 +41,8 @@ Function Convert-PathsToValidated {
         
         # searchForFilesAt-Property
         if (-not(Test-Path -Path ($config.searchForFilesAt))) {
-            Log 6 ("`tCreating Path 'searchForFilesAt: " + $config.searchForFilesAt);
             New-Item -ItemType Directory ($config.searchForFilesAt) -Force | Out-Null;
+            Log 6 ("`tCreated Path 'searchForFilesAt: " + $config.searchForFilesAt);
         }
 
         # loginConfigPath-Property --> Error because path must be to a file -> the contents of which cannot be generated automatically
@@ -59,14 +59,14 @@ Function Convert-PathsToValidated {
 
         # reportPath-Property
         if ((-not(Test-Path -Path ($config.reportPath)))) {
-            Log 6 ("`tCreating Path 'reportPath: " + $config.reportPath);
             New-Item -ItemType Directory ($config.reportPath) -Force | Out-Null;
+            Log 6 ("`tCreated Path 'reportPath: " + $config.reportPath);
         }
 
         # logPath-Property
         if ((-not(Test-Path -Path ($config.logPath)))) {
-            Log 6 ("`tCreating Path 'logPath: " + $config.logPath);
             New-Item -ItemType Directory ($config.logPath) -Force | Out-Null;
+            Log 6 ("`tCreated Path 'logPath: " + $config.logPath);
         }
         Log 5 "Paths validated."
     }
@@ -225,7 +225,7 @@ Function Log {
 
             # No LogPath is set
             if ($logPath.Length -gt 0) {
-                if (-not (Test-Path -Path $logPath)) { throw [System.IO.DirectoryNotFoundException] "Your provided logPath '$logPath' could not be found. Verify it exists" }
+                if (-not (Test-Path -Path $logPath)) { New-Item -Path $logPath -ItemType Directory | Out-Null; }
             }            
             
             # Log only if activated
