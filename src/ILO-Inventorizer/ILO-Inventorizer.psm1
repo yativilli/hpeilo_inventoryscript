@@ -239,7 +239,7 @@ Function Get-HWInfoFromILO {
                 Save-DataInCSV $report;
             }
             else {
-                throw [System.Data.DataException] "No Servers could be found. Please verify that either your server.json or inventory has at least one Server. Check also if doNotSearchInventory is set to the appropriate value."
+                throw [System.Data.DataException] "No Servers could be found. Please verify that either your server.json or inventory has at least one Server and is reachable via nslookup and ping. Check also if doNotSearchInventory is set to the appropriate value."
             }
             #>
 

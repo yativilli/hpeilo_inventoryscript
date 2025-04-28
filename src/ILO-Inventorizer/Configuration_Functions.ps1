@@ -155,7 +155,7 @@ Function Update-Config {
                     }
                     if ($Password.Length -gt 0) {
                         for ($i = 0; $i -lt $login.Count; $i++) {
-                            ($login[$i]).Password = (ConvertFrom-SecureString -String $Password -AsPlainText); 
+                            ($login[$i]).Password = (ConvertFrom-SecureString -SecureString $Password -AsPlainText); 
                         }
                     }
                     Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);

@@ -63,10 +63,10 @@ Function Get-ServerByScanner {
             $username = $iloCredentials[$i].Username;
             $password = $iloCredentials[$i].Password;
 
-            if (Invoke-PingTest -Hostname $server) {
+            if ((Invoke-PingTest -Hostname $server -ErrorAction "SilentlyContinue") -and ($server.Length -gt 0 -and $username.Length -gt 0 -and $password.Length -gt 0)) {
                 Log 2 "Server $server is reachable. Querying..." -IgnoreLogActive;
                 # Call the function to query the server with the provided password
-                $report += Get-DataFromILO -Servers $server -Username $username -Password (ConvertTo-SecureString -String $password -AsPlainText);
+                $report += Get-DataFromILO -Servers $server -Username $username -Password (ConvertTo-SecureString -String $password -AsPlainText) -ErrorAction "SilentlyContinue";
                 
                 if ($null -ne $report) {
 
@@ -78,6 +78,12 @@ Function Get-ServerByScanner {
             }
             else {
                 Write-Host "Server $server is not reachable - check that it has been assigned a DNS-Entry (f.ex. in hosts-File). Skipping...";
+                $mess = "Server '$server' not reachable";
+                $server.Length -eq 0 ? ($mess += ": The Hostname is empty or wrong.") : $false | Out-Null;
+                $username.Length -eq 0 ? ($mess += ": The Username is empty or wrong.") : $false | Out-Null;
+                $password.Length -eq 0 ? ($mess += ": The Password is empty or wrong.") : $false | Out-Null;
+
+                Add-Content -Path ($config.searchForFilesAt + $PART_DEFAULT_PATH_UNREACHABLE_SERVERS) -Value $mess -Force;
             }
         }
         if (-not $KeepTemporaryConfig) {
