@@ -66,7 +66,11 @@ Function Get-ServerByScanner {
             if ((Invoke-PingTest -Hostname $server -ErrorAction "SilentlyContinue") -and ($server.Length -gt 0 -and $username.Length -gt 0 -and $password.Length -gt 0)) {
                 Log 2 "Server $server is reachable. Querying..." -IgnoreLogActive;
                 # Call the function to query the server with the provided password
-                $report += Get-DataFromILO -Servers $server -Username $username -Password (ConvertTo-SecureString -String $password -AsPlainText) -ErrorAction "SilentlyContinue";
+                $login = @{
+                    Username = $username
+                    Password = $password
+                };
+                $report += $server | Get-DataFromILO -Login $login;
                 
                 if ($null -ne $report) {
 
@@ -116,6 +120,9 @@ Function Invoke-ScanServer {
     $password = (ConvertTo-SecureString -String $password -AsPlainText -Force);
 
     $res = Resolve-ErrorsInInput -Hostname $hostname -Password $password -SerialNumber $serialNumber;
+
+    $ping_res = Invoke-PingTest -Hostname $res.Hostname;
+    $ping_res ? (Write-Host "Server $($res.Hostname) is reachable.`n") : (Write-Host "Server $($res.Hostname) is not reachable.`n");
     return $res;
 }
 

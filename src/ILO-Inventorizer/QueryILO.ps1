@@ -6,12 +6,12 @@
 Function Get-DataFromILO {
     param(
         # Array with all the Hostnames of the Servers that will be querried
-        [Parameter()]
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
         [Array]
         $Servers,
 
-        [Parameter()]
-        [psobject]
+        [Parameter(Mandatory = $true)]
+        [Array]
         $Login
     )
     try {
@@ -26,7 +26,7 @@ Function Get-DataFromILO {
             }
             
             # Make connection with ILO.
-            $conn = Connect-HPEiLO -Address $srv -Username $log.Username -Password ($log.Password) -DisableCertificateAuthentication:($config.deactivateCertificateValidation) -ErrorAction Stop;
+            $conn = Connect-HPEiLO -Address $srv -Username ($log.Username) -Password ($log.Password) -DisableCertificateAuthentication:($config.deactivateCertificateValidation) -ErrorAction Stop;
             
             # Get MAC 1 to MAC 4 from NetworkAdapters --> to look exactly like Inventory
             
