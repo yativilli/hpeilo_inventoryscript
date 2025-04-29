@@ -20,7 +20,36 @@ Function Get-ServerByScanner {
 
         [Parameter()]
         [switch]
-        $KeepTemporaryConfig
+        $KeepTemporaryConfig,
+
+        [Parameter()]
+        [int]
+        $LogLevel = 0,
+
+        [Parameter()]
+        [switch]
+        $LogToConsole,
+
+        [Parameter()]
+        [switch]
+        $LoggingActivated,
+
+        [Parameter()]
+        [switch]
+        $PingTestActivated,
+
+        [Parameter()]
+        [switch]
+        $DeactivateCertificateValidation,
+
+        [Parameter()]
+        [switch]
+        $IgnoreMACAddress,
+
+        [Parameter()]
+        [switch]
+        $IgnoreSerialNumbers
+
     )
     try {
         Write-Host "------------------------`nStarted Scanner:`nTo capture any Server for ILO-Query, please scan the 'Password' and 'Hostname' printed on the Server itself with a barcode scanner."
@@ -32,7 +61,7 @@ Function Get-ServerByScanner {
         $serialNumbers = @();
 
         New-Config -Path ($DEFAULT_PATH_TEMPORARY) -ForScanner -StoreAsTemporary | Out-Null;
-        Update-Config -ReportPath $ReportPath -LogPath $LogPath;
+        Update-Config -ReportPath $ReportPath -LogPath $LogPath -LogLevel $LogLevel -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -PingTestActivated $PingTestActivated -DeactivateCertificateValidation $DeactivateCertificateValidation -IgnoreMACAddress $IgnoreMACAddress -IgnoreSerialNumbers $IgnoreSerialNumbers | Out-Null;
 
         ## Get Scanned Servers
         while ($true) {
