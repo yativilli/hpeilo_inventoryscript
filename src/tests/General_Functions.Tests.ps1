@@ -3,6 +3,12 @@ BeforeAll {
     
     Import-Module .\ILO-Inventorizer\ILO-Inventorizer.psm1 -Force;
     Import-Module HPEiLOCmdlets
+
+    $configPath = $ENV:TEMP + "\hpeilo_test";
+    if ((Test-Path $configPath)) {
+        Remove-Item $configPath -Recurse -Force;
+    }
+    New-Item -ItemType Directory $configPath -Force;
 }
 
 Describe "General_Functions" {
@@ -27,10 +33,9 @@ Describe "General_Functions" {
         }
     }
 
-    Context 'Convert-PathsToValidated' {
+    Context 'Convert-PathsToValidated' -Tag "CC" {
         BeforeEach {
             $configPath = $ENV:TEMP + "\hpeilo_test";
-            New-Item -ItemType Directory -Path $configPath -Force;
             $config = [ordered]@{
                 searchForFilesAt                = $configPath + "\Scanner\s"
                 configPath                      = $configPath + "\config.tmp"
@@ -122,9 +127,11 @@ Describe "General_Functions" {
 
 
     Context 'New-File' {
-        BeforeAll{
+        BeforeAll {
             $path = $ENV:TEMP + "\temporary\stuff";
-            Remove-Item $path -Force
+            if ((Test-Path $path)) {
+                Remove-Item $path -Force
+            }
         }
         It 'Path does not exist' {
             $path = $ENV:TEMP + "\temporary\stuff";
@@ -146,39 +153,84 @@ Describe "General_Functions" {
             $pathExists | Should -Be $true;
             $pathNowExists | Should -Be $true;
         }
+        AfterAll {
+            Remove-Item -Path ($ENV:TEMP + "\temporary\stuff");
+        }
     }
 
-    Context 'Save-Exception' -Tag "FF" -Skip{
-        BeforeAll{
+    Context 'Save-Exception' {
+        BeforeAll {
             $configuration_exc = @{
-                logPath = $ENV:TEMP + "\hpeilo_test"
-                logLevel = 0
-                loggingActivated = $false
-                logToConsole = $false
+                logPath          = $ENV:TEMP + "\hpeilo_test"
+                logLevel         = 1
+                loggingActivated = $true
+                logToConsole     = $false
             }
 
-            ($configuration_exc | ConvertTo-Json) | Out-File -Path ($configuration_exc.logPath) -Force;
-            Set-ConfigPath = $configuration_exc.logPath;
+            ($configuration_exc | ConvertTo-Json) | Set-Content -Path ($configuration_exc.logPath + "\config.tmp") -Force;
+            $path = "$((Get-Config).logPath)\$(Get-Date -Format "yyyy_MM_dd").txt"
+            if (Test-Path $path) {
+                Remove-Item $path -Force;
+            }
+            Set-ConfigPath $configuration_exc.logPath;
         }
 
         It "Save Exception" {
             $err = [System.Management.Automation.RuntimeException] "Throw some error."
             $path = "$((Get-Config).logPath)\$(Get-Date -Format "yyyy_MM_dd").txt"
-            Write-Host $path;
-            Save-Exception $err "Throw error";
-            $logContent = Get-Content $path -Force;
-            $logContent;
-
+            Save-Exception $err "Throw Error to test" -ErrorAction SilentlyContinue;
+            [string]$logContent = (Get-Content $path -Force)
+            $logContent | Should -Match ".*Throw Error to test";
         }
     }
 
-    Context "Get-Config" {
-        It "has all required fields" {
+    Context "Get-Config" -Tag "FF" {
+        BeforeAll {
+            $configPath = $ENV:TEMP + "\hpeilo_test";
+            $config = [ordered]@{
+                searchForFilesAt                = $configPath + "\Scanner\s"
+                configPath                      = $configPath + "\config.tmp"
+                loginConfigPath                 = $configPath + "\login.tmp"
+                reportPath                      = $configPath + "\Scanner\g"
+                serverPath                      = $configPath + "\Scanner\srv\srv.tmp"
+                logPath                         = $configPath + "\Scanner\log"
+                logLevel                        = 0
+                loggingActivated                = $false
+                searchStringInventory           = ""
+                doNotSearchInventory            = $false
+                remoteMgmntField                = ""
+                deactivateCertificateValidation = $false
+                deactivatePingtest              = $false
+                logToConsole                    = $false
+                ignoreMACAddress                = $false
+                ignoreSerialNumbers             = $false
+            }; 
+            $config | ConvertTo-Json -Depth 2 | Out-File -FilePath ($config.configPath) -Force
+            Set-ConfigPath -Path $config.configPath;
+        }
+        It "returns object with all properties" {
+            $configuration = Get-Config;
+            $countGet = ([array]$configuration.PSObject.Properties).Count;
+            $countActual = $config.Count;
 
+            (ConvertTo-Json $config) | Should -Be (ConvertTo-Json $configuration);
+            
+            # Verify all Properties are displayed
+            ([pscustomobject]$countGet) | Should -Be $countActual;
+            
         }
 
         It "shows help" {
+            $help = ( Get-Config /? )
+            $functDescr = ($help.details.description.Text);
+            $functName = $help.details.Name;
+            
+            $actualHelp = Get-Help Get-Config -Full; 
+            $actualFunctDescr = $actualHelp.details.description.Text;
+            $actialFunctName = $actualHelp.details.Name;
 
+            $functDescr | Should -Be $actualFunctDescr;
+            $functName | Should -Be $actialFunctName;
         }
     }
 
