@@ -184,7 +184,7 @@ Describe "General_Functions" {
         }
     }
 
-    Context "Get-Config" -Tag "FF" {
+    Context "Get-Config" {
         BeforeAll {
             $configPath = $ENV:TEMP + "\hpeilo_test";
             $config = [ordered]@{
@@ -235,8 +235,34 @@ Describe "General_Functions" {
     }
 
     Context 'Invoke-ConfigTypeValidation' {
+        BeforeAll {
+            $configPath = $ENV:TEMP + "\hpeilo_test";
+            $config = [ordered]@{
+                searchForFilesAt                = $configPath + "\Scanner\s"
+                configPath                      = $configPath + "\config.tmp"
+                loginConfigPath                 = $configPath + "\login.tmp"
+                reportPath                      = $configPath + "\Scanner\g"
+                serverPath                      = $configPath + "\Scanner\srv\srv.tmp"
+                logPath                         = $configPath + "\Scanner\log"
+                logLevel                        = "Error"
+                loggingActivated                = $false
+                searchStringInventory           = ""
+                doNotSearchInventory            = $false
+                remoteMgmntField                = ""
+                deactivateCertificateValidation = $false
+                deactivatePingtest              = $false
+                logToConsole                    = $false
+                ignoreMACAddress                = $false
+                ignoreSerialNumbers             = $false
+            }; 
+        }
         It 'checks types of config correctly' {
-
+            
+            try {
+                $config | Invoke-ConfigTypeValidation
+            }catch{
+               [string]($_.Exception.Message) | Should -Match ".*Your configuration has wrong types: 'logLevel' must be of type 'long' but is instead of type 'string'"
+            } 
         }
     }
 

@@ -167,7 +167,7 @@ Function Get-Config {
 
 Function Invoke-ConfigTypeValidation {
     param(
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Object]$Config
     )
     # Type in Order of Configuration: Ordered
