@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Searchstring",
+            "name": "Tests",
             "type": "PowerShell",
             "request": "launch",
-            "script": "${cwd}\\demonstration\\3_script_SEARCHSTRING.ps1",
+            "script": "${cwd}\\tests\\General_Functions.Tests.ps1",
             "cwd": "${cwd}"
         },
         {
@@ -24,6 +24,6 @@
             "request": "launch",
             "script": "${cwd}\\devscript.ps1",
             "args": []
-        }
+        },
     ]
 }

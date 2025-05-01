@@ -122,17 +122,52 @@ Describe "General_Functions" {
 
 
     Context 'New-File' {
-        It 'Path Exists' {
-
+        BeforeAll{
+            $path = $ENV:TEMP + "\temporary\stuff";
+            Remove-Item $path -Force
         }
-
         It 'Path does not exist' {
+            $path = $ENV:TEMP + "\temporary\stuff";
+            $pathExists = Test-Path $path;
 
+            New-File $path;
+            $pathNowExists = Test-Path $path;
+            
+            $pathExists | Should -Be $false;
+            $pathNowExists | Should -Be $true;
+        }
+        It 'Path Exists' {
+            $path = $ENV:TEMP + "\temporary\stuff";
+            $pathExists = Test-Path $path;
+
+            New-File $path;
+            $pathNowExists = Test-Path $path;
+            
+            $pathExists | Should -Be $true;
+            $pathNowExists | Should -Be $true;
         }
     }
 
-    Context 'Save-Exception' {
+    Context 'Save-Exception' -Tag "FF" -Skip{
+        BeforeAll{
+            $configuration_exc = @{
+                logPath = $ENV:TEMP + "\hpeilo_test"
+                logLevel = 0
+                loggingActivated = $false
+                logToConsole = $false
+            }
+
+            ($configuration_exc | ConvertTo-Json) | Out-File -Path ($configuration_exc.logPath) -Force;
+            Set-ConfigPath = $configuration_exc.logPath;
+        }
+
         It "Save Exception" {
+            $err = [System.Management.Automation.RuntimeException] "Throw some error."
+            $path = "$((Get-Config).logPath)\$(Get-Date -Format "yyyy_MM_dd").txt"
+            Write-Host $path;
+            Save-Exception $err "Throw error";
+            $logContent = Get-Content $path -Force;
+            $logContent;
 
         }
     }
@@ -169,7 +204,9 @@ Describe "General_Functions" {
 
             }
 
-            It 'behaves correctly on IgnoreLogActive'
+            It 'behaves correctly on IgnoreLogActive' {
+
+            }
         }
 
         Context 'File does not exist' {
