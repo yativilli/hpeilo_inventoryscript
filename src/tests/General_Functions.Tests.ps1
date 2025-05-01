@@ -266,7 +266,7 @@ Describe "General_Functions" {
         }
     }
 
-    Context 'Invoke-TypeValidation' -Tag "FF" {
+    Context 'Invoke-TypeValidation' {
         It 'throws error if type is not correct' {
             [type]$expectedType = [string];
             $name = "TestAttribute";
@@ -301,7 +301,6 @@ Describe "General_Functions" {
         }
     }
 
-
     Context 'Log' {
         Context 'File Already exists' {
             It 'saves Logs correctly to file' {
@@ -334,19 +333,47 @@ Describe "General_Functions" {
         }
 
         It 'should execute a pingtest' {
-
+            
         }
     }
 
-    Context 'Resolve-NullValuesToSymbol' {
-        It 'should resolve value to symbol if null' {
-
+    Context "Resolve-NullValues" {
+        BeforeAll {
+            $NO_VALUE_FOUND_SYMBOL = Get-NoValueFoundSymbol;
         }
-    }
+        Context 'Resolve-NullValuesToSymbol' {
+            It 'should resolve value to symbol if null' {
+                $testString = $null;
+                $testString = Resolve-NullValuesToSymbol -Value $testString;
+                $testString | Should -Be $NO_VALUE_FOUND_SYMBOL
+            }
+            It 'should not resolve value to symbol if not null' {
+                $testString = "Hamburger";
+                $expectedString = $testString;
 
-    Context 'Resolve-NullValues' {
-        It 'shoud resolve null values to selected symbol' {
+                $testString = Resolve-NullValuesToSymbol -Value $testString;
+                $testString | Should -Not -Be $NO_VALUE_FOUND_SYMBOL;
+                $testString | Should -Be $expectedString;
+            }
+        }
+    
+        Context 'Resolve-NullValues' {
+            It 'shoud resolve null values to selected symbol' {
+                $testString = $null;
+                $resolveToSymbol = "%%";
 
+                $testString = Resolve-NullValues -Value $testString -ValueOnNull $resolveToSymbol;
+                $testString | Should -Be $resolveToSymbol;
+            }
+            It 'should not resolve value to symbol if not null' {
+                $testString = "French Fries";
+                $expectedString = $testString;
+                $resolveToSymbol = "%%";
+
+                $testString = Resolve-NullValues -Value $testString -ValueOnNull $resolveToSymbol;
+                $testString | Should -Not -Be $resolveToSymbol;
+                $testString | Should -Be $expectedString;
+            }
         }
     }
 }
