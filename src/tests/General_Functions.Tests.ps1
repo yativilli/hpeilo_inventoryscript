@@ -33,7 +33,7 @@ Describe "General_Functions" {
         }
     }
 
-    Context 'Convert-PathsToValidated' -Tag "CC" {
+    Context 'Convert-PathsToValidated' {
         BeforeEach {
             $configPath = $ENV:TEMP + "\hpeilo_test";
             $config = [ordered]@{
@@ -256,21 +256,51 @@ Describe "General_Functions" {
                 ignoreSerialNumbers             = $false
             }; 
         }
-        It 'checks types of config correctly' {
-            
+        It 'throws error if type is not correct' {
             try {
                 $config | Invoke-ConfigTypeValidation
-            }catch{
-               [string]($_.Exception.Message) | Should -Match ".*Your configuration has wrong types: 'logLevel' must be of type 'long' but is instead of type 'string'"
+            }
+            catch {
+                [string]($_.Exception.Message) | Should -Match ".*Your configuration has wrong types: 'logLevel' must be of type 'long' but is instead of type 'string'"
             } 
         }
     }
 
-    Context 'Invoke-TypeValidation' {
-        It 'checks type correctly' {
+    Context 'Invoke-TypeValidation' -Tag "FF" {
+        It 'throws error if type is not correct' {
+            [type]$expectedType = [string];
+            $name = "TestAttribute";
 
+            $inputValue = 1234.56;
+            [type]$inputType = $inputValue.GetType();
+
+            $result = "";
+            try {
+                Invoke-TypeValidation -Value $inputValue -ExpectedType $expectedType -Name $name;
+            }
+            catch {
+                $result = $_.Exception.Message;
+            } 
+            $result | Should -Match ".*Your configuration has wrong types: '$name' must be of type '$expectedType' but is instead of type '$inputType'"
+        }
+        
+        It 'throws no error if type is correct' {
+            $expectedType = [string];
+            $name = "TestAttribute";
+            $inputValue = "123456";
+        
+            $result = "";
+            try {
+                Invoke-TypeValidation -Value $inputValue -ExpectedType $expectedType -Name $name;
+            }
+            catch {
+                $result = $_.Exception.Message;
+            } 
+            Write-Host $result;
+            $result.Length | Should -BeLessOrEqual 0;
         }
     }
+
 
     Context 'Log' {
         Context 'File Already exists' {
