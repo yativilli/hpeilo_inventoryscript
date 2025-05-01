@@ -48,13 +48,13 @@ Function Convert-PathsToValidated {
         # loginConfigPath-Property --> Error because path must be to a file -> the contents of which cannot be generated automatically
         if ((-not(Test-Path -Path ($config.loginConfigPath)))) {
             Log 6 ("`tPath 'loginConfigPath' does not exist: " + $config.loginConfigPath);
-            throw [System.IO.FileNotFoundException] ("Path to '$path' could not be resolved. Verify that loginConfigPath includes some file like 'login.json' and it and the file must exist for the script to work. It also must include a Username and a Password.")
+            throw [System.IO.FileNotFoundException] ("Path to '$($config.loginConfigPath)' could not be resolved. Verify that loginConfigPath includes some file like 'login.json' and it and the file must exist for the script to work. It also must include a Username and a Password.")
         }
 
         # serverPath-Property --> Error because path must be to a file -> the contents of which cannot be generated automatically
         if ((-not(Test-Path -Path ($config.serverPath))) -and ($IgnoreServerPath -eq $false)) {
             Log 6 ("`tPath 'serverPath' does not exist: " + $config.serverPath);
-            throw [System.IO.FileNotFoundException] ("Path to '$path' could not be resolved. Verify that serverPath includes some file like 'server.json' and it and the file must exist for the script to work, with it containing an array of servers.")
+            throw [System.IO.FileNotFoundException] ("Path to '$($config.loginConfigPath)' could not be resolved. Verify that serverPath includes some file like 'server.json' and it and the file must exist for the script to work, with it containing an array of servers.")
         }
 
         # reportPath-Property
