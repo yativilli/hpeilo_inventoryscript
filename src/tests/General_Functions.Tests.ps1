@@ -301,13 +301,59 @@ Describe "General_Functions" {
         }
     }
 
-    Context 'Log' {
+    Context 'Log' -Tag "FF" {
+        BeforeAll{
+            $configPath = $ENV:TEMP + "\hpeilo_test";
+            $config = [ordered]@{
+                searchForFilesAt                = $configPath + "\Scanner\s"
+                configPath                      = $configPath + "\config.tmp"
+                loginConfigPath                 = $configPath + "\login.tmp"
+                reportPath                      = $configPath + "\Scanner\g"
+                serverPath                      = $configPath + "\Scanner\srv\srv.tmp"
+                logPath                         = $configPath + "\Scanner\log"
+                logLevel                        = 2
+                loggingActivated                = $true
+                searchStringInventory           = ""
+                doNotSearchInventory            = $false
+                remoteMgmntField                = ""
+                deactivateCertificateValidation = $false
+                deactivatePingtest              = $false
+                logToConsole                    = $false
+                ignoreMACAddress                = $false
+                ignoreSerialNumbers             = $false
+            }; 
+            $config | ConvertTo-Json -Depth 2 | Out-File -FilePath ($config.configPath) -Force
+            Set-ConfigPath -Path $config.configPath;
+
+            $currentDay = (Get-Date -Format "yyyy_MM_dd")+".txt";
+        }
         Context 'File Already exists' {
             It 'saves Logs correctly to file' {
+                Log 1 "Test";
+                $path = $config.logPath + "\$currentDay";
+                $logContent = Get-Content -Path $path -Force;
 
+                [regex]$expectedLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test"
+                $logContent | Should -Match $expectedLog;
             }
 
             It 'checks Loglevel' {
+                $expectedLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	"
+                $path = $config.logPath + "\$currentDay";
+                # Above
+                Log 3 "Test above";
+                $expectedAboveLog = $expectedLog + "Test above";
+                # Below
+                Log 1 "Test below";
+                $expectedBelowLog = $expectedLog + "Test below";
+                # Exactly   
+                Log 2 "Test exactly";
+                $expectedExactlyLog = $expectedLog + "Test exactly";
+
+                $logContent = "$(Get-Content -Path $path -Force)";
+                $logContent | Should -Not -Match $expectedAboveLog;
+                $logContent | Should -Match $expectedExactlyLog;
+                $logContent | Should -Match $expectedBelowLog;
 
             }
 
