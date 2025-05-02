@@ -136,9 +136,35 @@ Describe "ILO-Inventarizer_Functions" {
         }
     }
 
-    Context "Invoke-NoConfigFoundHandler"  -Tag "FF" {
+    Context "Invoke-NoConfigFoundHandler" {
         BeforeAll {
-            Set-ConfigPath $configPath;
+            $config = [ordered]@{
+                searchForFilesAt                = $configPath
+                configPath                      = $configPath + "\config.tmp"
+                loginConfigPath                 = $configPath + "\login.tmp"
+                reportPath                      = $configPath
+                serverPath                      = $configPath + "\srv.tmp"
+                logPath                         = $configPath
+                logLevel                        = 2
+                loggingActivated                = $true
+                searchStringInventory           = ""
+                doNotSearchInventory            = $false
+                remoteMgmntField                = ""
+                deactivateCertificateValidation = $false
+                deactivatePingtest              = $false
+                logToConsole                    = $false
+                ignoreMACAddress                = $false
+                ignoreSerialNumbers             = $false
+            }; 
+            
+            $login = @{
+                Username = "USER"
+                Password = "Password"
+            }
+            
+            Set-ConfigPath $config.configPath;
+            $login | ConvertTo-JSON -Depth 2 | Out-File -FilePath ($config.loginConfigPath) -Force;
+            $config | ConvertTo-JSON -Depth 2 | Out-File -FilePath ($config.configPath) -Force;
         }
         It "should act to generate empty config if selected" {
             # Arrange
@@ -202,16 +228,77 @@ Describe "ILO-Inventarizer_Functions" {
     }
 
     Context "Start-PingtestOnServers" {
-        It "should read servers from config" {
+        BeforeEach {
+            # Arrange
+            $config = [ordered]@{
+                searchForFilesAt                = $configPath
+                configPath                      = $configPath + "\config.tmp"
+                loginConfigPath                 = $configPath + "\login.tmp"
+                reportPath                      = $configPath
+                serverPath                      = $configPath + "\srv.tmp"
+                logPath                         = $configPath
+                logLevel                        = 2
+                loggingActivated                = $true
+                searchStringInventory           = ""
+                doNotSearchInventory            = $false
+                remoteMgmntField                = ""
+                deactivateCertificateValidation = $false
+                deactivatePingtest              = $false
+                logToConsole                    = $false
+                ignoreMACAddress                = $false
+                ignoreSerialNumbers             = $false
+            }; 
+            
+            $login = @{
+                Username = "USER"
+                Password = "Password"
+            }
 
+            $srv = @(
+                "srv001",
+                "srv002",
+                "srv003",
+                "srv004"
+            )
+            
+            Set-ConfigPath $config.configPath;
+            $login | ConvertTo-JSON -Depth 2 | Out-File -FilePath ($config.loginConfigPath) -Force;
+            $config | ConvertTo-JSON -Depth 2 | Out-File -FilePath ($config.configPath) -Force;
+            $srv | ConvertTo-Json -Depth 2 | Out-File -FilePath ($config.serverPath) -Force;
         }
 
-        It "should ping all servers found and return only the reachable ones" {
-
+        It "should read all servers from config and return only the reachable ones" -Tag "FF" {
+            # Arrange
+            $expectedReachable = 2;
+            $expectedUnreachable = 2;
+            Mock Invoke-PingTest { return $true; } -ParameterFilter { ($Hostname -eq $srv[0]) -or ($Hostname -eq $srv[2]) } -ModuleName "ILO-Inventorizer"
+            Mock Invoke-PingTest { return $false; } -ParameterFilter { ($Hostname -eq $srv[1]) -or ($Hostname -eq $srv[3]) } -ModuleName "ILO-Inventorizer"
+            Mock Get-Config { return $config; } -ModuleName "ILO-Inventorizer"
+            
+            # Act
+            $res = Start-PingtestOnServers;
+            
+            # Assert
+            ($res.Count) | Should -Be $expectedReachable;
+            ($srv.Count - $res.Count) | Should -Be $expectedUnreachable;
+            $res[0] | Should -Be $srv[0];
+            $res[1] | Should -Be $srv[2];
+            $srv.Count | Should -Not -Be $res.Count;
         }
 
-        It "should not execute if pingtest is disabled" {
+        It "should not execute if pingtest is disabled" -Tag "FF" {
+            # Arrange
+            $config.deactivatePingtest = $true;
+            Write-Host ($config);
+            Mock Get-Config { return $config; } -ModuleName "ILO-Inventorizer"
+            Mock Invoke-PingTest {} -ModuleName "ILO-Inventorizer";
 
+            # Act
+            $res = Start-PingtestOnServers;
+
+            # Assert
+            Should -Invoke -CommandName "Invoke-PingTest" -Times 0 -ModuleName "ILO-Inventorizer";
+            $srv.Count | Should -Be $res.Count;
         }
     }
 }
