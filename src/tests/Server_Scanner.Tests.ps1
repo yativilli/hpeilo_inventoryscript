@@ -11,39 +11,41 @@ BeforeAll {
     New-Item -ItemType Directory $configPath -Force;
 }
 
-Describe "Server_Scanner"{
-    Context "Invoke-ScanServer"{
-        It "should ask for serialnumber, hostname and password"{
+Describe "Server_Scanner" {
+    Context "Invoke-ScanServer" {
+        It "should ask for serialnumber, hostname and password" {
 
         }
 
-        It "should resolve errors in order"{
+        It "should resolve errors in order" {
 
         }
 
-        It "should execute a pingtest before carrying on"{
+        It "should execute a pingtest before carrying on" {
 
         }
     }
 
-    Context "Stop-OnExit"{
-        It "should stop if input is exit"{
+    Context "Stop-OnExit" {
+        It "should stop if input is exit" {
 
         }
         
-        It "should not break if input is not exit"{
+        It "should not break if input is not exit" {
 
         }
     }
 
-    Context "Resolve-ErrorsInInput"{
-        It "should filter out prod-id"{
+    Context "Resolve-ErrorsInInput" {
+        It "should filter out prod-id" {
 
         }
 
-        It "should bring false inputs in correct order"{
+        It "should bring false inputs in correct order" {
             
         }
-    }
-        
+    }       
+}
+AfterAll {
+    Remove-Item -Path ($ENV:TEMP + "\hpeilo_test") -Force -Recurse;
 }

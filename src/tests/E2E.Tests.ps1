@@ -40,3 +40,7 @@ Describe "End2EndTests"{
         }
     }
 }
+
+AfterAll{
+    Remove-Item -Path ($ENV:TEMP + "\hpeilo_test") -Force -Recurse;
+}

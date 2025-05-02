@@ -58,3 +58,7 @@ Describe "Configuration_Functions"{
         }
     }
 }
+
+AfterAll{
+    Remove-Item -Path ($ENV:TEMP + "\hpeilo_test") -Force -Recurse;
+}
