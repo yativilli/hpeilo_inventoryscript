@@ -302,7 +302,7 @@ Describe "General_Functions" {
     }
 
     Context 'Log' {
-        BeforeAll{
+        BeforeAll {
             $configPath = $ENV:TEMP + "\hpeilo_test";
             $config = [ordered]@{
                 searchForFilesAt                = $configPath + "\Scanner\s"
@@ -325,7 +325,7 @@ Describe "General_Functions" {
             $config | ConvertTo-Json -Depth 2 | Out-File -FilePath ($config.configPath) -Force
             Set-ConfigPath -Path $config.configPath;
 
-            $currentDay = (Get-Date -Format "yyyy_MM_dd")+".txt";
+            $currentDay = (Get-Date -Format "yyyy_MM_dd") + ".txt";
             $path = $config.logPath + "\$currentDay";
         }
         Context 'File Already exists' {
@@ -339,10 +339,10 @@ Describe "General_Functions" {
 
             It 'checks Loglevel' {
                 # Above
-                Log ($config.logLevel +1) "Test above";
+                Log ($config.logLevel + 1) "Test above";
                 [regex]$expectedAboveLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test above";
                 # Below
-                Log ($config.logLevel -1) "Test below";
+                Log ($config.logLevel - 1) "Test below";
                 [regex]$expectedBelowLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test below";
                 # Exactly   
                 Log ($config.logLevel) "Test exactly";
@@ -369,7 +369,7 @@ Describe "General_Functions" {
 
         Context 'File does not exist' {
             It 'creates file if path is specified' {
-                if(Test-Path $path) {
+                if (Test-Path $path) {
                     Remove-Item -Path $path -Force;
                 }
                 Log 1 "Test if file is created";
@@ -394,19 +394,51 @@ Describe "General_Functions" {
         }
     }
 
-    Context 'Invoke-PingTest' {
-        It 'should execute an nslookup' {
+    Context 'Invoke-PingTest' -Tag "CC" {
+        BeforeAll {
+            $configPath = $ENV:TEMP + "\hpeilo_test";
+            $config = [ordered]@{
+                searchForFilesAt                = $configPath + "\Scanner\s"
+                configPath                      = $configPath + "\config.tmp"
+                loginConfigPath                 = $configPath + "\login.tmp"
+                reportPath                      = $configPath + "\Scanner\g"
+                serverPath                      = $configPath + "\Scanner\srv\srv.tmp"
+                logPath                         = $configPath + "\Scanner\log"
+                logLevel                        = 2
+                loggingActivated                = $true
+                searchStringInventory           = ""
+                doNotSearchInventory            = $false
+                remoteMgmntField                = ""
+                deactivateCertificateValidation = $false
+                deactivatePingtest              = $false
+                logToConsole                    = $false
+                ignoreMACAddress                = $false
+                ignoreSerialNumbers             = $false
+            }; 
+            $config | ConvertTo-Json -Depth 2 | Out-File -FilePath ($config.configPath) -Force
+            Set-ConfigPath -Path $config.configPath;
 
+            Mock Resolve-DnsName { return @{Name = "www.google.com"; IPAddress = "127.0.0.1" } } -ParameterFilter { $Hostname -eq "www.google.com" } -ModuleName "ILO-Inventorizer";
+            Mock Test-Connection { return $true } -ParameterFilter { $Hostname -eq "www.google.com" } -ModuleName "ILO-Inventorizer";
         }
-
+        
+        It 'should execute an nslookup' {
+            $hostname = "www.google.com";
+            $pingtest = Invoke-PingTest $hostname
+            Should -Invoke -CommandName "Resolve-DnsName" -Times 1 -ModuleName "ILO-Inventorizer";
+            $pingtest | Should -Be $true
+        }
         It 'should execute a pingtest' {
-            
+            $hostname = "www.google.com";
+            $pingtest = Invoke-PingTest $hostname
+            Should -Invoke -CommandName "Test-Connection" -Times 1 -ModuleName "ILO-Inventorizer";
+            $pingtest | Should -Be $true
         }
     }
 
     Context "Resolve-NullValues" {
         BeforeAll {
-            $NO_VALUE_FOUND_SYMBOL = Get-NoValueFoundSymbol;
+            $NO_VALUE_FOUND_SYMBOL = "-";
         }
         Context 'Resolve-NullValuesToSymbol' {
             It 'should resolve value to symbol if null' {
