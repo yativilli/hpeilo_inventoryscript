@@ -8,7 +8,7 @@
             "name": "Run Pester Tests",
             "type": "PowerShell",
             "request": "launch",
-            "script": "Invoke-Pester -Output 'Detailed' -Path '${cwd}\\tests'",
+            "script": "Invoke-Pester -Output 'Detailed' -Path '${cwd}\\tests' -Tag 'FF'",
             "args": [],
             "createTemporaryIntegratedConsole": true
         },

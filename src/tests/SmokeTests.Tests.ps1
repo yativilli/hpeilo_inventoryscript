@@ -28,7 +28,6 @@ Describe "TestServers" {
             try{
                 Test-Connection $srv - -Quiet -Count 1;
             }catch{
-                Write-Host $srv;
                 $serverNotReachable = $true;
             }
         }

@@ -95,7 +95,7 @@ Function Invoke-NoConfigFoundHandler {
         3 {
             # Add Path to Config
             Log 6 "User has selected adding existing config"
-            $pathToConfig = Read-Host -Prompt "Where dou you have the config stored at?";
+            $pathToConfig = Read-Host -Prompt "Where do you have the config stored at?";
             if (Test-Path $pathToConfig) {
                 Set-ConfigPath -Path $pathToConfig;
             }

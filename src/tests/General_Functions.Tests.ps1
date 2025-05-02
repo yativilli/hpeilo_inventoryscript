@@ -20,21 +20,22 @@ Describe "General_Functions" {
             }
 
             It 'on --help' {
-            (Show-Help "--help") | Should -Be $true
+                (Show-Help "--help") | Should -Be $true
             }
 
             It 'on -h' {
-            (Show-Help "-h") | Should -Be $true
+                (Show-Help "-h") | Should -Be $true
             }
         
             It 'on other strings' {
-            (Show-Help "help") | Should -Be $false
+                (Show-Help "help") | Should -Be $false
             }
         }
     }
 
     Context 'Convert-PathsToValidated' {
         BeforeEach {
+            # Arrange
             $configPath = $ENV:TEMP + "\hpeilo_test";
             $config = [ordered]@{
                 searchForFilesAt                = $configPath + "\Scanner\s"
@@ -69,55 +70,76 @@ Describe "General_Functions" {
 
         Context 'Checking if paths in config are valid and create if not' {
             It 'searchForFilesat' {
+                # Arrange
                 $configuration = Get-Config;
                 if (Test-Path ($configuration.searchForFilesAt)) {
                     Remove-Item -Path ($configuration.searchForFilesAt) -Force
                 }
+
+                # Act
                 Convert-PathsToValidated -IgnoreServerPath;
+                
+                # Assert
                 Test-Path ($configuration.searchForFilesAt) | Should -Be $true
             }
 
             It 'reportPath' {
+                # Arrange
                 $configuration = Get-Config;
                 if (Test-Path ($configuration.reportPath)) {
                     Remove-Item -Path ($configuration.reportPath) -Force
                 }
+
+                # Act
                 Convert-PathsToValidated -IgnoreServerPath;
+                
+                # Assert
                 Test-Path ($configuration.reportPath) | Should -Be $true
             }
 
             It "logPath" {
+                # Arrange
                 $configuration = Get-Config;
                 if (Test-Path ($configuration.logPath)) {
                     Remove-Item -Path ($configuration.logPath) -Force
                 }
+
+                # Act
                 Convert-PathsToValidated -IgnoreServerPath;
+                
+                # Assert
                 Test-Path ($configuration.logPath) | Should -Be $true
             }
         }
 
         Context 'Checking if Paths in config are valid and throw error if not' {
             It 'loginConfigPath' {
+                # Arrange
                 $configuration = Get-Config;
                 Remove-Item($configuration.loginConfigPath) -Force; 
                 try {
+                    # Act
                     Convert-PathsToValidated -ErrorAction Stop  
                 }
                 catch {
+                    # Assert
                     $exceptionMessage = $_.Exception.Message
                     $exceptionMessage | Should -Be "Path to '$($config.loginConfigPath)' could not be resolved. Verify that loginConfigPath includes some file like 'login.json' and it and the file must exist for the script to work. It also must include a Username and a Password."
                 }
             }
 
             It 'serverPath' {
+                # Arrange
                 $configuration = Get-Config;
                 if (Test-Path ($configuration.serverPath)) {
                     Remove-Item -Path ($configuration.serverPath) -Force
                 }
                 try {
+                    # Act
                     Convert-PathsToValidated -ErrorAction Stop    
                 }
                 catch {
+                    # Assert
                     $exceptionMessage = $_.Exception.Message
                     $exceptionMessage | Should -Be "Path to '$($config.loginConfigPath)' could not be resolved. Verify that serverPath includes some file like 'server.json' and it and the file must exist for the script to work, with it containing an array of servers."
                 }
@@ -128,28 +150,36 @@ Describe "General_Functions" {
 
     Context 'New-File' {
         BeforeAll {
+            # Arrange
             $path = $ENV:TEMP + "\temporary\stuff";
             if ((Test-Path $path)) {
                 Remove-Item $path -Force
             }
         }
         It 'Path does not exist' {
+            # Arrange
             $path = $ENV:TEMP + "\temporary\stuff";
             $pathExists = Test-Path $path;
 
+            # Act
             New-File $path;
+            
+            # Assert
             $pathNowExists = Test-Path $path;
             
             $pathExists | Should -Be $false;
             $pathNowExists | Should -Be $true;
         }
         It 'Path Exists' {
+                            # Arrange
             $path = $ENV:TEMP + "\temporary\stuff";
             $pathExists = Test-Path $path;
-
+                
+            # Act
             New-File $path;
             $pathNowExists = Test-Path $path;
             
+                            # Assert
             $pathExists | Should -Be $true;
             $pathNowExists | Should -Be $true;
         }
@@ -160,6 +190,7 @@ Describe "General_Functions" {
 
     Context 'Save-Exception' {
         BeforeAll {
+            # Arrange
             $configuration_exc = @{
                 logPath          = $ENV:TEMP + "\hpeilo_test"
                 logLevel         = 1
@@ -176,9 +207,14 @@ Describe "General_Functions" {
         }
 
         It "Save Exception" {
+            # Arrange
             $err = [System.Management.Automation.RuntimeException] "Throw some error."
             $path = "$((Get-Config).logPath)\$(Get-Date -Format "yyyy_MM_dd").txt"
+            
+                            # Act
             Save-Exception $err "Throw Error to test" -ErrorAction SilentlyContinue;
+            
+                            # Assert
             [string]$logContent = (Get-Content $path -Force)
             $logContent | Should -Match ".*Throw Error to test";
         }
@@ -186,6 +222,7 @@ Describe "General_Functions" {
 
     Context "Get-Config" {
         BeforeAll {
+            # Arrange
             $configPath = $ENV:TEMP + "\hpeilo_test";
             $config = [ordered]@{
                 searchForFilesAt                = $configPath + "\Scanner\s"
@@ -209,19 +246,23 @@ Describe "General_Functions" {
             Set-ConfigPath -Path $config.configPath;
         }
         It "returns object with all properties" {
+            # Act
             $configuration = Get-Config;
             $countGet = ([array]$configuration.PSObject.Properties).Count;
             $countActual = $config.Count;
 
             (ConvertTo-Json $config) | Should -Be (ConvertTo-Json $configuration);
             
-            # Verify all Properties are displayed
+            # Assert/ Verify all Properties are displayed
             ([pscustomobject]$countGet) | Should -Be $countActual;
             
         }
 
         It "shows help" {
+            # Act
             $help = ( Get-Config /? )
+            
+            # Assert
             $functDescr = ($help.details.description.Text);
             $functName = $help.details.Name;
             
@@ -236,6 +277,7 @@ Describe "General_Functions" {
 
     Context 'Invoke-ConfigTypeValidation' {
         BeforeAll {
+            # Arrange
             $configPath = $ENV:TEMP + "\hpeilo_test";
             $config = [ordered]@{
                 searchForFilesAt                = $configPath + "\Scanner\s"
@@ -258,9 +300,11 @@ Describe "General_Functions" {
         }
         It 'throws error if type is not correct' {
             try {
+                # Act
                 $config | Invoke-ConfigTypeValidation
             }
             catch {
+                # Assert
                 [string]($_.Exception.Message) | Should -Match ".*Your configuration has wrong types: 'logLevel' must be of type 'long' but is instead of type 'string'"
             } 
         }
@@ -268,6 +312,7 @@ Describe "General_Functions" {
 
     Context 'Invoke-TypeValidation' {
         It 'throws error if type is not correct' {
+            # Arrange
             [type]$expectedType = [string];
             $name = "TestAttribute";
 
@@ -276,33 +321,38 @@ Describe "General_Functions" {
 
             $result = "";
             try {
+                # Act
                 Invoke-TypeValidation -Value $inputValue -ExpectedType $expectedType -Name $name;
             }
             catch {
                 $result = $_.Exception.Message;
             } 
+            # Assert
             $result | Should -Match ".*Your configuration has wrong types: '$name' must be of type '$expectedType' but is instead of type '$inputType'"
         }
         
         It 'throws no error if type is correct' {
+            # Arrange
             $expectedType = [string];
             $name = "TestAttribute";
             $inputValue = "123456";
         
             $result = "";
             try {
+                # Act
                 Invoke-TypeValidation -Value $inputValue -ExpectedType $expectedType -Name $name;
             }
             catch {
                 $result = $_.Exception.Message;
             } 
-            Write-Host $result;
+            # Assert
             $result.Length | Should -BeLessOrEqual 0;
         }
     }
 
     Context 'Log' {
         BeforeAll {
+            # Arrange
             $configPath = $ENV:TEMP + "\hpeilo_test";
             $config = [ordered]@{
                 searchForFilesAt                = $configPath + "\Scanner\s"
@@ -330,14 +380,18 @@ Describe "General_Functions" {
         }
         Context 'File Already exists' {
             It 'saves Logs correctly to file' {
+                # Act
                 Log 1 "Test";
+                
+                # Assert
                 $logContent = Get-Content -Path $path -Force;
-
                 [regex]$expLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test"
                 $logContent | Should -Match $expLog;
             }
 
             It 'checks Loglevel' {
+                # Act
+                #########
                 # Above
                 Log ($config.logLevel + 1) "Test above";
                 [regex]$expectedAboveLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test above";
@@ -348,6 +402,7 @@ Describe "General_Functions" {
                 Log ($config.logLevel) "Test exactly";
                 [regex]$expectedExactlyLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test exactly";
 
+                # Assert
                 $logContent = "$(Get-Content -Path $path -Force)";
                 $logContent | Should -Not -Match $expectedAboveLog;
                 $logContent | Should -Match $expectedExactlyLog;
@@ -355,9 +410,14 @@ Describe "General_Functions" {
             }
 
             It 'behaves correctly on IgnoreLogActive' {
+                # Arrange
                 $pathToConsoleOutput = Start-Transcript -Path ($config.logPath + "\consoleOutput.txt") -Force;
+                
+                # Act
                 Log 4 "Test IgnoreLogActive" -IgnoreLogActive;
                 Stop-Transcript
+
+                # Assert
                 $pathToConsoleOutput = $pathToConsoleOutput.Split("is ")[1];
                 $consoleOutput = "$(Get-Content $pathToConsoleOutput -Force)";
                 $consoleOutput | Should -Match "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test IgnoreLogActive";
@@ -369,11 +429,15 @@ Describe "General_Functions" {
 
         Context 'File does not exist' {
             It 'creates file if path is specified' {
+                # Arrange
                 if (Test-Path $path) {
                     Remove-Item -Path $path -Force;
                 }
+
+                # Act
                 Log 1 "Test if file is created";
 
+                # Assert
                 Test-Path $path | Should -Be $true;
                 $logContent = "$(Get-Content -Path $path -Force)";
                 [regex]$expLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test if file is created"
@@ -382,10 +446,15 @@ Describe "General_Functions" {
             }
 
             It 'writes to console if no config is set' {
+                # Arrange
                 Set-ConfigPath -Reset;
                 $pathToConsoleOutput = Start-Transcript -Path ($config.logPath + "\consoleOutput.txt") -Force;
+                
+                # Act
                 Log 1 "Test log to console if no config is set";
                 Stop-Transcript
+                
+                # Assert
                 $pathToConsoleOutput = $pathToConsoleOutput.Split("is ")[1];
                 $consoleOutput = "$(Get-Content $pathToConsoleOutput -Force)";
                 [regex]$expLog = "WARNING: Test log to console if no config is set"
@@ -396,6 +465,7 @@ Describe "General_Functions" {
 
     Context 'Invoke-PingTest' -Tag "CC" {
         BeforeAll {
+            # Arrange
             $configPath = $ENV:TEMP + "\hpeilo_test";
             $config = [ordered]@{
                 searchForFilesAt                = $configPath + "\Scanner\s"
@@ -423,14 +493,24 @@ Describe "General_Functions" {
         }
         
         It 'should execute an nslookup' {
+            # Arrange
             $hostname = "www.google.com";
+
+            # Act
             $pingtest = Invoke-PingTest $hostname
+            
+            # Assert
             Should -Invoke -CommandName "Resolve-DnsName" -Times 1 -ModuleName "ILO-Inventorizer";
             $pingtest | Should -Be $true
         }
         It 'should execute a pingtest' {
+            # Arrange
             $hostname = "www.google.com";
+            
+            # Act
             $pingtest = Invoke-PingTest $hostname
+            
+            # Assert
             Should -Invoke -CommandName "Test-Connection" -Times 1 -ModuleName "ILO-Inventorizer";
             $pingtest | Should -Be $true
         }
@@ -442,15 +522,24 @@ Describe "General_Functions" {
         }
         Context 'Resolve-NullValuesToSymbol' {
             It 'should resolve value to symbol if null' {
+                # Arrange
                 $testString = $null;
+                
+                # Act
                 $testString = Resolve-NullValuesToSymbol -Value $testString;
+                
+                # Assert
                 $testString | Should -Be $NO_VALUE_FOUND_SYMBOL
             }
             It 'should not resolve value to symbol if not null' {
+                # Arrange
                 $testString = "Hamburger";
                 $expectedString = $testString;
 
+                # Act
                 $testString = Resolve-NullValuesToSymbol -Value $testString;
+                
+                # Assert
                 $testString | Should -Not -Be $NO_VALUE_FOUND_SYMBOL;
                 $testString | Should -Be $expectedString;
             }
@@ -458,18 +547,26 @@ Describe "General_Functions" {
     
         Context 'Resolve-NullValues' {
             It 'shoud resolve null values to selected symbol' {
+                # Arrange
                 $testString = $null;
                 $resolveToSymbol = "%%";
 
+                # Act
                 $testString = Resolve-NullValues -Value $testString -ValueOnNull $resolveToSymbol;
+                
+                # Assert
                 $testString | Should -Be $resolveToSymbol;
             }
             It 'should not resolve value to symbol if not null' {
+                # Arrange
                 $testString = "French Fries";
                 $expectedString = $testString;
                 $resolveToSymbol = "%%";
 
+                # Act
                 $testString = Resolve-NullValues -Value $testString -ValueOnNull $resolveToSymbol;
+                
+                # Assert
                 $testString | Should -Not -Be $resolveToSymbol;
                 $testString | Should -Be $expectedString;
             }
@@ -477,6 +574,6 @@ Describe "General_Functions" {
     }
 }
 
-AfterAll{
+AfterAll {
     Remove-Item -Path ($ENV:TEMP + "\hpeilo_test") -Force -Recurse;
 }
