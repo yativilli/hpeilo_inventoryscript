@@ -158,7 +158,7 @@ Function Invoke-ScanServer {
 Function Stop-OnExit {
     param(
         [Parameter(ValueFromPipeline = $true)]
-        [psobject]
+        [string]
         $Object
     )
     if ($Object -contains "exit") {

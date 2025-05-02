@@ -223,6 +223,8 @@ Function Get-InventoryData {
         Log 5 "Import Inventory Data from '$path'"
         if (Test-Path -Path $path) {
             $server = Get-Content $path | ConvertFrom-Json -Depth 10;
+        }else{
+            throw [System.IO.FileNotFoundException];
         }
     }
     catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {

@@ -363,8 +363,12 @@ Function Get-ConfigPath {
             Get-Help Get-ConfigPath -Full;    
         }
         else {   
-            Log 5 ("Getting config path - " + $ENV:HPEILOCONFIG); 
-            return $ENV:HPEILOCONFIG;
+            if($ENV:HPEILOCONFIG.Length -gt 0){    
+                Log 5 ("Getting config path - " + $ENV:HPEILOCONFIG); 
+                return $ENV:HPEILOCONFIG;
+            }else{
+                throw [System.IO.InvalidDataException] "No Config configuration has been set: Please use 'Set-ConfigPath', 'Get-NewConfig' or 'Get-HWInfoFromILO' to generate a new config";
+            }
         }
     }
     catch {

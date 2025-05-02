@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Run Pester Tests",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Invoke-Pester -Output 'Detailed' -Path '${cwd}\\tests'",
+            "args": [],
+            "createTemporaryIntegratedConsole": true
+        },
+        {
             "name": "Tests",
             "type": "PowerShell",
             "request": "launch",

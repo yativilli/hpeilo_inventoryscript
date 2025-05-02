@@ -161,7 +161,9 @@ Function Update-Config {
                     Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);
                 }
                 Log 5 ("Saving updated Configuration at " + $config.configPath)
-                Set-Content -Path (Get-ConfigPath) -Value ($config | ConvertTo-Json -Depth 3);
+                if(Test-Path (Get-ConfigPath)){
+                    Set-Content -Path (Get-ConfigPath) -Value ($config | ConvertTo-Json -Depth 3);
+                }
             }
             else {
                 throw [System.IO.FileNotFoundException] "No updatable config could be found at '$pathToConfig'. Verify that a configuration is set to a config.json that exists and verify that the path exists. `nIf you moved the config file, use Set-ConfigPath -Path 'C:\Somewhere' to change it.";
@@ -333,7 +335,7 @@ Function Add-ExampleConfigWithoutInventory {
     # Generate example server.json - File
     $servers | ConvertTo-Json -Depth 2 | Out-File -FilePath ($serverPath);
 
-    $Config | Save-Config -Login $Login -Path $Path;
+    $Config | Save-Config -Login $Login;
 }
 
 Function Set-LoginConfigurationForNewConfig {
@@ -408,7 +410,7 @@ Function Add-ExampleConfigWithInventory {
     $Config.remoteMgmntField = "Hostname Mgnt";
     $Config.deactivateCertificateValidation = $true;
 
-    $Config | Save-Config -Login $Login -Path $Path;
+    $Config | Save-Config -Login $Login;
 }
 
 Function Add-ScannerConfiguration {
@@ -442,7 +444,7 @@ Function Add-ScannerConfiguration {
     $Config.remoteMgmntField = "";
     $Config.deactivateCertificateValidation = $true;
     
-    $Config | Save-Config -Path $Path;
+    $Config | Save-Config;
 }
 
 Function Add-EmptyConfig {
@@ -485,7 +487,7 @@ Function Add-EmptyConfig {
     $login[0].Username = "";
     $login[0].Password = "";
 
-    $Config | Save-Config -Login $Login -Path $Path; 
+    $Config | Save-Config -Login $Login;
 }
 
 Function Save-Config {
@@ -496,11 +498,7 @@ Function Save-Config {
         
         [Parameter()]
         [psobject]
-        $Login,
-
-        [Parameter(Mandatory = $true)]
-        [string]
-        $Path
+        $Login
     )
 
     Log 6 "`tSaving Config files at $($Config.configPath)";
