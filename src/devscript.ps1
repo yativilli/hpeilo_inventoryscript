@@ -1,8 +1,1 @@
-Remove-Module ILO-Inventorizer;
-Remove-Module HPEiLOCmdlets;
-Import-Module .\ILO-Inventorizer\ILO-Inventorizer.psm1;
-Import-Module HPEiLOCmdlets;
-
-
-Set-ConfigPath -Reset
-Get-ServerByScanner -LogPath "C:\Users\wernle_y\AppData\Roaming\hpeilo\Scanner" -ReportPath "C:\Users\wernle_y\AppData\Roaming\hpeilo\Scanner" -KeepTemporaryConfig;
+Invoke-Pester -Output Detailed U:\IPA\IPA\IPA_Sourcecode_hpeilo_inventoryscript\src\tests\General_Functions.Tests.ps1 -TagFilter "CC"

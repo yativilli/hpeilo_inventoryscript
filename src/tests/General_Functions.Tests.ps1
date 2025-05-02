@@ -301,7 +301,7 @@ Describe "General_Functions" {
         }
     }
 
-    Context 'Log' -Tag "FF" {
+    Context 'Log' {
         BeforeAll{
             $configPath = $ENV:TEMP + "\hpeilo_test";
             $config = [ordered]@{
@@ -326,49 +326,70 @@ Describe "General_Functions" {
             Set-ConfigPath -Path $config.configPath;
 
             $currentDay = (Get-Date -Format "yyyy_MM_dd")+".txt";
+            $path = $config.logPath + "\$currentDay";
         }
         Context 'File Already exists' {
             It 'saves Logs correctly to file' {
                 Log 1 "Test";
-                $path = $config.logPath + "\$currentDay";
                 $logContent = Get-Content -Path $path -Force;
 
-                [regex]$expectedLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test"
-                $logContent | Should -Match $expectedLog;
+                [regex]$expLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test"
+                $logContent | Should -Match $expLog;
             }
 
             It 'checks Loglevel' {
-                $expectedLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	"
-                $path = $config.logPath + "\$currentDay";
                 # Above
-                Log 3 "Test above";
-                $expectedAboveLog = $expectedLog + "Test above";
+                Log ($config.logLevel +1) "Test above";
+                [regex]$expectedAboveLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test above";
                 # Below
-                Log 1 "Test below";
-                $expectedBelowLog = $expectedLog + "Test below";
+                Log ($config.logLevel -1) "Test below";
+                [regex]$expectedBelowLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test below";
                 # Exactly   
-                Log 2 "Test exactly";
-                $expectedExactlyLog = $expectedLog + "Test exactly";
+                Log ($config.logLevel) "Test exactly";
+                [regex]$expectedExactlyLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test exactly";
 
                 $logContent = "$(Get-Content -Path $path -Force)";
                 $logContent | Should -Not -Match $expectedAboveLog;
                 $logContent | Should -Match $expectedExactlyLog;
                 $logContent | Should -Match $expectedBelowLog;
-
             }
 
             It 'behaves correctly on IgnoreLogActive' {
+                $pathToConsoleOutput = Start-Transcript -Path ($config.logPath + "\consoleOutput.txt") -Force;
+                Log 4 "Test IgnoreLogActive" -IgnoreLogActive;
+                Stop-Transcript
+                $pathToConsoleOutput = $pathToConsoleOutput.Split("is ")[1];
+                $consoleOutput = "$(Get-Content $pathToConsoleOutput -Force)";
+                $consoleOutput | Should -Match "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test IgnoreLogActive";
 
+                $logContent = "$(Get-Content -Path $path -Force)";
+                $logContent | Should -Match "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test IgnoreLogActive";
             }
         }
 
         Context 'File does not exist' {
             It 'creates file if path is specified' {
+                if(Test-Path $path) {
+                    Remove-Item -Path $path -Force;
+                }
+                Log 1 "Test if file is created";
+
+                Test-Path $path | Should -Be $true;
+                $logContent = "$(Get-Content -Path $path -Force)";
+                [regex]$expLog = "[0-9]{4}\.[0-9]{2}\.[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}\	Test if file is created"
+                $logContent | Should -Match $expLog;
 
             }
 
             It 'writes to console if no config is set' {
-
+                Set-ConfigPath -Reset;
+                $pathToConsoleOutput = Start-Transcript -Path ($config.logPath + "\consoleOutput.txt") -Force;
+                Log 1 "Test log to console if no config is set";
+                Stop-Transcript
+                $pathToConsoleOutput = $pathToConsoleOutput.Split("is ")[1];
+                $consoleOutput = "$(Get-Content $pathToConsoleOutput -Force)";
+                [regex]$expLog = "WARNING: Test log to console if no config is set"
+                $consoleOutput | Should -Match $expLog;
             }
         }
     }
