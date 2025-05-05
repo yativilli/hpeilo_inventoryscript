@@ -158,7 +158,7 @@ Describe "Configuration_Functions" {
         }
     }
 
-    Context "Save-Config" -Tag "FF" {
+    Context "Save-Config"  {
         It "should save the config to the specified path" {
             # Arrange
             Set-ConfigPath $config.configPath;
