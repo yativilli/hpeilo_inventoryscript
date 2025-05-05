@@ -305,7 +305,7 @@ Function Set-ConfigPath {
             }
             "SetPath" {
                 Log 5 "Set Config Path has been started with 'Path' $Path and reset:$Reset"
-                if (Test-Path -Path $Path -ErrorAction Stop) {
+                if (Test-Path -Path $Path) {
                     $checkForFile = $Path | Split-Path -Extension
                     if ($checkForFile.Length -ne 0) {
                         Log 6 "Config Path already contains file"
@@ -313,16 +313,23 @@ Function Set-ConfigPath {
                     }
                     else {
                         Log 6 "Config Path is a directory, Path does not contain config.json. "
-                        $Path = $Path + "\config.json";
-                        if (Test-Path -Path $Path) {
+                        $jsonPath = $Path + "\config.json";
+                        $tmpPath = $Path + "\config.tmp";
+                        if (Test-Path -Path $jsonPath) {
                             Log 6 "Config Path directory contains a config.json"
-                            $ENV:HPEILOCONFIG = $Path;
+                            $ENV:HPEILOCONFIG = $jsonPath;
+                        }elseif(Test-Path -Path $tmpPath){
+                            Log 6 "Config Path directory contains a config.tmp"
+                            $ENV:HPEILOCONFIG = $tmpPath;
                         }
                         else {
                             Log 6 "Config Path does not include a config.json in its path or directory."
-                            throw [System.IO.FileNotFoundException] "The Path must include a 'config.json'."
+                            throw [System.IO.FileNotFoundException] "The Path '$Path' must include a 'config.json' or 'config.tmp'."
                         } 
                     }
+                }
+                else {
+                    throw [System.Management.Automation.ItemNotFoundException] "The path '$Path' does not exist.";
                 }
                 Log 5 ("Config Path has successfully been set to '" + $ENV:HPEILOCONFIG + "'")
                 break;
@@ -363,10 +370,11 @@ Function Get-ConfigPath {
             Get-Help Get-ConfigPath -Full;    
         }
         else {   
-            if($ENV:HPEILOCONFIG.Length -gt 0){    
+            if ($ENV:HPEILOCONFIG.Length -gt 0) {    
                 Log 5 ("Getting config path - " + $ENV:HPEILOCONFIG); 
                 return $ENV:HPEILOCONFIG;
-            }else{
+            }
+            else {
                 throw [System.IO.InvalidDataException] "No Config configuration has been set: Please use 'Set-ConfigPath', 'Get-NewConfig' or 'Get-HWInfoFromILO' to generate a new config";
             }
         }

@@ -267,7 +267,7 @@ Describe "ILO-Inventarizer_Functions" {
             $srv | ConvertTo-Json -Depth 2 | Out-File -FilePath ($config.serverPath) -Force;
         }
 
-        It "should read all servers from config and return only the reachable ones" -Tag "FF" {
+        It "should read all servers from config and return only the reachable ones" {
             # Arrange
             $expectedReachable = 2;
             $expectedUnreachable = 2;
@@ -286,10 +286,9 @@ Describe "ILO-Inventarizer_Functions" {
             $srv.Count | Should -Not -Be $res.Count;
         }
 
-        It "should not execute if pingtest is disabled" -Tag "FF" {
+        It "should not execute if pingtest is disabled" {
             # Arrange
             $config.deactivatePingtest = $true;
-            Write-Host ($config);
             Mock Get-Config { return $config; } -ModuleName "ILO-Inventorizer"
             Mock Invoke-PingTest {} -ModuleName "ILO-Inventorizer";
 

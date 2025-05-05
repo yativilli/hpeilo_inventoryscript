@@ -463,7 +463,7 @@ Describe "General_Functions" {
         }
     }
 
-    Context 'Invoke-PingTest' -Tag "CC" {
+    Context 'Invoke-PingTest'{
         BeforeAll {
             # Arrange
             $configPath = $ENV:TEMP + "\hpeilo_test";
