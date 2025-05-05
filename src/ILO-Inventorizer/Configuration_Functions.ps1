@@ -338,6 +338,7 @@ Function Add-ExampleConfigWithoutInventory {
     $Config | Save-Config -Login $Login;
 }
 
+# Create Login for new configurations
 Function Set-LoginConfigurationForNewConfig {
     param(
         [Parameter()]
@@ -438,7 +439,7 @@ Function Add-ScannerConfiguration {
     $Config.logLevel = 1;
     $Config.logToConsole = $true;
     $Config.loggingActivated = $true;
-    $Config.searchStringInventory = "NONE - Scanner";
+    $Config.searchStringInventory = "";
     $Config.doNotSearchInventory = $true;
     $Config.deactivatePingtest = $false;
     $Config.remoteMgmntField = "";

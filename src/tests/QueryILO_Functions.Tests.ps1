@@ -13,7 +13,6 @@ BeforeAll {
 
 Describe "QueryILO_Functions" {
     Context "query server" {
-
         Context "Get-PowerSupplyData" {
             It "should return summary on power supply" {
 
