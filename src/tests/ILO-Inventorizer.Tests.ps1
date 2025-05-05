@@ -15,7 +15,7 @@ Describe "ILO-Inventorizer" {
     BeforeAll {
         $configPath = $ENV:TEMP + "\hpeilo_test";
     }
-    Context "Set-ConfigPath" -Tag "FF" {
+    Context "Set-ConfigPath" {
         it "should provide help if prompted" {
             # Arrange
             Mock Get-Help {} -ParameterFilter { ($Name -eq "Set-ConfigPath") } -ModuleName "ILO-Inventorizer";
@@ -78,14 +78,14 @@ Describe "ILO-Inventorizer" {
             $pathAtEnd | Should -Not -Be "";
         }
 
-        it "should check provided path for a file"  -Tag "CC"  {
+        it "should check provided path for a file"  -Tag "CC" {
             # Arrange
             $ENV:HPEILOCONFIG = "";
             $pathToSet = $ENV:TEMP + "\somePathThatShouldNotExist\Folder";
             if (Test-Path $pathToSet) {
                 Remove-Item $pathToSet -Force;
             }
-            Mock Save-Exception {} -ParameterFilter { $_.Exception.Message.ToString() -match "The path '.*' does not exist."} -ModuleName "ILO-Inventorizer"
+            Mock Save-Exception {} -ParameterFilter { $_.Exception.Message.ToString() -match "The path '.*' does not exist." } -ModuleName "ILO-Inventorizer"
 
             # Act
             Set-ConfigPath -Path $pathToSet;
@@ -133,7 +133,7 @@ Describe "ILO-Inventorizer" {
             ($ENV:HPEILOCONFIG) | Should -Be ($config.configPath);
         }
 
-        it "should throw error if path does not contain any usable file"{
+        it "should throw error if path does not contain any usable file" {
             # Arrange
             $ENV:HPEILOCONFIG = "";
             $pathToSet = $configPath + "\noUsableFilesInside";
@@ -156,25 +156,55 @@ Describe "ILO-Inventorizer" {
 
     Context "Get-ConfigPath" {
         it "should provide help if prompted" {
+            # Arrange
+            Mock Get-Help {} -ParameterFilter { ($Name -eq "Get-ConfigPath") } -ModuleName "ILO-Inventorizer";
 
+            # Act
+            Get-ConfigPath /?
+            
+            # Assert
+            Should -Invoke -CommandName "Get-Help" -Times 1 -ModuleName "ILO-Inventorizer";
         }
 
         it "should return path to config" {
+            # Arrange
+            $expectedPathToConfig = $ENV:TEMP + "\config.tmp"
+            $ENV:HPEILOCONFIG = $expectedPathToConfig;
 
+            # Act 
+            $actualPathToConfig = Get-ConfigPath;
+
+            # Assert
+            $expectedPathToConfig | Should -Be $actualPathToConfig;
         }
 
         it "should return an error if no config is set" {
+            # Arrange
+            $ENV:HPEILOCONFIG = "";
+            Mock Save-Exception {} -ParameterFilter { $_.Exception.Message.ToString() -match "No configuration has been set: Please use 'Set-ConfigPath', 'Get-NewConfig' or 'Get-HWInfoFromILO' to generate a new config" } -ModuleName "ILO-Inventorizer"
 
+            # Act
+            Get-ConfigPath;
+
+            # Assert
+            Should -Invoke -CommandName "Save-Exception" -Times 1 -ModuleName "ILO-Inventorizer"
         }
     }
 
     Context "Get-NewConfig" {
         it "should reset config path" {
-
-        }
-
-        it "should call Get-InfoFromILO to start process over" {
+            # Arrange
+            $pathAtBeginning = $ENV:TEMP + "\config.tmp"
+            $ENV:HPEILOCONFIG = $pathAtBeginning;
+            Mock Get-HWInfoFromILO { } -ModuleName "ILO-Inventorizer";
             
+            # Act
+            Get-NewConfig;
+            
+            # Assert
+            $isEmpty = $ENV:HPEILOCONFIG.Length -eq 0
+            $isEmpty | Should -Be $true;
+            Should -Invoke -CommandName "Get-HWInfoFromILO" -ModuleName "ILO-Inventorizer" -Times 1;
         }
     }
 }
