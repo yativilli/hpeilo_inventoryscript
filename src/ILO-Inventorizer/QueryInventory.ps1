@@ -78,22 +78,23 @@ Function Invoke-InventoryResponseCleaner {
         $config = Get-Config;
 
         $servers = (($Response).d.Rows);
+        $names = (($Response).d.Columns);
         $serversClean = @();
         foreach ($srv in $servers) {
             $serversClean += [ordered]@{
-                Label         = $srv[0]
-                Hostname      = $srv[1]
-                Hostname_Mgnt = $srv[2]
-                Serial        = $srv[3]
-                Part_Type     = $srv[4]
-                Facility      = $srv[5]
-                MAC_1         = $srv[6]
-                MAC_2         = $srv[7]
-                MAC_3         = $srv[8]
-                MAC_4         = $srv[9]
-                Mgnt_MAC      = $srv[10]
-                HW_Status     = $srv[11]
-                OS            = $srv[12]
+                $names[0]  = $srv[0]
+                $names[1]  = $srv[1]
+                $names[2]  = $srv[2]
+                $names[3]  = $srv[3]
+                $names[4]  = $srv[4]
+                $names[5]  = $srv[5]
+                $names[6]  = $srv[6]
+                $names[7]  = $srv[7]
+                $names[8]  = $srv[8]
+                $names[9]  = $srv[9]
+                $names[10] = $srv[10]
+                $names[11] = $srv[11]
+                $names[12] = $srv[12]
             }
         }
         Log 6 "`tFilter Inventory-Answer for servers"
@@ -105,9 +106,13 @@ Function Invoke-InventoryResponseCleaner {
         # Save Servers if a Mgnt-Hostname exists.
         [Array]$serversToSave = @();
         Log 6 "`tSaving servers in json if a Hostname_Mgnt exists."
+        if ($config.remoteMgmntField.Length -le 0) {
+            throw [System.IO.InvalidDataException] "The field 'RemoteMgntField' cannot be zero. Please verify that your config includes a value like 'Hostname Mgnt'"
+        }
+
         foreach ($s in $serversClean) {
-            if ($s.Hostname_Mgnt.Length -gt 0) {
-                $serversToSave += $s.Hostname_Mgnt;
+            if ($s["$($config.remoteMgmntField)"].Length -gt 0) {
+                $serversToSave += $s["$($config.remoteMgmntField)"];
             }
         }
 
@@ -118,7 +123,7 @@ Function Invoke-InventoryResponseCleaner {
 Function Save-ServersFromInventory {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [PSCustomObject]
+        [array]
         $ServersToSave
     )
     if ($null -ne $ServersToSave) {
@@ -135,7 +140,11 @@ Function Save-ServersFromInventory {
         $config = Get-Config;
         # Add to Existing path
         if (Test-Path -Path $config.serverPath) {
-            $ServersToSave | ConvertTo-Json -Depth 2 | Out-File -Path ($config.serverPath);
+            [pscustomobject[]]$servers = Get-Content $config.serverPath | ConvertFrom-Json;
+            foreach ($srv in $ServersToSave) {
+                $servers += ($srv);
+            }
+            $servers | ConvertTo-Json -Depth 2 | Out-File -Path ($config.serverPath);
         }
         # Path does not Exist
         else {
