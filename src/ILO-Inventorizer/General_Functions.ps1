@@ -156,7 +156,7 @@ Function Get-Config {
                 return $config;
             }
             else {
-                throw [System.IO.FileNotFoundException] "No config has been specified. Use either Set-ConfigPath to set Path to an existing one or let one generate by using Get-NewConfig";
+               # No Config Set
             }
         }
     }
@@ -254,8 +254,10 @@ Function Log {
         }
         else {
             # Warning if no Logfile exists (yet)
-            Write-Warning "No path to logfiles exist. Please specify one in your config or via parameter as soon as possible.";
-            Write-Warning $Message;
+            if($ENV:HPEILO_LogWarning -eq $false){
+                Write-Warning "No path to logfiles exist. Please specify one in your config or via parameter as soon as possible.";
+                $ENV:HPEILO_LogWarning = $true;
+            }
         }
     }
     catch {

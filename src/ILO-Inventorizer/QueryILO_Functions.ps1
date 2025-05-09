@@ -298,8 +298,8 @@ Function Save-GeneralInformationToCSV {
     if ($null -ne $Report) {
         [string]$date = (Get-Date -Format $DATE_FILENAME).ToString();
         $config = Get-Config;
-        $name = "$path\ilo_report_$date.csv"
         $path = $config.reportPath;
+        $name = "$path\ilo_report_$date.csv"
         $inventoryData = Get-InventoryData;
 
         Log 6 "`tStart creating the general.csv file at '$name'."

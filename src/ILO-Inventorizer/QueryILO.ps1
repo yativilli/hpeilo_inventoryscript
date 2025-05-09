@@ -103,10 +103,11 @@ Function Register-Directory {
         Log 5 "Check if Directory '$path' exists and create it if needed."
         if ((-not (Test-Path -Path $Path)) -and $IgnoreError) {
             New-Item -Path $Path -Force -ItemType Directory | Out-Null;
+            return $Path.ToString();
         }
         elseif (Test-Path -Path $path) {  
             Log 6 "`tPath $path already exists, now splitting it to return only the directory." 
-            $isDirectory = (Get-Item ($Path)) -is [System.IO.DirectoryInfo];
+            $isDirectory = (Get-Item ($Path)).Extension.Length -eq 0;
             if (-not $isDirectory) {
                 $Path = $Path | Split-Path -Parent -Resolve;
             }
@@ -133,14 +134,15 @@ Function Save-DataInJSON {
         Log 4 "Begin saving results in JSON";
         # Guarantee that a Directory exists at reportPath
         $config = Get-Config;
-        $path = $config.reportPath
-        Update-Config -ReportPath ((Register-Directory ($path)).ToString()) -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation) ;
+        $path = Register-Directory ($config.reportPath)
+        Update-Config -ReportPath $path;
         # Save to File with current Date as name
         if (Test-Path -Path ($path)) {
             [string]$date = (Get-Date -Format $DATE_FILENAME).ToString();
             $name = "$path\ilo_report_$date.json";
             Log 6 "`tSave result at $name";
             $report | ConvertTo-Json -Depth 15 | Out-File -FilePath $name -Force;
+            return $name;
         }
         else {
             throw [System.IO.DirectoryNotFoundException] "No appropriate path could be find to save the report files. Please verify the specified one exists. The current path is '$path'"
@@ -163,9 +165,10 @@ Function Save-DataInCSV {
         # Guarantee that a Directory exists at reportPath
         Log 4 "Begin saving results in CSV"
         $config = Get-Config;
-        $generatePath = (Register-Directory ($config.reportPath)).ToString();
-        Update-Config -ReportPath $generatePath -LogLevel ($config.logLevel) -DeactivatePingtest:($config.deactivatePingtest) -IgnoreMACAddress:($config.ignoreMACAddress) -IgnoreSerialNumbers:($config.ignoreSerialNumbers) -LogToConsole:($config.logToConsole) -LoggingActivated:($config.loggingActivated) -DoNotSearchInventory:($config.doNotSearchInventory) -DeactivateCertificateValidationILO:($config.deactivateCertificateValidation);
+        $pathToReportTo = (Register-Directory ($config.reportPath)).ToString(); 
+        Update-Config -ReportPath $pathToReportTo;
          
+        $config = Get-Config;
         $path = $config.reportPath;
     
         if (Test-Path -Path $path) {
@@ -181,6 +184,7 @@ Function Save-DataInCSV {
             if (-not $config.ignoreSerialNumbers) {
                 Save-SerialInformationToCSV -Report $Report;
             }
+            return $path;
         }
         else {
             throw [System.IO.DirectoryNotFoundException] "No appropriate path could be find to save the report files. Please verify the specified one exists. The current path is '$path'"
@@ -224,11 +228,12 @@ Function Get-InventoryData {
         if (Test-Path -Path $path) {
             $server = Get-Content $path | ConvertFrom-Json -Depth 10;
         }else{
-            throw [System.IO.FileNotFoundException];
+            throw [System.IO.FileNotFoundException] "No Inventory file has been found at'$path'.";
         }
     }
     catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {
         Save-Exception $_ "The file $path does not exist or has been moved. Do not move or delete, as it is vital to query from Inventory.";
+        return {};
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());

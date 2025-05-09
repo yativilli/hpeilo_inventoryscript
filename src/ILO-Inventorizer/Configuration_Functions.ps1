@@ -161,7 +161,7 @@ Function Update-Config {
                     Set-Content -Path ($config.loginConfigPath) -Value ($login | ConvertTo-Json -Depth 3);
                 }
                 Log 5 ("Saving updated Configuration at " + $config.configPath)
-                if(Test-Path (Get-ConfigPath)){
+                if (Test-Path (Get-ConfigPath)) {
                     Set-Content -Path (Get-ConfigPath) -Value ($config | ConvertTo-Json -Depth 3);
                 }
             }
@@ -287,6 +287,7 @@ Function New-Config {
             $config | Add-EmptyConfig -Login ($login.login) -Path $Path;
         }
         ($login.login) | ConvertTo-Json -Depth 2 | Out-File -FilePath ($login.login_config_path) -Force;
+        exit;
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());
@@ -370,9 +371,9 @@ Function Set-LoginConfigurationForNewConfig {
     }
 
     return @{
-        config_path = $config_path
+        config_path       = $config_path
         login_config_path = $login_config_path
-        login = $login
+        login             = $login
     };
 }
 
@@ -485,9 +486,13 @@ Function Add-EmptyConfig {
     $Config.ignoreMACAddress = $null;
     $Config.ignoreSerialNumbers = $null;
 
-    $login[0].Username = "";
-    $login[0].Password = "";
-
+    if ($login -eq $null) {
+        $login = @{
+            Username = "TestUser"
+            Password = "TestPass"
+        }
+    }
+        
     $Config | Save-Config -Login $Login;
 }
 

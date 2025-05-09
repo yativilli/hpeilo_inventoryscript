@@ -211,7 +211,8 @@ Function Get-HWInfoFromILO {
             # Check that all Paths needed in the future are set and exist
    
             Convert-PathsToValidated -IgnoreServerPath;
-            
+            $config = Get-Config;
+
             # Query Inventory
             if (-not $config.doNotSearchInventory) {
                 Log 3 "Query from Inventory started."

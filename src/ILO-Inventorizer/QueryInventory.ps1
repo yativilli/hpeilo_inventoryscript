@@ -12,7 +12,7 @@ Function Get-ServersFromInventory {
         # Check if it matches naming convention
         Log 6 "`tValidate naming convention before querying inventory"
         [regex]$reg = '(gfa)?(s(f)?(ls)?)?-.*';
-        $doesMatchNamingConvention = $reg.Match($searchStringInventory).Success;
+        $doesMatchNamingConvention = $searchStringInventory -match $reg;
         if (-not $doesMatchNamingConvention) {
             throw [System.Text.RegularExpressions.RegexParseException] "The search string does not match the naming convention. The search String must contain something like 'gfa-', 'sf-', 'sls-'.";
         }   
@@ -140,11 +140,7 @@ Function Save-ServersFromInventory {
         $config = Get-Config;
         # Add to Existing path
         if (Test-Path -Path $config.serverPath) {
-            [pscustomobject[]]$servers = Get-Content $config.serverPath | ConvertFrom-Json;
-            foreach ($srv in $ServersToSave) {
-                $servers += ($srv);
-            }
-            $servers | ConvertTo-Json -Depth 2 | Out-File -Path ($config.serverPath);
+            $ServersToSave | ConvertTo-Json -Depth 2 | Out-File -Path ($config.serverPath);
         }
         # Path does not Exist
         else {

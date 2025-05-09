@@ -39,8 +39,7 @@ Dieses Projekt wurde als Individuelle Praktische Arbeit von Yannick Wernle inner
 Um das Modul korrekt zu verwenden muss die Bibliothek [HPEiLOCmdlets](https://www.powershellgallery.com/packages/HPEiLOCmdlets/4.4.0.0) installiert sein.
 Ausserdem muss PowerShell von mindestens Version 7.0.0 verwendet werden.
 
-## Start der Anwendung
-
+## Anwendung Manuell starten
 Starten sie das Programm entweder manuell so:
 
 ```
@@ -51,3 +50,5 @@ Get-HWInfoFromILO
 ```
 
 oder führen Sie `.\src\script.ps1` aus.
+
+## Start m

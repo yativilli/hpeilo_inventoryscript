@@ -1,1 +1,4 @@
-Invoke-Pester -Output Detailed U:\IPA\IPA\IPA_Sourcecode_hpeilo_inventoryscript\src\tests\General_Functions.Tests.ps1 -TagFilter "CC"
+Remove-Module ILO-Inventorizer;
+Import-Module .\ILO-Inventorizer\ILO-Inventorizer.psm1
+
+Get-HWInfoFromILO

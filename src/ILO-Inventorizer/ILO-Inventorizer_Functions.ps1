@@ -46,7 +46,8 @@ Function Invoke-ParameterSetHandler {
         }
         default {
             # No Config Found
-            if ($ENV:HPEILOCONFIG.Length -eq 0) {
+            if (($ENV:HPEILOCONFIG.Length -eq 0) -or ($ENV:HPEILOCONFIG.Length -gt 0 -and (Test-Path $ENV:HPEILOCONFIG) -eq $false)) {    
+                $ENV:HPEILOCONFIG.Length -gt 0 ? ($ENV:HPEILOCONFIG = "") : $false | Out-Null;
                 Invoke-NoConfigFoundHandler;
             }
             else {

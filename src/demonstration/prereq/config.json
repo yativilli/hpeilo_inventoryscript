@@ -3,7 +3,7 @@
   "configPath": "U:\\IPA\\IPA\\IPA_Sourcecode_hpeilo_inventoryscript\\src\\demonstration\\prereq\\config.json",
   "loginConfigPath": "U:\\IPA\\IPA\\IPA_Sourcecode_hpeilo_inventoryscript\\src\\demonstration\\prereq\\login.json",
   "reportPath": "U:\\IPA\\IPA\\IPA_Sourcecode_hpeilo_inventoryscript\\src\\demonstration\\dump",
-  "serverPath": "C:\\Users\\wernle_y\\AppData\\Roaming\\hpeilo\\server.json",
+  "serverPath": "U:\\IPA\\IPA\\IPA_Sourcecode_hpeilo_inventoryscript\\src\\demonstration\\prereq\\SERVERPATH.json",
   "logPath": "U:\\IPA\\IPA\\IPA_Sourcecode_hpeilo_inventoryscript\\src\\demonstration\\dump",
   "logLevel": 1,
   "loggingActivated": true,
