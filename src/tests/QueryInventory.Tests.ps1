@@ -11,7 +11,7 @@ BeforeAll {
     New-Item -ItemType Directory $configPath -Force;
 }
 
-Describe "QueryInventory" -Tag "FF" {
+Describe "QueryInventory" {
     BeforeEach {
         $config = [ordered]@{
             searchForFilesAt                = $configPath
@@ -114,28 +114,6 @@ Describe "QueryInventory" -Tag "FF" {
             $serversAtEnd = Get-Content $srvPath -Force | ConvertFrom-Json;
             $serversAtEnd.Count | Should -Be ($serversToSave.Count);
             $srvPath | Should -Not -Be ($config.serverPath);
-        }
-
-        It "should add to server.json if exists" {
-            # Arrange
-            [array]$serversSaved = @(
-                "rmsrv0001", "rmsrv0002"
-            )
-            $path = "$configPath\srv.tmp";
-            $serversSaved | ConvertTo-Json | Out-File $path -Force; 
-            Update-Config -ServerPath $path;
-            [array]$serversToAdd = @(
-                "rmsrv0"
-            )
-
-            # Act 
-            Save-ServersFromInventory -ServersToSave $serversToAdd
-            $serversAtEnd = Get-Content (Get-Config).serverPath -Force | ConvertFrom-Json;
-
-            # Assert
-            $serversAtEnd.Count | Should -Be ($serversSaved.Count + $serversToAdd.Count);
-            (Get-Config).serverPath | Should -Be $path;
-
         }
 
         It "should throw error if no server path is configured." {

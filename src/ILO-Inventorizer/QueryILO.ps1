@@ -21,8 +21,8 @@ Function Get-DataFromILO {
             Log 6 "Started querying $srv" -IgnoreLogActive
 
             $log = $Login[$i]
-            if($null -eq $log){
-                $log = $Login[($i -1)]
+            if ($null -eq $log) {
+                $log = $Login[($i - 1)]
             }
             
             # Make connection with ILO.
@@ -208,6 +208,7 @@ Function Get-StandardizedCSV {
         foreach ($srvObj in $Report) {
             foreach ($uniqueMember in $unique) {
                 if (($srvObj.Keys -contains $uniqueMember) -eq $false) {    
+                    ## IMPORTANT: Objects within array must be of type ordered dictionary, otherwise it wont work with adding the missing properties
                     $srvObj | Add-Member -Name $uniqueMember -Value $NO_VALUE_FOUND_SYMBOL -MemberType NoteProperty;
                 }
             }
@@ -220,6 +221,9 @@ Function Get-StandardizedCSV {
 }
 
 Function Get-InventoryData {
+    [CmdletBinding()]
+    param()
+
     try {
         # Return Inventorydata from previously saved file.
         $config = Get-Config;
@@ -227,12 +231,13 @@ Function Get-InventoryData {
         Log 5 "Import Inventory Data from '$path'"
         if (Test-Path -Path $path) {
             $server = Get-Content $path | ConvertFrom-Json -Depth 10;
-        }else{
+        }
+        else {
             throw [System.IO.FileNotFoundException] "No Inventory file has been found at'$path'.";
         }
     }
     catch [System.IO.FileNotFoundException], [System.IO.DirectoryNotFoundException] {
-        Save-Exception $_ "The file $path does not exist or has been moved. Do not move or delete, as it is vital to query from Inventory.";
+        Save-Exception $_ "The file '$path' does not exist or has been moved. Do not move or delete, as it is vital to query from Inventory.";
         return {};
     }
     catch {

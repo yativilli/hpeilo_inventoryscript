@@ -1,0 +1,254 @@
+[
+  {
+    "Serial": "EXAMPLE-SERIAL-001",
+    "Part_Type_Name": "ProLiant DL380p Gen8",
+    "Hostname": "srv001",
+    "Hostname_Mgnt": "srv001-mgmt",
+    "ILO_Version": "4",
+    "MAC_1": "00:00:00:00:00:01",
+    "MAC_2": "00:00:00:00:00:02",
+    "MAC_3": "00:00:00:00:00:03",
+    "MAC_4": "00:00:00:00:00:04",
+    "Mgnt_MAC": "00:00:00:00:00:05",
+    "PowerSupply": {
+      "PresentPowerReading": "0 Watts",
+      "PowerSupplies": [
+        {
+          "Serial": "EXAMPLE-SERIAL-002",
+          "Status": null,
+          "Model": "656363-B21                      ",
+          "Name": null
+        },
+        {
+          "Serial": "EXAMPLE-SERIAL-003",
+          "Status": null,
+          "Model": "656363-B21                      ",
+          "Name": null
+        }
+      ],
+      "PowerSystemRedundancy": "Not Redundant"
+    },
+    "Health_Summary": {
+      "FanStatus": "OK",
+      "MemoryStatus": "Other",
+      "PowerSuppliesStatus": "Failed",
+      "ProcessorStatus": "OK",
+      "StorageStatus": "OK",
+      "TemperatureStatus": "OK"
+    },
+    "Processor": [
+      {
+        "Model": " Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz      ",
+        "Serial": "EXAMPLE-SERIAL-004"
+      },
+      {
+        "Model": " Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz      ",
+        "Serial": "EXAMPLE-SERIAL-005"
+      }
+    ],
+    "Memory": null,
+    "NetworkInterfaces": [
+      {
+        "MACAddress": "00:00:00:00:00:06",
+        "Status": null,
+        "InterfaceType": null
+      },
+      {
+        "MACAddress": "00:00:00:00:00:07",
+        "Status": null,
+        "InterfaceType": null
+      }
+    ],
+    "NetworkAdapter": [
+      {
+        "Name": "Intel(R) 82599 10 Gigabit Dual Port Network Connection",
+        "Location": null,
+        "Serial": "EXAMPLE-SERIAL-006",
+        "Ports": [
+          {
+            "Name": null,
+            "MACAddress": "00:00:00:00:00:08"
+          },
+          {
+            "Name": null,
+            "MACAddress": "00:00:00:00:00:09"
+          }
+        ],
+        "State": null
+      },
+      {
+        "Name": "HPE Ethernet 1Gb 4-port 331T Adapter #4",
+        "Location": null,
+        "Serial": "EXAMPLE-SERIAL-007",
+        "Ports": [
+          {
+            "Name": null,
+            "MACAddress": "00:00:00:00:00:0A"
+          },
+          {
+            "Name": null,
+            "MACAddress": "00:00:00:00:00:0B"
+          },
+          {
+            "Name": null,
+            "MACAddress": "00:00:00:00:00:0C"
+          },
+          {
+            "Name": null,
+            "MACAddress": "00:00:00:00:00:0D"
+          }
+        ],
+        "State": null
+      },
+      {
+        "Name": "HPE Ethernet 10Gb 2-port 530T Adapter #49",
+        "Location": null,
+        "Serial": "EXAMPLE-SERIAL-008",
+        "Ports": [
+          {
+            "Name": null,
+            "MACAddress": "00:00:00:00:00:0E"
+          },
+          {
+            "Name": null,
+            "MACAddress": "00:00:00:00:00:0F"
+          }
+        ],
+        "State": null
+      }
+    ],
+    "Devices": null,
+    "Storage": null,
+    "IPv4Configuration": {
+      "MACAddress": "00:00:00:00:00:10",
+      "IPv4Address": "127.0.0.1",
+      "IPv4SubnetMask": "127.0.0.1",
+      "IPv4Gateway": "127.0.0.1",
+      "IPv4AddressOrigin": null,
+      "DNSServer": [
+        "127.0.0.1",
+        "127.0.0.1",
+        "0.0.0.0"
+      ],
+      "FQDN": null,
+      "DomainName": "example.ch"
+    },
+    "IPv6Configuration": {
+      "MACAddress": "00:00:00:00:00:11",
+      "IPv6Address": "0:0:0:0:0:0:0:1",
+      "DNSServer": [
+        "::",
+        "::",
+        "::"
+      ],
+      "PreferredProtocol": null
+    }
+  },
+  {
+    "Serial": "EXAMPLE-SERIAL-009",
+    "Part_Type_Name": "ProLiant DL380 Gen11",
+    "Hostname": "srv002",
+    "Hostname_Mgnt": "srv002-management",
+    "ILO_Version": "6",
+    "MAC_1": "00:00:00:00:00:12",
+    "MAC_2": "00:00:00:00:00:13",
+    "MAC_3": "00:00:00:00:00:14",
+    "MAC_4": "00:00:00:00:00:15",
+    "Mgnt_MAC": "00:00:00:00:00:16",
+    "PowerSupply": {
+      "PresentPowerReading": "0",
+      "PowerSupplies": [
+        {
+          "Serial": "EXAMPLE-SERIAL-010",
+          "Status": "OK",
+          "Model": "P38995-B21",
+          "Name": "HpeServerPowerSupply"
+        },
+        {
+          "Serial": "EXAMPLE-SERIAL-011",
+          "Status": "Warning",
+          "Model": "P38995-B21",
+          "Name": "HpeServerPowerSupply"
+        }
+      ],
+      "PowerSystemRedundancy": null
+    },
+    "Health_Summary": {
+      "FanStatus": "OK",
+      "MemoryStatus": "OK",
+      "PowerSuppliesStatus": "Critical",
+      "ProcessorStatus": "OK",
+      "StorageStatus": "OK",
+      "TemperatureStatus": "OK"
+    },
+    "Processor": [
+      {
+        "Model": "Intel(R) Xeon(R) Silver 4416+",
+        "Serial": "EXAMPLE-SERIAL-012"
+      },
+      {
+        "Model": "Intel(R) Xeon(R) Silver 4416+",
+        "Serial": "EXAMPLE-SERIAL-013"
+      }
+    ],
+    "Memory": [
+      {
+        "Location": "PROC 1 DIMM 1",
+        "SizeMB": "16384",
+        "Serial": "EXAMPLE-SERIAL-014"
+      },
+      {
+        "Location": "PROC 1 DIMM 2",
+        "SizeMB": "16384",
+        "Serial": "EXAMPLE-SERIAL-015"
+      }
+    ],
+    "NetworkInterfaces": [
+      {
+        "MACAddress": "00:00:00:00:00:17",
+        "Status": "Enabled",
+        "InterfaceType": "Dedicated"
+      },
+      {
+        "MACAddress": "00:00:00:00:00:18",
+        "Status": "Disabled",
+        "InterfaceType": "Shared"
+      }
+    ],
+    "NetworkAdapter": null,
+    "Devices": [
+      {
+        "Name": "10/25Gb 2-port SFP28 BCM57414 OCP3 Adapter",
+        "DeviceType": "LOM/NIC",
+        "Location": "OCP 3.0 Slot 14",
+        "Serial": "EXAMPLE-SERIAL-016",
+        "Status": null
+      }
+    ],
+    "Storage": null,
+    "IPv4Configuration": {
+      "MACAddress": "00:00:00:00:00:19",
+      "IPv4Address": "127.0.0.1",
+      "IPv4SubnetMask": "255.255.255.0",
+      "IPv4Gateway": "v",
+      "IPv4AddressOrigin": "DHCP",
+      "DNSServer": [
+        "127.0.0.1",
+        "127.0.0.1",
+        "0.0.0.0"
+      ],
+      "FQDN": "srv.example.ch",
+      "DomainName": "example.ch"
+    },
+    "IPv6Configuration": {
+      "MACAddress": "00:00:00:00:00:1A",
+      "IPv6Address": "0:0:0:0:0:0:0:1",
+      "DNSServer": [
+        "::",
+        "::",
+        "::"
+      ],
+      "PreferredProtocol": null
+    }
+  }
+]

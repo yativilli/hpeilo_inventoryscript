@@ -3,3 +3,5 @@
 /r.json
 /src/devscript.ps1
 /src/.vscode/launch.json
+/src/demonstration/prereq/login.json
+/src/demonstration/prereq/SERVERPATH.json

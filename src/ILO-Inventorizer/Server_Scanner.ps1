@@ -60,8 +60,8 @@ Function Get-ServerByScanner {
         $iloCredentials = @();
         $serialNumbers = @();
 
-        New-Config -Path ($DEFAULT_PATH_TEMPORARY) -ForScanner -StoreAsTemporary | Out-Null;
-        Update-Config -ReportPath $ReportPath -LogPath $LogPath -LogLevel $LogLevel -LogToConsole $LogToConsole -LoggingActivated $LoggingActivated -PingTestActivated $PingTestActivated -DeactivateCertificateValidation $DeactivateCertificateValidation -IgnoreMACAddress $IgnoreMACAddress -IgnoreSerialNumbers $IgnoreSerialNumbers | Out-Null;
+        New-Config -Path ($DEFAULT_PATH_TEMPORARY) -ForScanner -StoreAsTemporary ;
+        Update-Config -ReportPath (Get-ConfigPath) -LogPath $LogPath -LogLevel $LogLevel -LogToConsole:$LogToConsole -LoggingActivated:$LoggingActivated -DeactivatePingtest:$PingTestActivated -DeactivateCertificateValidation:$DeactivateCertificateValidation -IgnoreMACAddress:$IgnoreMACAddress -IgnoreSerialNumbers:$IgnoreSerialNumbers;
 
         ## Get Scanned Servers
         while ($true) {

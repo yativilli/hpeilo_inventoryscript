@@ -1,0 +1,47 @@
+[
+  {
+    "Label": "SRV001",
+    "Hostname": "SRV001.example.com",
+    "Hostname Mgnt": "mgnt-SRV001.example.com",
+    "Serial": "SERIAL123",
+    "Part Type": "Model X",
+    "Facility": "-",
+    "MAC 1": "00:00:00:00:00:01",
+    "MAC 2": "00:00:00:00:00:02",
+    "MAC 3": "00:00:00:00:00:03",
+    "MAC 4": "00:00:00:00:00:04",
+    "Mgnt MAC": "00:00:00:00:00:05",
+    "HW Status": "Tested",
+    "OS": "OS 1"
+  },
+  {
+    "Label": "SRV002",
+    "Hostname": "SRV002.example.com",
+    "Hostname Mgnt": "mgnt-SRV002.example.com",
+    "Serial": "SERIAL456",
+    "Part Type": "Model Y",
+    "Facility": null,
+    "MAC 1": null,
+    "MAC 2": null,
+    "MAC 3": null,
+    "MAC 4": null,
+    "Mgnt MAC": null,
+    "HW Status": "Tested",
+    "OS": null
+  },
+  {
+    "Label": "SRV003",
+    "Hostname": "SRV003.example.com",
+    "Hostname Mgnt": null,
+    "Serial": "SERIAL789",
+    "Part Type": "Model Z",
+    "Facility": "FACILITY1",
+    "MAC 1": null,
+    "MAC 2": null,
+    "MAC 3": null,
+    "MAC 4": null,
+    "Mgnt MAC": null,
+    "HW Status": "Tested",
+    "OS": "OS 2"
+  }
+]

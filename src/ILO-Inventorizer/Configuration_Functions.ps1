@@ -287,7 +287,6 @@ Function New-Config {
             $config | Add-EmptyConfig -Login ($login.login) -Path $Path;
         }
         ($login.login) | ConvertTo-Json -Depth 2 | Out-File -FilePath ($login.login_config_path) -Force;
-        exit;
     }
     catch {
         Save-Exception $_ ($_.Exception.Message.ToString());

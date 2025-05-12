@@ -71,7 +71,7 @@ Function Invoke-NoConfigFoundHandler {
             $pathToSaveAt = Read-Host -Prompt "Where do you want to save the config at?";
             if ((Test-Path $pathToSaveAt) -eq $false) { throw [System.IO.DirectoryNotFoundException] "The path provided ('$pathToSaveAt') does not exist. Verify that it does" }
             New-Config -Path $pathToSaveAt;
-            break;
+            exit;
         }
         2 {
             # Generate Config with exampledata
@@ -91,7 +91,7 @@ Function Invoke-NoConfigFoundHandler {
                     break;
                 }
             }
-            break;
+            exit;
         }
         3 {
             # Add Path to Config
