@@ -78,7 +78,7 @@ Describe "ILO-Inventorizer" {
             $pathAtEnd | Should -Not -Be "";
         }
 
-        it "should check provided path for a file"  -Tag "CC" {
+        it "should check provided path for a file"  {
             # Arrange
             $ENV:HPEILOCONFIG = "";
             $pathToSet = $ENV:TEMP + "\somePathThatShouldNotExist\Folder";

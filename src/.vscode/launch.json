@@ -5,10 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run Pester Tests",
+            "name": "Pester FF",
             "type": "PowerShell",
             "request": "launch",
             "script": "Invoke-Pester -Output 'Detailed' -Path '${cwd}\\tests' -Tag 'FF'",
+            "args": [],
+            "createTemporaryIntegratedConsole": true
+        },
+        {
+            "name": "Pester CC",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Invoke-Pester -Output 'Detailed' -Path '${cwd}\\tests' -Tag 'cc'",
             "args": [],
             "createTemporaryIntegratedConsole": true
         },

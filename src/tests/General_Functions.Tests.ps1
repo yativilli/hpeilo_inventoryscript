@@ -171,7 +171,7 @@ Describe "General_Functions" {
             $pathNowExists | Should -Be $true;
         }
         It 'Path Exists' {
-                            # Arrange
+            # Arrange
             $path = $ENV:TEMP + "\temporary\stuff";
             $pathExists = Test-Path $path;
                 
@@ -179,7 +179,7 @@ Describe "General_Functions" {
             New-File $path;
             $pathNowExists = Test-Path $path;
             
-                            # Assert
+            # Assert
             $pathExists | Should -Be $true;
             $pathNowExists | Should -Be $true;
         }
@@ -211,10 +211,10 @@ Describe "General_Functions" {
             $err = [System.Management.Automation.RuntimeException] "Throw some error."
             $path = "$((Get-Config).logPath)\$(Get-Date -Format "yyyy_MM_dd").txt"
             
-                            # Act
+            # Act
             Save-Exception $err "Throw Error to test" -ErrorAction SilentlyContinue;
             
-                            # Assert
+            # Assert
             [string]$logContent = (Get-Content $path -Force)
             $logContent | Should -Match ".*Throw Error to test";
         }
@@ -448,22 +448,25 @@ Describe "General_Functions" {
             It 'writes to console if no config is set' {
                 # Arrange
                 Set-ConfigPath -Reset;
+                $ENV:HPEILO_LogWarning = $null;
                 $pathToConsoleOutput = Start-Transcript -Path ($config.logPath + "\consoleOutput.txt") -Force;
-                
+
                 # Act
                 Log 1 "Test log to console if no config is set";
+                
+                Start-Sleep -Seconds 0.5
                 Stop-Transcript
                 
                 # Assert
                 $pathToConsoleOutput = $pathToConsoleOutput.Split("is ")[1];
                 $consoleOutput = "$(Get-Content $pathToConsoleOutput -Force)";
-                [regex]$expLog = "WARNING: Test log to console if no config is set"
+                [regex]$expLog = "LOG: Test log to console if no config is set"
                 $consoleOutput | Should -Match $expLog;
             }
         }
     }
 
-    Context 'Invoke-PingTest'{
+    Context 'Invoke-PingTest' {
         BeforeAll {
             # Arrange
             $configPath = $ENV:TEMP + "\hpeilo_test";
@@ -575,5 +578,5 @@ Describe "General_Functions" {
 }
 
 AfterAll {
-    Remove-Item -Path ($ENV:TEMP + "\hpeilo_test") -Force -Recurse;
+    # Remove-Item -Path ($ENV:TEMP + "\hpeilo_test") -Force -Recurse;
 }

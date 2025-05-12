@@ -254,10 +254,11 @@ Function Log {
         }
         else {
             # Warning if no Logfile exists (yet)
-            if($ENV:HPEILO_LogWarning -eq $false){
+            if(($ENV:HPEILO_LogWarning -eq $false) -or ($ENV:HPEILO_LogWarning -eq $null)){
                 Write-Warning "No path to logfiles exist. Please specify one in your config or via parameter as soon as possible.";
                 $ENV:HPEILO_LogWarning = $true;
             }
+            "LOG: $Message" | Out-Host;
         }
     }
     catch {

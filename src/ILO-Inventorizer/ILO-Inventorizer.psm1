@@ -13,6 +13,7 @@ Scripting-Module to query information from HPE-Servers via ILO
 
 # Main Function
 Function Get-HWInfoFromILO {
+   
     <#
     .SYNOPSIS
     Main function used for starting the ILO-query.
@@ -180,6 +181,7 @@ Function Get-HWInfoFromILO {
 
 
     )
+    $ENV:HPEILO_LogWarning = $null;
     try {
         Log 0 "--------------------------------------`nILO-Inventorizer has been started." -IgnoreLogActive;
 
@@ -319,7 +321,8 @@ Function Set-ConfigPath {
                         if (Test-Path -Path $jsonPath) {
                             Log 6 "Config Path directory contains a config.json"
                             $ENV:HPEILOCONFIG = $jsonPath;
-                        }elseif(Test-Path -Path $tmpPath){
+                        }
+                        elseif (Test-Path -Path $tmpPath) {
                             Log 6 "Config Path directory contains a config.tmp"
                             $ENV:HPEILOCONFIG = $tmpPath;
                         }

@@ -26,7 +26,7 @@ Describe "TestServers" {
         $serverNotReachable = $false;
         foreach($srv in $serversUsedForTesting){
             try{
-                Test-Connection $srv - -Quiet -Count 1;
+                Test-Connection $srv -Quiet -Count 1;
             }catch{
                 $serverNotReachable = $true;
             }
@@ -35,7 +35,7 @@ Describe "TestServers" {
     }
 }
 
-Describe "Inventory Reachable"{
+Describe "Inventory Reachable" -Tag "FF"{
     it " inventory is reachable"{
         $inventoryDNSNotFound = $false;
         try{

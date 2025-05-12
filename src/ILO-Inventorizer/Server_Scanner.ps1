@@ -51,6 +51,7 @@ Function Get-ServerByScanner {
         $IgnoreSerialNumbers
 
     )
+    $ENV:HPEILO_LogWarning = $null
     try {
         Write-Host "------------------------`nStarted Scanner:`nTo capture any Server for ILO-Query, please scan the 'Password' and 'Hostname' printed on the Server itself with a barcode scanner."
         Write-Host "A Loop will run, prompting you to scan the 'Serial Number', 'Hostname' and 'Password' as many times as you please. `nATTENTION: Ensure that any hostname entered starts with 'Ilo'`nTo Stop the programme, please type 'exit'."
