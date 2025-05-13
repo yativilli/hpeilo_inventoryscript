@@ -35,7 +35,7 @@ Describe "TestServers" {
     }
 }
 
-Describe "Inventory Reachable" -Tag "FF"{
+Describe "Inventory Reachable"{
     it " inventory is reachable"{
         $inventoryDNSNotFound = $false;
         try{

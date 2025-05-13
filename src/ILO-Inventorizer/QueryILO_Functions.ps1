@@ -15,10 +15,10 @@ Function Get-PowerSupplyData {
         $powerSuppliesDetails = @();
         foreach ($ps in $powerSupply.PowerSupplies) {
             $powerSuppliesDetails += [ordered]@{
-                Serial = $ps.SerialNumber;
-                Status = $iLOVersion -eq 4 ? $ps.Status : $ps.Status.Health;
-                Model  = $ps.Model;
-                Name   = $iLOVersion -eq 4 ? $ps.Label : $ps.Name;
+                Serial = $ps.SerialNumber | Resolve-NullValuesToSymbol;
+                Status = ($iLOVersion -eq 4 ? $ps.Status : $ps.Status.Health) | Resolve-NullValuesToSymbol;
+                Model  = $ps.Model | Resolve-NullValuesToSymbol;
+                Name   = ($iLOVersion -eq 4 ? $ps.Label : $ps.Name) | Resolve-NullValuesToSymbol;
             }
         }
         $powerDetails = @{
@@ -43,8 +43,8 @@ Function Get-ProcessorData {
         $processorDetails = @();
         foreach ($pr in $processor) {
             $processorDetails += [ordered]@{
-                Model  = $pr.Model;
-                Serial = $pr.SerialNumber;    
+                Model  = $pr.Model | Resolve-NullValuesToSymbol;
+                Serial = $pr.SerialNumber | Resolve-NullValuesToSymbol;    
             }
         }
         return $processorDetails;
@@ -64,9 +64,9 @@ Function Get-MemoryData {
         $memoryDetails = @();
         foreach ($me in $memory) {
             $memoryDetails += [ordered]@{
-                Location = $iLOVersion -eq 4 ? $me.MemoryLocation.ToString() : $me.DeviceLocator.ToString();
-                SizeMB   = $iLOVersion -eq 4 ? $me.MemorySizeMB.ToString() : $me.CapacityMiB.ToString();
-                Serial   = $iLOVersion -eq 4 ? "N/A in ILO4" : $me.SerialNumber;
+                Location = ($iLOVersion -eq 4 ? $me.MemoryLocation.ToString() : $me.DeviceLocator.ToString()) | Resolve-NullValuesToSymbol;
+                SizeMB   = ($iLOVersion -eq 4 ? $me.MemorySizeMB.ToString() : $me.CapacityMiB.ToString()) | Resolve-NullValuesToSymbol;
+                Serial   = ($iLOVersion -eq 4 ? "N/A in ILO4" : $me.SerialNumber) | Resolve-NullValuesToSymbol;
             }
         }   
         return $memoryDetails;
@@ -269,7 +269,7 @@ Function Format-MACAddressesLikeInventory {
             MAC3 = "";
             MAC4 = "";
         }
-        $networkadapter = $conn | Get-NetAdapterData;
+        $networkadapter = $Connection | Get-NetAdapterData;
         $ports = $networkAdapter.Ports;
         if ($ports.Length -gt 0) {
             $macAddressNotEmbeded = $ports[2..($ports.Length - 1)]
@@ -345,7 +345,6 @@ Function Save-MACInformationToCSV {
     if ($null -ne $Report) {
         [string]$date = (Get-Date -Format $DATE_FILENAME).ToString();
         $config = Get-Config;
-        $name = "$path\ilo_report_$date.csv"
         $path = $config.reportPath;
         $inventoryData = Get-InventoryData;
 
@@ -403,7 +402,6 @@ Function Save-SerialInformationToCSV {
     if ($null -ne $Report) {
         [string]$date = (Get-Date -Format $DATE_FILENAME).ToString();
         $config = Get-Config;
-        $name = "$path\ilo_report_$date.csv"
         $path = $config.reportPath;
         $inventoryData = Get-InventoryData;
 

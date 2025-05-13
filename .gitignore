@@ -5,3 +5,4 @@
 /src/.vscode/launch.json
 /src/demonstration/prereq/login.json
 /src/demonstration/prereq/SERVERPATH.json
+/src/tests/login.json

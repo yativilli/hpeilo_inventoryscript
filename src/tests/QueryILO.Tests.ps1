@@ -11,7 +11,7 @@ BeforeAll {
     New-Item -ItemType Directory $configPath -Force;
 }
 
-Describe "QueryILO" -Tag "FF" {
+Describe "QueryILO" {
     BeforeEach {
         $config = [ordered]@{
             searchForFilesAt                = $configPath
@@ -260,7 +260,9 @@ Describe "QueryILO" -Tag "FF" {
                 
                 $objectToDE_MemberCount = $objectToCsv[1].Keys.Count;
                 $respDE_MemberCount = $resp[1].Keys.Count;
-                $respDE_MemberCount | Should -Be $objectToFR_MemberCount;
+                $respDE_MemberCount | Should -Be $objectToDE_MemberCount;
+
+                $objectToFR_MemberCount | Should -Be $objectToDE_MemberCount;
                 
             }
         }

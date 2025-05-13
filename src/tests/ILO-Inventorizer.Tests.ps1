@@ -125,7 +125,7 @@ Describe "ILO-Inventorizer" {
             }; 
             $config | ConvertTo-Json -Depth 2 | Out-File -FilePath ($config.configPath) -Force
 
-            # Act
+            # Act   
             Set-ConfigPath -Path $pathToSet;
 
             # Assert
