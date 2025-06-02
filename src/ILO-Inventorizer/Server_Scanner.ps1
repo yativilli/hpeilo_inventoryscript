@@ -5,10 +5,6 @@
 Function Get-ServerByScanner {
     param(
         [Parameter()]
-        [switch]
-        $RequireSingleValidation,
-
-        [Parameter()]
         [string]
         [ValidateNotNullOrEmpty()]
         $ReportPath,
