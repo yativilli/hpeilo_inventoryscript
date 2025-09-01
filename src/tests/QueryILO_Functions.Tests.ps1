@@ -11,7 +11,7 @@ BeforeAll {
     New-Item -ItemType Directory $configPath -Force;
 }
 
-Describe "QueryILO_Functions" {
+Describe "QueryILO_Functions" -Tag "cc" {
     BeforeAll {
         $mockConn = @{ Address = "SomeAddress" };
     }

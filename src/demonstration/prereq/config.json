@@ -8,7 +8,7 @@
   "logLevel": 1,
   "loggingActivated": true,
   "searchStringInventory": "gfa-sioc-cs-de",
-  "doNotSearchInventory": false,
+  "doNotSearchInventory": true,
   "remoteMgmntField": "Hostname Mgnt",
   "deactivateCertificateValidation": true,
   "deactivatePingtest": false,
