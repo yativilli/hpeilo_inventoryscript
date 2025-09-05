@@ -88,4 +88,4 @@ There are some End2End, Unit Tests and other tests that tests the functions of t
 
 For them to be run, you must have installed [Pester](https://pester.dev/).   
 They can be run by using:   
-`Invoke-Pester -Output 'Detailed' -Path 'pathtotests`   
+`Invoke-Pester -Output 'Detailed' -Path 'pathtotests'`   
